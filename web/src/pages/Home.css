@@ -471,10 +471,12 @@
   .hero__inner { padding-block: 0 28px; gap: 20px; }
   .hero__right { margin-inline: -16px; } /* cancel the container's side padding */
   .hero__img {
-    aspect-ratio: auto;   /* show the full image, no 4:3 crop */
+    aspect-ratio: 1 / 0.9;        /* slightly shorter than square */
     height: auto;
-    border-radius: 0;     /* square edges */
-    box-shadow: none;     /* no floating shadow on a full-bleed banner */
+    object-fit: cover;
+    object-position: center top;  /* keep the top, trim the bottom (hides the watermark) */
+    border-radius: 0;             /* square edges */
+    box-shadow: none;             /* no floating shadow on a full-bleed banner */
   }
   .hero__sub { font-size: 15px; }
   .hero__badges { gap: 10px; margin-top: 22px; }
