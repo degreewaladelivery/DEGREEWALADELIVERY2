@@ -1,0 +1,276 @@
+import { useRef, useState } from 'react';
+import { Link, useNavigate } from 'react-router-dom';
+import { categories, featuredShops, getShopCount } from '@shared/mockData';
+import { Button } from '../components/ui/Button';
+import { CategoryCard } from '../components/cards/CategoryCard';
+import { ShopCard } from '../components/cards/ShopCard';
+import {
+  GridIcon, TruckIcon, AwardIcon, LockIcon,
+  LeafIcon, CoffeeIcon, SparklesIcon, GiftIcon, CalendarIcon,
+  BuildingIcon, UsersIcon, StoreIcon, BagIcon,
+  TagIcon, CreditCardIcon, MapPinIcon, HeadphonesIcon, SearchIcon,
+} from '../components/ui/icons';
+import { getBrandImage } from '../lib/images';
+import './Home.css';
+
+const POPULAR_SEARCHES = ['Food', 'Grocery', 'Medicine', 'Cakes', 'Meat'];
+
+const HERO_BADGES = [
+  { Icon: GridIcon, title: 'Wide Range', sub: 'of Categories' },
+  { Icon: TruckIcon, title: 'Fast Delivery', sub: 'at Your Doorstep' },
+  { Icon: AwardIcon, title: 'Best Quality', sub: 'Guaranteed' },
+  { Icon: LockIcon, title: 'Easy & Secure', sub: 'Payments' },
+];
+
+const STATS = [
+  { Icon: BuildingIcon, value: '3+', label: 'Cities', sub: 'Available in multiple cities' },
+  { Icon: UsersIcon, value: '1000+', label: 'Happy Customers', sub: 'Joined the family' },
+  { Icon: StoreIcon, value: '61+', label: 'Shops', sub: 'Partnered with us' },
+  { Icon: BagIcon, value: '1000+', label: 'Products', sub: 'Wide quality range' },
+];
+
+const WHY_CHOOSE = [
+  { Icon: LeafIcon, title: 'Healthy & Hygienic' },
+  { Icon: TruckIcon, title: 'Easy Mode of Delivery' },
+  { Icon: CoffeeIcon, title: 'Gourmet Options' },
+  { Icon: SparklesIcon, title: 'Plan a Party' },
+  { Icon: GiftIcon, title: 'Gift Cards Collection' },
+  { Icon: CalendarIcon, title: 'Schedule Your Order' },
+];
+
+const APP_FEATURES = [
+  { Icon: TagIcon, title: 'Exclusive Offers' },
+  { Icon: CreditCardIcon, title: 'Easy Payments' },
+  { Icon: MapPinIcon, title: 'Live Order Tracking' },
+  { Icon: HeadphonesIcon, title: 'Quick Support' },
+];
+
+export function Home() {
+  const [query, setQuery] = useState('');
+  const navigate = useNavigate();
+  const railRef = useRef<HTMLDivElement>(null);
+
+  const heroArt = getBrandImage('hero');
+  const appPhone = getBrandImage('app-phone');
+
+  const scrollRail = (dir: number) => {
+    railRef.current?.scrollBy({ left: dir * 380, behavior: 'smooth' });
+  };
+
+  return (
+    <div className="home">
+      {/* ================= HERO ================= */}
+      <section className="hero">
+        <div className="container hero__inner">
+          <div className="hero__left">
+            <p className="hero__welcome">Welcome to</p>
+            <h1 className="hero__title">
+              Degree<span className="hero__title-accent">Wala</span>
+            </h1>
+            <p className="hero__sub">
+              Order food, groceries, medicine, bakery and more from your
+              favourite local shops — delivered fast, right to your door.
+            </p>
+
+            <form
+              className="hero__search"
+              onSubmit={(e) => {
+                e.preventDefault();
+                navigate('/category/food');
+              }}
+            >
+              <span className="hero__search-icon"><SearchIcon size={18} /></span>
+              <input
+                value={query}
+                onChange={(e) => setQuery(e.target.value)}
+                placeholder="Search for food, grocery, salon, cakes…"
+                aria-label="Search"
+              />
+              <Button type="submit" size="md">Search</Button>
+            </form>
+
+            <div className="hero__popular">
+              <span>Popular:</span>
+              {POPULAR_SEARCHES.map((p) => (
+                <Link key={p} to="/category/food" className="chip">{p}</Link>
+              ))}
+            </div>
+
+            <div className="hero__badges">
+              {HERO_BADGES.map((b) => (
+                <div key={b.title} className="hero__badge">
+                  <span className="hero__badge-icon">
+                    <b.Icon />
+                  </span>
+                  <div>
+                    <strong>{b.title}</strong>
+                    <small>{b.sub}</small>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+
+          {/* Hero illustration: your brand/hero.png if present, else a fallback */}
+          <div className="hero__right">
+            {heroArt ? (
+              <img className="hero__img" src={heroArt} alt="Degreewala delivery" />
+            ) : (
+              <div className="hero__art">
+                <span className="hero__art-scooter">🛵</span>
+                <span className="hero__art-pin">📍</span>
+                <div className="hero__art-chip hero__art-chip--1">🍔 Food</div>
+                <div className="hero__art-chip hero__art-chip--2">🛒 Grocery</div>
+                <div className="hero__art-chip hero__art-chip--3">💊 Medicine</div>
+                <div className="hero__art-card">
+                  <strong>Order in 2 mins</strong>
+                  <small>Fast &amp; reliable delivery</small>
+                </div>
+              </div>
+            )}
+          </div>
+        </div>
+      </section>
+
+      {/* ================= TOP CATEGORIES (carousel) ================= */}
+      <section className="section" id="categories">
+        <div className="container">
+          <div className="section-heading">
+            <span className="eyebrow">Browse by need</span>
+            <h2>Top Categories</h2>
+            <div className="underline" />
+          </div>
+
+          <div className="carousel">
+            <button className="carousel__arrow" onClick={() => scrollRail(-1)} aria-label="Scroll left">‹</button>
+            <div className="carousel__rail" ref={railRef}>
+              {categories.map((cat) => (
+                <div className="carousel__item" key={cat.id}>
+                  <CategoryCard category={cat} count={getShopCount(cat.key)} />
+                </div>
+              ))}
+            </div>
+            <button className="carousel__arrow" onClick={() => scrollRail(1)} aria-label="Scroll right">›</button>
+          </div>
+        </div>
+      </section>
+
+      {/* ================= FEATURED (dark navy panel) ================= */}
+      <section className="section" id="offers">
+        <div className="container">
+          <div className="featured-panel">
+            <div className="featured-panel__intro">
+              <span className="eyebrow-light">Featured</span>
+              <h2 className="featured-panel__title">Popular Near You</h2>
+              <p className="featured-panel__desc">
+                Hand-picked shops your neighbours love — top-rated and ready to deliver.
+              </p>
+              <Link to="/category/food" className="btn btn-light btn-md featured-panel__cta">
+                Shop Now →
+              </Link>
+            </div>
+
+            <div className="featured-panel__shops">
+              <div className="featured-panel__head">
+                <span>Top rated near you</span>
+                <Link to="/category/food" className="featured-panel__all">View All Shops →</Link>
+              </div>
+              <div className="featured-panel__row">
+                {featuredShops.map((shop) => (
+                  <div className="featured-panel__shop" key={shop.id}>
+                    <ShopCard shop={shop} />
+                  </div>
+                ))}
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* ================= STATS (peach card) ================= */}
+      <section className="section stats-section">
+        <div className="container">
+          <div className="stats-card">
+            {STATS.map((s) => (
+              <div key={s.label} className="stat">
+                <span className="stat__icon"><s.Icon size={26} /></span>
+                <div className="stat__text">
+                  <span className="stat__value">{s.value}</span>
+                  <strong className="stat__label">{s.label}</strong>
+                  <small className="stat__sub">{s.sub}</small>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* ================= WHY CHOOSE (row) ================= */}
+      <section className="section">
+        <div className="container">
+          <div className="section-heading">
+            <span className="eyebrow">Our promise</span>
+            <h2>Why Choose DegreeWala?</h2>
+            <div className="underline" />
+          </div>
+          <div className="why-row">
+            {WHY_CHOOSE.map((w) => (
+              <div key={w.title} className="why">
+                <span className="why__icon"><w.Icon size={30} /></span>
+                <span className="why__title">{w.title}</span>
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* ================= APP CTA (with phone mockup) ================= */}
+      <section className="section">
+        <div className="container">
+          <div className="app-cta">
+            <div className="app-cta__left">
+              <h2 className="app-cta__title">What’s waiting for you on the app?</h2>
+              <p className="app-cta__sub">Schedule your order today and never miss a deal.</p>
+              <div className="app-cta__stores">
+                <span className="store-pill">▶ Google Play</span>
+                <span className="store-pill"> App Store</span>
+              </div>
+            </div>
+
+            {/* Phone mockup: brand/app-phone.png if present, else a CSS mockup */}
+            <div className="app-cta__phone">
+              {appPhone ? (
+                <img className="app-cta__phone-img" src={appPhone} alt="Degreewala app" />
+              ) : (
+                <div className="phone">
+                  <div className="phone__notch" />
+                  <div className="phone__screen">
+                    <div className="phone__bar">Degree<span>Wala</span></div>
+                    <div className="phone__search">🔍 Search…</div>
+                    <div className="phone__grid">
+                      {categories.slice(0, 6).map((c) => (
+                        <div key={c.id} className="phone__tile" style={{ background: c.tint }}>
+                          <span>{c.emoji}</span>
+                          {c.name}
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                </div>
+              )}
+            </div>
+
+            <div className="app-cta__features">
+              {APP_FEATURES.map((f) => (
+                <div key={f.title} className="app-feature">
+                  <span className="app-feature__icon"><f.Icon size={20} /></span>
+                  {f.title}
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
+      </section>
+    </div>
+  );
+}

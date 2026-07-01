@@ -1,0 +1,83 @@
+.shoplist__banner {
+  color: #fff;
+  padding-block: 28px 30px;
+}
+.shoplist__banner-inner {
+  position: relative;
+}
+.shoplist__back {
+  display: inline-block;
+  font-size: 14px;
+  font-weight: 600;
+  color: rgba(255, 255, 255, 0.92);
+  margin-bottom: 14px;
+}
+.shoplist__back:hover {
+  color: #fff;
+}
+.shoplist__emoji {
+  font-size: 44px;
+  display: block;
+  filter: drop-shadow(0 6px 10px rgba(0, 0, 0, 0.18));
+}
+.shoplist__title {
+  color: #fff;
+  font-size: clamp(26px, 4vw, 36px);
+  margin-top: 6px;
+}
+.shoplist__count {
+  font-size: 14px;
+  color: rgba(255, 255, 255, 0.9);
+  margin-top: 4px;
+}
+
+.shoplist__body {
+  padding-block: 28px 48px;
+}
+
+/* Sub-category pills */
+.subcat-row {
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+  margin-bottom: 24px;
+}
+.subcat {
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--text, #15172b);
+  background: #fff;
+  border: 1.5px solid var(--border-strong, #dfe3ea);
+  padding: 9px 20px;
+  border-radius: var(--radius-pill, 999px);
+  transition: all 0.16s ease;
+}
+.subcat:hover {
+  border-color: var(--brand, #ff6b00);
+}
+.subcat.is-active {
+  background: var(--brand, #ff6b00);
+  border-color: var(--brand, #ff6b00);
+  color: #fff;
+}
+
+.shoplist__grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(230px, 1fr));
+  gap: 20px;
+}
+
+.shoplist__none {
+  color: var(--text-muted, #6b7280);
+  text-align: center;
+  padding-block: 40px;
+}
+
+.shoplist__empty {
+  text-align: center;
+  padding-block: 80px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 18px;
+}

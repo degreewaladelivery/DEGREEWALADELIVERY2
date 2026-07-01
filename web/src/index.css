@@ -1,0 +1,122 @@
+/* ==========================================================================
+   index.css — global styles for the whole site
+   - a light reset, base typography, and a few utility classes
+   - colours/spacing come from the CSS variables we inject in cssVars.ts
+   - fallback values (after the comma) keep things sane before JS runs
+   ========================================================================== */
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box; /* width includes padding+border — far easier layouts */
+  margin: 0;
+  padding: 0;
+}
+
+html {
+  scroll-behavior: smooth;
+}
+
+body {
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto,
+    Helvetica, Arial, sans-serif;
+  color: var(--text, #15172b);
+  background: var(--bg-soft, #f7f8fb);
+  line-height: 1.5;
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
+}
+
+h1, h2, h3, h4, h5 {
+  font-family: 'Poppins', 'Inter', sans-serif;
+  color: var(--text, #15172b);
+  line-height: 1.2;
+  font-weight: 700;
+}
+
+a {
+  color: inherit;
+  text-decoration: none;
+}
+
+button {
+  font-family: inherit;
+  cursor: pointer;
+  border: none;
+  background: none;
+}
+
+img {
+  display: block;
+  max-width: 100%;
+}
+
+ul {
+  list-style: none;
+}
+
+/* ---- Reusable layout helpers -------------------------------------------- */
+
+/* Centred page container with comfortable side padding. */
+.container {
+  width: 100%;
+  max-width: 1180px;
+  margin: 0 auto;
+  padding-inline: 20px;
+}
+
+/* A section title with the little orange underline used across the site. */
+.section-heading {
+  text-align: center;
+  margin-bottom: 28px;
+}
+.section-heading .eyebrow {
+  display: block;
+  font-size: var(--fs-xs, 12px);
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--text-muted, #6b7280);
+  font-weight: 600;
+  margin-bottom: 6px;
+}
+.section-heading h2 {
+  font-size: clamp(22px, 3vw, 30px);
+}
+.section-heading .underline {
+  width: 48px;
+  height: 3px;
+  border-radius: 999px;
+  background: var(--brand, #ff6b00);
+  margin: 10px auto 0;
+}
+
+/* Generic vertical rhythm for big page sections. */
+.section {
+  padding-block: 56px;
+}
+
+/* Screen-reader-only (accessible labels without visible text). */
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}
+
+/* ---- Mobile spacing (phones) -------------------------------------------- */
+@media (max-width: 640px) {
+  .container {
+    padding-inline: 16px;
+  }
+  .section {
+    padding-block: 36px;
+  }
+  .section-heading {
+    margin-bottom: 20px;
+  }
+}

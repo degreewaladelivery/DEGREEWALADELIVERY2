@@ -1,0 +1,91 @@
+.product-card {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  padding: 16px 0;
+  border-bottom: 1px solid var(--border, #eceef2);
+}
+
+.product-card.is-unavailable {
+  opacity: 0.55;
+}
+
+.product-card__info {
+  min-width: 0;
+}
+
+.product-card__name {
+  font-size: 15px;
+  font-weight: 600;
+  font-family: 'Inter', sans-serif;
+}
+
+.product-card__desc {
+  margin-top: 3px;
+  font-size: 13px;
+  color: var(--text-muted, #6b7280);
+}
+
+.product-card__price {
+  display: inline-block;
+  margin-top: 8px;
+  font-size: 15px;
+  font-weight: 700;
+  font-family: 'Poppins', sans-serif;
+}
+
+.product-card__action {
+  flex-shrink: 0;
+}
+
+.product-card__add {
+  background: var(--brand-tint, #fff3e0);
+  color: var(--brand-dark, #e85d00);
+  font-weight: 700;
+  font-size: 14px;
+  padding: 9px 20px;
+  border-radius: var(--radius-md, 12px);
+  border: 1.5px solid #ffd9b3;
+  transition: background 0.16s ease, transform 0.12s ease;
+}
+.product-card__add:hover {
+  background: #ffe7cc;
+}
+.product-card__add:active {
+  transform: scale(0.97);
+}
+
+.product-card__soldout {
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--danger, #f44336);
+  background: #fdeceb;
+  padding: 6px 12px;
+  border-radius: var(--radius-pill, 999px);
+}
+
+/* Quantity stepper */
+.stepper {
+  display: inline-flex;
+  align-items: center;
+  gap: 14px;
+  background: var(--brand, #ff6b00);
+  border-radius: var(--radius-md, 12px);
+  padding: 7px 12px;
+  box-shadow: var(--shadow-brand, 0 8px 24px rgba(255, 107, 0, 0.28));
+}
+.stepper button {
+  color: #fff;
+  font-size: 18px;
+  font-weight: 700;
+  line-height: 1;
+  width: 20px;
+}
+.stepper__qty {
+  color: #fff;
+  font-weight: 700;
+  font-size: 15px;
+  min-width: 14px;
+  text-align: center;
+}
