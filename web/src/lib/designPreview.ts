@@ -29,7 +29,8 @@ export function enableDesignPreviewMode() {
     (e) => {
       const target = e.target as HTMLElement | null;
       const el = target?.closest('a, button, [role="button"]');
-      if (el) {
+      // Exception: keep the mobile hamburger (☰) menu toggle clickable.
+      if (el && !el.closest('.nav-toggle')) {
         e.preventDefault();
         e.stopPropagation();
       }
