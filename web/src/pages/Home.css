@@ -10,6 +10,10 @@
   align-items: center;
   padding-block: 56px 64px;
 }
+/* both hero columns must be allowed to shrink so nothing overflows/clips */
+.hero__inner > * {
+  min-width: 0;
+}
 .hero__welcome {
   font-size: 18px;
   font-weight: 600;
@@ -51,6 +55,7 @@
 }
 .hero__search input {
   flex: 1;
+  min-width: 0; /* let the input shrink so the Search button never gets pushed off */
   border: none;
   outline: none;
   font-size: 15px;
@@ -97,6 +102,7 @@
   display: flex;
   align-items: center;
   gap: 9px;
+  min-width: 0;
 }
 .hero__badge-icon {
   color: var(--brand, #ff6b00); /* makes the SVG line-icons orange */
@@ -115,9 +121,10 @@
 .hero__badge small { font-size: 11px; color: var(--text-muted, #6b7280); }
 
 /* Hero illustration */
-.hero__right { display: flex; justify-content: center; }
+.hero__right { display: flex; justify-content: center; min-width: 0; }
 .hero__img {
   width: 100%;
+  min-width: 0;               /* let the large image shrink to fit narrow screens */
   aspect-ratio: 4 / 3;       /* landscape scene */
   object-fit: cover;          /* fills the frame, crops cleanly, never distorts */
   border-radius: 24px;
@@ -197,6 +204,8 @@
   scroll-snap-type: x mandatory;
   padding: 6px 2px;
   scrollbar-width: none;
+  min-width: 0; /* allow the scroll rail to shrink instead of widening the page */
+  flex: 1;
 }
 .carousel__rail::-webkit-scrollbar { display: none; }
 .carousel__item {
@@ -217,6 +226,10 @@
   border-radius: 28px;
   padding: 38px;
   color: #fff;
+}
+/* let the intro + the horizontal shop rail shrink instead of widening the page */
+.featured-panel > * {
+  min-width: 0;
 }
 .eyebrow-light {
   font-size: var(--fs-xs, 12px);
