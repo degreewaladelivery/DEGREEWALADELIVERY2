@@ -109,7 +109,7 @@ export function Home() {
               <input
                 value={query}
                 onChange={(e) => setQuery(e.target.value)}
-                placeholder='Search "chatpata"'
+                placeholder="Search for food, grocery, medicine…"
                 aria-label="Search"
               />
               <span className="mx-search__mic"><MicIcon size={17} /></span>
