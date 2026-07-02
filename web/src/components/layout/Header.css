@@ -208,6 +208,14 @@
 }
 
 /* ---- Responsive ---------------------------------------------------------- */
+/* On phones the home page brings its own app-style top bar (location + search),
+   so the regular site header is hidden there — like a native delivery app. */
+@media (max-width: 640px) {
+  .app-shell--home .site-header {
+    display: none;
+  }
+}
+
 @media (max-width: 900px) {
   .site-header__inner {
     gap: 10px;

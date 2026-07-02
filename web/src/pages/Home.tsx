@@ -1,19 +1,42 @@
 import { useRef, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { categories, featuredShops, getShopCount } from '@shared/mockData';
+import { categories, featuredShops, shops, getShopCount } from '@shared/mockData';
+import { categoryPalette } from '@shared/tokens';
 import { Button } from '../components/ui/Button';
 import { CategoryCard } from '../components/cards/CategoryCard';
 import { ShopCard } from '../components/cards/ShopCard';
+import { Thumb } from '../components/ui/Thumb';
 import {
   GridIcon, TruckIcon, AwardIcon, LockIcon,
   LeafIcon, CoffeeIcon, SparklesIcon, GiftIcon, CalendarIcon,
   BuildingIcon, UsersIcon, StoreIcon, BagIcon,
   TagIcon, CreditCardIcon, MapPinIcon, HeadphonesIcon, SearchIcon,
+  MicIcon, ZapIcon, SlidersIcon, BookmarkIcon, PercentCircleIcon,
 } from '../components/ui/icons';
-import { getBrandImage } from '../lib/images';
+import { getBrandImage, getCategoryImage, getShopImage } from '../lib/images';
 import './Home.css';
 
 const POPULAR_SEARCHES = ['Food', 'Grocery', 'Medicine', 'Cakes', 'Meat'];
+
+/* ---- Mobile (Zomato-style) feed data ------------------------------------ */
+
+/** Display offers cycled across the mobile shop cards. */
+const MX_OFFERS = [
+  '₹75 OFF above ₹199',
+  '40% OFF up to ₹120',
+  '₹150 OFF above ₹499',
+  '50% OFF on select items',
+  'FREE DELIVERY',
+  '30% OFF up to ₹80',
+  '₹100 OFF above ₹349',
+  'Buy 1 Get 1',
+];
+
+/** "By 8.3K+" style vote counts under the rating pill on featured cards. */
+const MX_VOTES = ['By 8.3K+', 'By 2.1K+', 'By 950+', 'By 1.4K+'];
+
+/** Top-rated shops across all categories for the "Recommended" rail. */
+const MX_RECO_SHOPS = [...shops].sort((a, b) => b.rating - a.rating).slice(0, 8);
 
 const HERO_BADGES = [
   { Icon: GridIcon, title: 'Wide Range', sub: 'of Categories' },
@@ -59,54 +82,143 @@ export function Home() {
 
   return (
     <div className="home">
-      {/* ============ MOBILE EXPLORE (Zomato-style compact header) ============ */}
-      {/* Desktop keeps the big hero below; on phones this replaces it (see Home.css). */}
-      <section className="mobile-explore">
-        <div className="container mobile-explore__inner">
-          <button type="button" className="mobile-explore__location">
-            <span className="mobile-explore__location-icon"><MapPinIcon size={16} /></span>
-            <span className="mobile-explore__location-text">
-              <small>Delivering to</small>
+      {/* ============ MOBILE HOME (Zomato-style app feed) ============ */}
+      {/* Hidden on desktop. `display: contents` on mobile, so the sticky
+          search bar / category rail stick for the whole page. */}
+      <section className="mx" aria-label="Explore">
+        {/* Location + profile avatar */}
+        <div className="container mx-top">
+          <button type="button" className="mx-loc">
+            <span className="mx-loc__pin"><MapPinIcon size={20} /></span>
+            <span className="mx-loc__text">
               <strong>Balehonnuru ▾</strong>
+              <small>Main Road, Balehonnuru, Chikkamagaluru</small>
             </span>
           </button>
-
-          <form
-            className="mobile-explore__search"
-            onSubmit={(e) => {
-              e.preventDefault();
-              navigate('/category/food');
-            }}
-          >
-            <span className="hero__search-icon"><SearchIcon size={18} /></span>
-            <input
-              value={query}
-              onChange={(e) => setQuery(e.target.value)}
-              placeholder="Search for food, grocery, medicine…"
-              aria-label="Search"
-            />
-          </form>
+          <span className="mx-avatar" aria-label="Account">A</span>
         </div>
 
+        {/* Sticky search bar + veg toggle */}
+        <div className="mx-searchbar">
+          <div className="container mx-searchbar__row">
+            <form
+              className="mx-search"
+              onSubmit={(e) => {
+                e.preventDefault();
+                navigate('/category/food');
+              }}
+            >
+              <span className="mx-search__icon"><SearchIcon size={18} /></span>
+              <input
+                value={query}
+                onChange={(e) => setQuery(e.target.value)}
+                placeholder='Search "chatpata"'
+                aria-label="Search"
+              />
+              <span className="mx-search__mic"><MicIcon size={17} /></span>
+            </form>
+            <span className="mx-veg">
+              <small>VEG</small>
+              <span className="mx-veg__track"><span className="mx-veg__knob" /></span>
+            </span>
+          </div>
+        </div>
+
+        {/* Full-bleed promo banner */}
         {heroArt && (
-          <div className="container">
-            <div className="mobile-explore__banner">
-              <img src={heroArt} alt="Degreewala delivery" />
-            </div>
+          <div className="mx-banner">
+            <img src={heroArt} alt="Degreewala delivery" />
+            <Link to="/category/food" className="mx-banner__cta">ORDER NOW ›</Link>
           </div>
         )}
 
-        <div className="container">
-          <div className="mobile-explore__chips">
-            {POPULAR_SEARCHES.map((p) => (
-              <Link key={p} to="/category/food" className="chip">{p}</Link>
+        {/* Sticky category rail: offer tile + circular category shortcuts */}
+        <div className="mx-cats">
+          <div className="mx-cats__rail">
+            <Link to="/#offers" className="mx-offer-tile">
+              <span className="mx-offer-tile__top">MEALS<br />UNDER ₹99</span>
+              <span className="mx-offer-tile__cta">Explore ›</span>
+            </Link>
+            {categories.map((c, i) => (
+              <Link key={c.id} to={`/category/${c.key}`} className={'mx-cat' + (i === 0 ? ' is-active' : '')}>
+                <span className="mx-cat__img">
+                  <Thumb src={getCategoryImage(c.key)} emoji={c.emoji} tint={c.tint} color={c.color} alt={c.name} fontSize={28} />
+                </span>
+                <span className="mx-cat__name">{c.name}</span>
+                <span className="mx-cat__bar" />
+              </Link>
             ))}
           </div>
+        </div>
+
+        {/* Filter pills */}
+        <div className="container mx-filters">
+          <button type="button" className="mx-pill"><SlidersIcon size={14} /> Filters ▾</button>
+          <button type="button" className="mx-pill"><span className="mx-bolt"><ZapIcon size={13} /></span> Near &amp; Fast</button>
+          <button type="button" className="mx-pill">No packaging charges</button>
+        </div>
+
+        {/* Recommended rail */}
+        <div className="container mx-reco">
+          <h2 className="mx-heading">Recommended for you</h2>
+          <div className="mx-reco__rail">
+            {MX_RECO_SHOPS.map((s, i) => {
+              const pal = categoryPalette[s.categoryKey];
+              return (
+                <Link key={s.id} to={`/shop/${s.id}`} className="mx-reco-card">
+                  <span className="mx-reco-card__img">
+                    <Thumb src={getShopImage(s.id)} emoji={pal.emoji} tint={pal.tint} color={pal.border} alt={s.name} fontSize={40} />
+                    <span className="mx-reco-card__offer">{MX_OFFERS[i % MX_OFFERS.length]}</span>
+                    <span className="mx-reco-card__rating">★ {s.rating.toFixed(1)}</span>
+                  </span>
+                  <strong className="mx-reco-card__name">{s.name}</strong>
+                  <span className="mx-fast"><ZapIcon size={12} /> Near &amp; Fast</span>
+                </Link>
+              );
+            })}
+          </div>
+        </div>
+
+        {/* Featured feed (big cards) */}
+        <div className="container mx-feed">
+          <h2 className="mx-heading">61 shops delivering to you</h2>
+          <p className="mx-subheading">Featured</p>
+          {featuredShops.map((s, i) => {
+            const pal = categoryPalette[s.categoryKey];
+            return (
+              <Link key={s.id} to={`/shop/${s.id}`} className="mx-feat">
+                <span className="mx-feat__img">
+                  <Thumb src={getShopImage(s.id)} emoji={pal.emoji} tint={pal.tint} color={pal.border} alt={s.name} fontSize={64} />
+                  <span className="mx-feat__bookmark"><BookmarkIcon size={20} /></span>
+                  <span className="mx-feat__dots">
+                    {Array.from({ length: 6 }).map((_, d) => (
+                      <span key={d} className={'mx-feat__dot' + (d === 0 ? ' is-on' : '')} />
+                    ))}
+                  </span>
+                </span>
+                <span className="mx-feat__body">
+                  <span className="mx-feat__row">
+                    <strong className="mx-feat__name">{s.name}</strong>
+                    <span className="mx-feat__rating">
+                      <span className="mx-feat__rating-pill">★ {s.rating.toFixed(1)}</span>
+                      <small>{MX_VOTES[i % MX_VOTES.length]}</small>
+                    </span>
+                  </span>
+                  <span className="mx-fast"><ZapIcon size={12} /> Near &amp; Fast</span>
+                  <span className="mx-feat__divider" />
+                  <span className="mx-feat__offer">
+                    <span className="mx-feat__offer-icon"><PercentCircleIcon size={17} /></span>
+                    {MX_OFFERS[(i + 3) % MX_OFFERS.length]}
+                  </span>
+                </span>
+              </Link>
+            );
+          })}
         </div>
       </section>
 
       {/* ================= HERO ================= */}
-      <section className="hero">
+      <section className="hero dt-only">
         <div className="container hero__inner">
           <div className="hero__left">
             <p className="hero__welcome">Welcome to</p>
@@ -179,7 +291,7 @@ export function Home() {
       </section>
 
       {/* ================= TOP CATEGORIES (carousel) ================= */}
-      <section className="section" id="categories">
+      <section className="section dt-only" id="categories">
         <div className="container">
           <div className="section-heading">
             <span className="eyebrow">Browse by need</span>
@@ -202,7 +314,7 @@ export function Home() {
       </section>
 
       {/* ================= FEATURED (dark navy panel) ================= */}
-      <section className="section" id="offers">
+      <section className="section dt-only" id="offers">
         <div className="container">
           <div className="featured-panel">
             <div className="featured-panel__intro">
@@ -234,7 +346,7 @@ export function Home() {
       </section>
 
       {/* ================= STATS (peach card) ================= */}
-      <section className="section stats-section">
+      <section className="section stats-section dt-only">
         <div className="container">
           <div className="stats-card">
             {STATS.map((s) => (
@@ -252,7 +364,7 @@ export function Home() {
       </section>
 
       {/* ================= WHY CHOOSE (row) ================= */}
-      <section className="section">
+      <section className="section dt-only">
         <div className="container">
           <div className="section-heading">
             <span className="eyebrow">Our promise</span>
@@ -271,7 +383,7 @@ export function Home() {
       </section>
 
       {/* ================= APP CTA (with phone mockup) ================= */}
-      <section className="section">
+      <section className="section dt-only">
         <div className="container">
           <div className="app-cta">
             <div className="app-cta__left">

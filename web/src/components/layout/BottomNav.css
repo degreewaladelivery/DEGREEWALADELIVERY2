@@ -1,14 +1,16 @@
+/* Floating pill tab bar (Zomato-style), phones only. */
 .bottom-nav {
-  display: none; /* phones only, see media query below */
+  display: none; /* shown in the media query below */
   position: fixed;
-  left: 0;
-  right: 0;
-  bottom: 0;
+  left: 14px;
+  right: 14px;
+  bottom: calc(10px + env(safe-area-inset-bottom));
   z-index: 60;
-  background: rgba(255, 255, 255, 0.96);
-  backdrop-filter: blur(12px);
-  border-top: 1px solid var(--border, #eceef2);
-  padding: 6px 4px calc(6px + env(safe-area-inset-bottom));
+  background: #fff;
+  border: 1px solid var(--border, #eceef2);
+  border-radius: 999px;
+  box-shadow: 0 10px 34px rgba(16, 24, 40, 0.18);
+  padding: 7px 10px;
 }
 
 .bottom-nav__tab {
@@ -17,7 +19,7 @@
   flex-direction: column;
   align-items: center;
   gap: 3px;
-  padding: 6px 2px;
+  padding: 5px 2px;
   color: var(--text-muted, #6b7280);
   transition: color 0.16s ease;
 }
@@ -31,6 +33,9 @@
 .bottom-nav__label {
   font-size: 10px;
   font-weight: 600;
+}
+.bottom-nav__tab.is-active .bottom-nav__label {
+  font-weight: 800;
 }
 .bottom-nav__badge {
   position: absolute;
@@ -54,8 +59,8 @@
   .bottom-nav {
     display: flex;
   }
-  /* Reserve space so the fixed bar never permanently covers the footer. */
+  /* Reserve space so the floating bar never permanently covers the footer. */
   body {
-    padding-bottom: 60px;
+    padding-bottom: 86px;
   }
 }

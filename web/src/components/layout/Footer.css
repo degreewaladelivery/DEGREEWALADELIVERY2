@@ -3,6 +3,11 @@
   color: #c9d2dd;
   margin-top: 56px;
 }
+@media (max-width: 640px) {
+  .site-footer {
+    margin-top: 16px; /* the app-style feed sits closer to the footer */
+  }
+}
 
 .site-footer__inner {
   display: flex;

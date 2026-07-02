@@ -1,6 +1,6 @@
-/* ===================== MOBILE EXPLORE (Zomato-style header) ===================== */
-/* Hidden on desktop; swapped in for the big hero on phones (see 640px query below). */
-.mobile-explore { display: none; }
+/* ===================== MOBILE HOME (Zomato-style feed) ===================== */
+/* Hidden on desktop; becomes the entire home page on phones (see 640px query). */
+.mx { display: none; }
 
 /* ===================== HERO ===================== */
 .hero {
@@ -469,129 +469,391 @@
   .app-cta__stores, .app-cta__features { justify-content: center; align-items: center; }
   .app-cta__phone { order: -1; }
 }
+/* On phones the home page becomes a Zomato-style app feed: the desktop
+   sections hide and the .mx section takes over the whole page. */
 @media (max-width: 640px) {
-  /* The compact location+search header replaces the big hero on phones. */
-  .hero { display: none; }
+  .dt-only { display: none; }
 
-  .mobile-explore {
-    display: block;
-    background: #fff;
-    padding-block: 14px 18px;
-  }
-  .mobile-explore__inner {
+  /* display: contents lifts the children into .home's flow, so the sticky
+     search bar and category rail stay pinned while the whole feed scrolls. */
+  .mx { display: contents; }
+
+  /* ---- Location + avatar -------------------------------------------- */
+  .mx-top {
     display: flex;
-    flex-direction: column;
+    align-items: center;
+    justify-content: space-between;
     gap: 12px;
+    padding-block: 12px 4px;
   }
-  .mobile-explore__location {
+  .mx-loc {
     display: flex;
-    align-items: center;
-    gap: 8px;
-    align-self: flex-start;
+    align-items: flex-start;
+    gap: 6px;
+    min-width: 0;
+    text-align: left;
   }
-  .mobile-explore__location-icon { color: var(--brand, #ff6b00); display: inline-flex; }
-  .mobile-explore__location-text {
+  .mx-loc__pin { color: var(--brand, #ff6b00); display: inline-flex; margin-top: 1px; }
+  .mx-loc__text {
     display: flex;
     flex-direction: column;
-    align-items: flex-start;
-    line-height: 1.15;
+    min-width: 0;
+    line-height: 1.3;
   }
-  .mobile-explore__location-text small { font-size: 10px; color: var(--text-muted, #6b7280); }
-  .mobile-explore__location-text strong { font-size: 14px; font-weight: 700; }
+  .mx-loc__text strong { font-size: 16.5px; font-weight: 800; letter-spacing: -0.01em; }
+  .mx-loc__text small {
+    font-size: 11.5px;
+    color: var(--text-muted, #6b7280);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+  .mx-avatar {
+    width: 36px;
+    height: 36px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, var(--brand, #ff6b00), #ff9446);
+    color: #fff;
+    font-weight: 800;
+    font-size: 15px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+  }
 
-  .mobile-explore__search {
+  /* ---- Sticky search + VEG toggle ------------------------------------ */
+  .mx-searchbar {
+    position: sticky;
+    top: 0;
+    z-index: 46;
+    background: #fff;
+    padding: 8px 0 10px; /* 8 + 46 + 10 = 64px tall; .mx-cats sticks below it */
+  }
+  .mx-searchbar__row { display: flex; align-items: center; gap: 12px; }
+  .mx-search {
+    flex: 1;
+    min-width: 0;
     display: flex;
     align-items: center;
-    gap: 8px;
-    background: var(--surface, #f4f6f9);
-    border: 1px solid var(--border, #eceef2);
-    border-radius: var(--radius-pill, 999px);
-    padding: 11px 16px;
+    gap: 10px;
+    height: 46px;
+    padding: 0 14px;
+    background: #fff;
+    border: 1px solid var(--border-strong, #dfe3ea);
+    border-radius: 14px;
+    box-shadow: 0 2px 10px rgba(16, 24, 40, 0.07);
   }
-  .mobile-explore__search .hero__search-icon { color: var(--text-faint, #9aa0ac); }
-  .mobile-explore__search input {
+  .mx-search__icon { color: var(--brand, #ff6b00); display: inline-flex; }
+  .mx-search input {
     flex: 1;
     min-width: 0;
     border: none;
     outline: none;
     background: transparent;
-    font-size: 14px;
+    font-size: 15px;
     font-family: inherit;
     color: var(--text, #15172b);
   }
-
-  .mobile-explore__banner {
-    margin-top: 14px;
-    border-radius: 16px;
-    overflow: hidden;
+  .mx-search__mic {
+    color: var(--brand, #ff6b00);
+    display: inline-flex;
+    border-left: 1px solid var(--border, #eceef2);
+    padding-left: 10px;
   }
-  .mobile-explore__banner img {
+  .mx-veg {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 3px;
+    flex-shrink: 0;
+  }
+  .mx-veg small { font-size: 10px; font-weight: 800; letter-spacing: 0.06em; }
+  .mx-veg__track {
+    width: 34px;
+    height: 18px;
+    border-radius: 999px;
+    background: #d7dbe0;
+    position: relative;
+    display: block;
+  }
+  .mx-veg__knob {
+    position: absolute;
+    top: 2px;
+    left: 2px;
+    width: 14px;
+    height: 14px;
+    border-radius: 50%;
+    background: #fff;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.25);
+  }
+
+  /* ---- Promo banner (full-bleed) -------------------------------------- */
+  .mx-banner { position: relative; }
+  .mx-banner img {
     display: block;
     width: 100%;
-    aspect-ratio: 16 / 9;
+    aspect-ratio: 1 / 0.9;        /* trims the bottom edge (hides the watermark) */
     object-fit: cover;
     object-position: center top;
   }
+  .mx-banner__cta {
+    position: absolute;
+    left: 50%;
+    transform: translateX(-50%);
+    bottom: 16px;
+    background: var(--brand, #ff6b00);
+    color: #fff;
+    font-weight: 800;
+    font-size: 13px;
+    letter-spacing: 0.08em;
+    padding: 10px 24px;
+    border-radius: 999px;
+    box-shadow: 0 8px 22px rgba(0, 0, 0, 0.3);
+  }
 
-  .mobile-explore__chips {
+  /* ---- Sticky category rail ------------------------------------------- */
+  .mx-cats {
+    position: sticky;
+    top: 64px; /* right below the sticky search bar */
+    z-index: 45;
+    background: #fff;
+    border-bottom: 1px solid var(--border, #eceef2);
+  }
+  .mx-cats__rail {
     display: flex;
-    gap: 8px;
+    align-items: stretch;
+    gap: 16px;
     overflow-x: auto;
-    margin-top: 14px;
     scrollbar-width: none;
+    padding: 12px 16px 0;
   }
-  .mobile-explore__chips::-webkit-scrollbar { display: none; }
-  .mobile-explore__chips .chip { flex: 0 0 auto; }
-
-  /* Categories: circular icons in a row, Zomato-style (no card chrome/count/CTA). */
-  #categories .cat-card {
+  .mx-cats__rail::-webkit-scrollbar { display: none; }
+  .mx-offer-tile {
+    flex: 0 0 auto;
+    width: 78px;
+    border: 1px solid var(--border, #eceef2);
+    border-radius: 14px;
+    background: var(--brand-tint, #fff3e0);
+    display: flex;
+    flex-direction: column;
     align-items: center;
-    background: transparent;
-    border: none;
-    box-shadow: none;
+    justify-content: center;
+    gap: 6px;
+    text-align: center;
+    padding: 8px 6px;
+    margin-bottom: 9px;
   }
-  #categories .cat-card:hover {
-    transform: none;
-    box-shadow: none;
-    border-color: transparent;
+  .mx-offer-tile__top { font-size: 10px; font-weight: 800; line-height: 1.3; }
+  .mx-offer-tile__cta {
+    font-size: 10px;
+    font-weight: 700;
+    color: #fff;
+    background: var(--brand, #ff6b00);
+    border-radius: 999px;
+    padding: 3px 9px;
   }
-  #categories .cat-card__thumb {
-    width: 68px;
-    height: 68px;
+  .mx-cat {
+    flex: 0 0 auto;
+    width: 64px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 6px;
+  }
+  .mx-cat__img {
+    width: 58px;
+    height: 58px;
     border-radius: 50%;
     overflow: hidden;
     border: 1px solid var(--border, #eceef2);
+    display: block;
   }
-  #categories .cat-card__count,
-  #categories .cat-card__cta { display: none; }
-  #categories .cat-card__body { padding: 8px 0 0; text-align: center; }
-  #categories .cat-card__name {
-    font-size: 12px;
+  .mx-cat__name { font-size: 12px; font-weight: 600; white-space: nowrap; }
+  .mx-cat__bar {
+    width: 26px;
+    height: 3px;
+    border-radius: 999px;
+    background: transparent;
+    margin-bottom: 6px;
+  }
+  .mx-cat.is-active .mx-cat__name { font-weight: 800; }
+  .mx-cat.is-active .mx-cat__bar { background: var(--brand, #ff6b00); }
+
+  /* ---- Filter pills ---------------------------------------------------- */
+  .mx-filters {
+    display: flex;
+    gap: 8px;
+    overflow-x: auto;
+    scrollbar-width: none;
+    padding-block: 12px 4px;
+  }
+  .mx-filters::-webkit-scrollbar { display: none; }
+  .mx-pill {
+    flex: 0 0 auto;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    border: 1px solid var(--border-strong, #dfe3ea);
+    background: #fff;
+    border-radius: 12px;
+    padding: 9px 13px;
+    font-size: 13px;
     font-weight: 600;
-    margin-bottom: 0;
-    white-space: nowrap;
+    color: var(--text, #15172b);
+  }
+  .mx-bolt { color: #1ca34a; display: inline-flex; }
+  .mx-fast {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    color: #1ca34a;
+    font-size: 12.5px;
+    font-weight: 700;
   }
 
-  /* Featured panel: drop the marketing copy/CTA, keep it to a compact heading + cards. */
-  .featured-panel__desc,
-  .featured-panel__cta { display: none; }
-  .featured-panel__title { font-size: 22px; }
+  /* ---- Section headings ------------------------------------------------ */
+  .mx-heading {
+    font-size: 13px;
+    font-weight: 700;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: var(--text-muted, #6b7280);
+  }
+  .mx-subheading { font-size: 14px; color: var(--text-faint, #9aa0ac); margin-top: 4px; }
 
-  .carousel__arrow { display: none; } /* swipe to scroll on mobile */
-  .carousel { gap: 0; }
-  .carousel__rail { gap: 20px; }
-  .carousel__item { width: 74px; }
+  /* ---- Recommended rail ------------------------------------------------ */
+  .mx-reco { padding-block: 14px 6px; }
+  .mx-reco__rail {
+    display: flex;
+    gap: 14px;
+    overflow-x: auto;
+    scrollbar-width: none;
+    margin-top: 12px;
+    padding-bottom: 6px;
+  }
+  .mx-reco__rail::-webkit-scrollbar { display: none; }
+  .mx-reco-card {
+    flex: 0 0 auto;
+    width: 168px;
+    display: flex;
+    flex-direction: column;
+  }
+  .mx-reco-card__img {
+    position: relative;
+    display: block;
+    width: 100%;
+    height: 150px;
+    border-radius: 18px;
+    overflow: hidden;
+  }
+  .mx-reco-card__offer {
+    position: absolute;
+    top: 0;
+    left: 0;
+    max-width: 92%;
+    background: linear-gradient(135deg, #c62828, #8e0000);
+    color: #fff;
+    font-size: 10px;
+    font-weight: 800;
+    padding: 5px 9px;
+    border-radius: 18px 0 14px 0;
+  }
+  .mx-reco-card__rating {
+    position: absolute;
+    left: 8px;
+    bottom: 8px;
+    background: var(--success, #2e9e5b);
+    color: #fff;
+    font-size: 12px;
+    font-weight: 800;
+    padding: 2px 7px;
+    border-radius: 8px;
+  }
+  .mx-reco-card__name {
+    font-size: 15.5px;
+    font-weight: 700;
+    margin-top: 8px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+  .mx-reco-card .mx-fast { margin-top: 3px; }
 
-  .featured-panel { padding: 22px; border-radius: 22px; gap: 22px; }
-  .featured-panel__shop { width: 170px; }
-
-  .stats-card { padding: 22px; }
-  .app-cta { padding: 28px 22px; border-radius: 22px; }
-  .app-cta__features { grid-template-columns: 1fr; }
-}
-
-@media (max-width: 560px) {
-  .why { min-width: 40%; }
-  .stats-card { grid-template-columns: 1fr; }
+  /* ---- Featured feed (big cards) --------------------------------------- */
+  .mx-feed { padding-block: 16px 8px; }
+  .mx-feed .mx-subheading { margin-bottom: 12px; }
+  .mx-feat {
+    display: block;
+    background: #fff;
+    border: 1px solid var(--border, #eceef2);
+    border-radius: 20px;
+    overflow: hidden;
+    box-shadow: var(--shadow-sm, 0 1px 2px rgba(16, 24, 40, 0.06));
+    margin-bottom: 16px;
+  }
+  .mx-feat__img { position: relative; display: block; height: 200px; }
+  .mx-feat__bookmark {
+    position: absolute;
+    top: 12px;
+    right: 12px;
+    color: #fff;
+    display: inline-flex;
+    filter: drop-shadow(0 2px 6px rgba(0, 0, 0, 0.45));
+  }
+  .mx-feat__dots {
+    position: absolute;
+    bottom: 10px;
+    left: 50%;
+    transform: translateX(-50%);
+    display: flex;
+    gap: 5px;
+  }
+  .mx-feat__dot {
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    background: rgba(255, 255, 255, 0.55);
+  }
+  .mx-feat__dot.is-on { background: #fff; }
+  .mx-feat__body { display: block; padding: 12px 14px 14px; }
+  .mx-feat__row {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 10px;
+  }
+  .mx-feat__name { font-size: 19px; font-weight: 800; letter-spacing: -0.01em; }
+  .mx-feat__rating {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-end;
+    gap: 2px;
+    flex-shrink: 0;
+  }
+  .mx-feat__rating-pill {
+    background: var(--success, #2e9e5b);
+    color: #fff;
+    font-size: 13px;
+    font-weight: 800;
+    padding: 3px 8px;
+    border-radius: 9px;
+  }
+  .mx-feat__rating small { font-size: 11px; color: var(--text-muted, #6b7280); }
+  .mx-feat .mx-fast { margin-top: 4px; }
+  .mx-feat__divider {
+    display: block;
+    border-top: 1.5px dashed var(--border-strong, #dfe3ea);
+    margin: 11px 0;
+  }
+  .mx-feat__offer {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 13px;
+    font-weight: 700;
+    color: #334155;
+  }
+  .mx-feat__offer-icon { color: #2563eb; display: inline-flex; }
 }
 
