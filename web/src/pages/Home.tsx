@@ -140,7 +140,9 @@ export function Home() {
               <Link key={c.id} to={`/category/${c.key}`} className="mx-reco-card">
                 <span className="mx-reco-card__img">
                   <Thumb src={getCategoryImage(c.key)} emoji={c.emoji} tint={c.tint} color={c.color} alt={c.name} fontSize={40} />
-                  <span className="mx-reco-card__offer">{MX_OFFERS[i % MX_OFFERS.length]}</span>
+                  {c.key === 'food' && (
+                    <span className="mx-reco-card__offer">{MX_OFFERS[i % MX_OFFERS.length]}</span>
+                  )}
                 </span>
                 <strong className="mx-reco-card__name">{c.name}</strong>
                 <span className="mx-fast"><ZapIcon size={12} /> {getShopCount(c.key)} shops near you</span>
