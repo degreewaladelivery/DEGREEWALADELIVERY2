@@ -193,6 +193,22 @@ export const HeadphonesIcon = ({ size }: IconProps) => (
 
 /* ---- Header ------------------------------------------------------------- */
 
+/** House — bottom-nav "Home" tab */
+export const HomeIcon = ({ size }: IconProps) => (
+  <Svg size={size}>
+    <path d="M3 11l9-8 9 8" />
+    <path d="M5 10v10a1 1 0 0 0 1 1h4v-6h4v6h4a1 1 0 0 0 1-1V10" />
+  </Svg>
+);
+
+/** Person — bottom-nav "Account" tab */
+export const UserIcon = ({ size }: IconProps) => (
+  <Svg size={size}>
+    <circle cx="12" cy="8" r="4" />
+    <path d="M4 21c0-4 3.5-7 8-7s8 3 8 7" />
+  </Svg>
+);
+
 /** Shopping cart — header cart button */
 export const CartIcon = ({ size }: IconProps) => (
   <Svg size={size}>

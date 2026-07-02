@@ -59,6 +59,52 @@ export function Home() {
 
   return (
     <div className="home">
+      {/* ============ MOBILE EXPLORE (Zomato-style compact header) ============ */}
+      {/* Desktop keeps the big hero below; on phones this replaces it (see Home.css). */}
+      <section className="mobile-explore">
+        <div className="container mobile-explore__inner">
+          <button type="button" className="mobile-explore__location">
+            <span className="mobile-explore__location-icon"><MapPinIcon size={16} /></span>
+            <span className="mobile-explore__location-text">
+              <small>Delivering to</small>
+              <strong>Balehonnuru ▾</strong>
+            </span>
+          </button>
+
+          <form
+            className="mobile-explore__search"
+            onSubmit={(e) => {
+              e.preventDefault();
+              navigate('/category/food');
+            }}
+          >
+            <span className="hero__search-icon"><SearchIcon size={18} /></span>
+            <input
+              value={query}
+              onChange={(e) => setQuery(e.target.value)}
+              placeholder="Search for food, grocery, medicine…"
+              aria-label="Search"
+            />
+          </form>
+        </div>
+
+        {heroArt && (
+          <div className="container">
+            <div className="mobile-explore__banner">
+              <img src={heroArt} alt="Degreewala delivery" />
+            </div>
+          </div>
+        )}
+
+        <div className="container">
+          <div className="mobile-explore__chips">
+            {POPULAR_SEARCHES.map((p) => (
+              <Link key={p} to="/category/food" className="chip">{p}</Link>
+            ))}
+          </div>
+        </div>
+      </section>
+
       {/* ================= HERO ================= */}
       <section className="hero">
         <div className="container hero__inner">

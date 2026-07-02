@@ -1,3 +1,7 @@
+/* ===================== MOBILE EXPLORE (Zomato-style header) ===================== */
+/* Hidden on desktop; swapped in for the big hero on phones (see 640px query below). */
+.mobile-explore { display: none; }
+
 /* ===================== HERO ===================== */
 .hero {
   background: #ffffff;
@@ -466,25 +470,117 @@
   .app-cta__phone { order: -1; }
 }
 @media (max-width: 640px) {
-  /* Full-bleed hero image: flush under the nav, edge-to-edge, whole image
-     visible, no rounded corners. (Text keeps its side padding.) */
-  .hero__inner { padding-block: 0 28px; gap: 20px; }
-  .hero__right { margin-inline: -16px; } /* cancel the container's side padding */
-  .hero__img {
-    aspect-ratio: 1 / 0.9;        /* slightly shorter than square */
-    height: auto;
-    object-fit: cover;
-    object-position: center top;  /* keep the top, trim the bottom (hides the watermark) */
-    border-radius: 0;             /* square edges */
-    box-shadow: none;             /* no floating shadow on a full-bleed banner */
+  /* The compact location+search header replaces the big hero on phones. */
+  .hero { display: none; }
+
+  .mobile-explore {
+    display: block;
+    background: #fff;
+    padding-block: 14px 18px;
   }
-  .hero__sub { font-size: 15px; }
-  .hero__badges { gap: 10px; margin-top: 22px; }
+  .mobile-explore__inner {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+  }
+  .mobile-explore__location {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    align-self: flex-start;
+  }
+  .mobile-explore__location-icon { color: var(--brand, #ff6b00); display: inline-flex; }
+  .mobile-explore__location-text {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    line-height: 1.15;
+  }
+  .mobile-explore__location-text small { font-size: 10px; color: var(--text-muted, #6b7280); }
+  .mobile-explore__location-text strong { font-size: 14px; font-weight: 700; }
+
+  .mobile-explore__search {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    background: var(--surface, #f4f6f9);
+    border: 1px solid var(--border, #eceef2);
+    border-radius: var(--radius-pill, 999px);
+    padding: 11px 16px;
+  }
+  .mobile-explore__search .hero__search-icon { color: var(--text-faint, #9aa0ac); }
+  .mobile-explore__search input {
+    flex: 1;
+    min-width: 0;
+    border: none;
+    outline: none;
+    background: transparent;
+    font-size: 14px;
+    font-family: inherit;
+    color: var(--text, #15172b);
+  }
+
+  .mobile-explore__banner {
+    margin-top: 14px;
+    border-radius: 16px;
+    overflow: hidden;
+  }
+  .mobile-explore__banner img {
+    display: block;
+    width: 100%;
+    aspect-ratio: 16 / 9;
+    object-fit: cover;
+    object-position: center top;
+  }
+
+  .mobile-explore__chips {
+    display: flex;
+    gap: 8px;
+    overflow-x: auto;
+    margin-top: 14px;
+    scrollbar-width: none;
+  }
+  .mobile-explore__chips::-webkit-scrollbar { display: none; }
+  .mobile-explore__chips .chip { flex: 0 0 auto; }
+
+  /* Categories: circular icons in a row, Zomato-style (no card chrome/count/CTA). */
+  #categories .cat-card {
+    align-items: center;
+    background: transparent;
+    border: none;
+    box-shadow: none;
+  }
+  #categories .cat-card:hover {
+    transform: none;
+    box-shadow: none;
+    border-color: transparent;
+  }
+  #categories .cat-card__thumb {
+    width: 68px;
+    height: 68px;
+    border-radius: 50%;
+    overflow: hidden;
+    border: 1px solid var(--border, #eceef2);
+  }
+  #categories .cat-card__count,
+  #categories .cat-card__cta { display: none; }
+  #categories .cat-card__body { padding: 8px 0 0; text-align: center; }
+  #categories .cat-card__name {
+    font-size: 12px;
+    font-weight: 600;
+    margin-bottom: 0;
+    white-space: nowrap;
+  }
+
+  /* Featured panel: drop the marketing copy/CTA, keep it to a compact heading + cards. */
+  .featured-panel__desc,
+  .featured-panel__cta { display: none; }
+  .featured-panel__title { font-size: 22px; }
 
   .carousel__arrow { display: none; } /* swipe to scroll on mobile */
   .carousel { gap: 0; }
-  .carousel__rail { gap: 12px; }
-  .carousel__item { width: 150px; }
+  .carousel__rail { gap: 20px; }
+  .carousel__item { width: 74px; }
 
   .featured-panel { padding: 22px; border-radius: 22px; gap: 22px; }
   .featured-panel__shop { width: 170px; }
@@ -499,6 +595,3 @@
   .stats-card { grid-template-columns: 1fr; }
 }
 
-@media (max-width: 400px) {
-  .hero__badges { grid-template-columns: 1fr; }
-}
