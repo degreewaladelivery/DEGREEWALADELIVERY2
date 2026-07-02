@@ -561,33 +561,6 @@
     border-left: 1px solid var(--border, #eceef2);
     padding-left: 10px;
   }
-  .mx-veg {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    gap: 3px;
-    flex-shrink: 0;
-  }
-  .mx-veg small { font-size: 10px; font-weight: 800; letter-spacing: 0.06em; }
-  .mx-veg__track {
-    width: 34px;
-    height: 18px;
-    border-radius: 999px;
-    background: #d7dbe0;
-    position: relative;
-    display: block;
-  }
-  .mx-veg__knob {
-    position: absolute;
-    top: 2px;
-    left: 2px;
-    width: 14px;
-    height: 14px;
-    border-radius: 50%;
-    background: #fff;
-    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.25);
-  }
-
   /* ---- Promo banner (full-bleed) -------------------------------------- */
   .mx-banner { position: relative; }
   .mx-banner img {

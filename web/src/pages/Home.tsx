@@ -95,7 +95,7 @@ export function Home() {
           <span className="mx-avatar" aria-label="Account">A</span>
         </div>
 
-        {/* Sticky search bar + veg toggle */}
+        {/* Sticky search bar */}
         <div className="mx-searchbar">
           <div className="container mx-searchbar__row">
             <form
@@ -114,10 +114,6 @@ export function Home() {
               />
               <span className="mx-search__mic"><MicIcon size={17} /></span>
             </form>
-            <span className="mx-veg">
-              <small>VEG</small>
-              <span className="mx-veg__track"><span className="mx-veg__knob" /></span>
-            </span>
           </div>
         </div>
 
