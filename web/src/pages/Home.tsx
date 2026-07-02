@@ -1,6 +1,6 @@
 import { useRef, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { categories, featuredShops, shops, getShopCount } from '@shared/mockData';
+import { categories, featuredShops, getShopCount } from '@shared/mockData';
 import { categoryPalette } from '@shared/tokens';
 import { Button } from '../components/ui/Button';
 import { CategoryCard } from '../components/cards/CategoryCard';
@@ -34,9 +34,6 @@ const MX_OFFERS = [
 
 /** "By 8.3K+" style vote counts under the rating pill on featured cards. */
 const MX_VOTES = ['By 8.3K+', 'By 2.1K+', 'By 950+', 'By 1.4K+'];
-
-/** Top-rated shops across all categories for the "Recommended" rail. */
-const MX_RECO_SHOPS = [...shops].sort((a, b) => b.rating - a.rating).slice(0, 8);
 
 const HERO_BADGES = [
   { Icon: GridIcon, title: 'Wide Range', sub: 'of Categories' },
@@ -84,7 +81,7 @@ export function Home() {
     <div className="home">
       {/* ============ MOBILE HOME (Zomato-style app feed) ============ */}
       {/* Hidden on desktop. `display: contents` on mobile, so the sticky
-          search bar / category rail stick for the whole page. */}
+          search bar stays pinned for the whole page. */}
       <section className="mx" aria-label="Explore">
         {/* Location + profile avatar */}
         <div className="container mx-top">
@@ -132,25 +129,6 @@ export function Home() {
           </div>
         )}
 
-        {/* Sticky category rail: offer tile + circular category shortcuts */}
-        <div className="mx-cats">
-          <div className="mx-cats__rail">
-            <Link to="/#offers" className="mx-offer-tile">
-              <span className="mx-offer-tile__top">MEALS<br />UNDER ₹99</span>
-              <span className="mx-offer-tile__cta">Explore ›</span>
-            </Link>
-            {categories.map((c, i) => (
-              <Link key={c.id} to={`/category/${c.key}`} className={'mx-cat' + (i === 0 ? ' is-active' : '')}>
-                <span className="mx-cat__img">
-                  <Thumb src={getCategoryImage(c.key)} emoji={c.emoji} tint={c.tint} color={c.color} alt={c.name} fontSize={28} />
-                </span>
-                <span className="mx-cat__name">{c.name}</span>
-                <span className="mx-cat__bar" />
-              </Link>
-            ))}
-          </div>
-        </div>
-
         {/* Filter pills */}
         <div className="container mx-filters">
           <button type="button" className="mx-pill"><SlidersIcon size={14} /> Filters ▾</button>
@@ -158,24 +136,20 @@ export function Home() {
           <button type="button" className="mx-pill">No packaging charges</button>
         </div>
 
-        {/* Recommended rail */}
+        {/* Recommended rail (categories) */}
         <div className="container mx-reco">
           <h2 className="mx-heading">Recommended for you</h2>
           <div className="mx-reco__rail">
-            {MX_RECO_SHOPS.map((s, i) => {
-              const pal = categoryPalette[s.categoryKey];
-              return (
-                <Link key={s.id} to={`/shop/${s.id}`} className="mx-reco-card">
-                  <span className="mx-reco-card__img">
-                    <Thumb src={getShopImage(s.id)} emoji={pal.emoji} tint={pal.tint} color={pal.border} alt={s.name} fontSize={40} />
-                    <span className="mx-reco-card__offer">{MX_OFFERS[i % MX_OFFERS.length]}</span>
-                    <span className="mx-reco-card__rating">★ {s.rating.toFixed(1)}</span>
-                  </span>
-                  <strong className="mx-reco-card__name">{s.name}</strong>
-                  <span className="mx-fast"><ZapIcon size={12} /> Near &amp; Fast</span>
-                </Link>
-              );
-            })}
+            {categories.map((c, i) => (
+              <Link key={c.id} to={`/category/${c.key}`} className="mx-reco-card">
+                <span className="mx-reco-card__img">
+                  <Thumb src={getCategoryImage(c.key)} emoji={c.emoji} tint={c.tint} color={c.color} alt={c.name} fontSize={40} />
+                  <span className="mx-reco-card__offer">{MX_OFFERS[i % MX_OFFERS.length]}</span>
+                </span>
+                <strong className="mx-reco-card__name">{c.name}</strong>
+                <span className="mx-fast"><ZapIcon size={12} /> {getShopCount(c.key)} shops near you</span>
+              </Link>
+            ))}
           </div>
         </div>
 
