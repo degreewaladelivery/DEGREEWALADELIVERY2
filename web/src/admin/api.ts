@@ -13,8 +13,6 @@ export interface CategoryInput {
   name: string;
   image_url: string | null;
   offer_badge: string | null;
-  color: string;
-  tint: string;
   sort_order: number;
   is_active: boolean;
 }
