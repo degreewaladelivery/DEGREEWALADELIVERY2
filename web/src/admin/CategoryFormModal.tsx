@@ -15,6 +15,8 @@ export function CategoryFormModal({
 }) {
   const [name, setName] = useState(category?.name ?? '');
   const [offerBadge, setOfferBadge] = useState(category?.offer_badge ?? '');
+  const [color, setColor] = useState(category?.color ?? '#FF6B00');
+  const [tint, setTint] = useState(category?.tint ?? '#FFF3E0');
   const [sortOrder, setSortOrder] = useState(category?.sort_order ?? 0);
   const [isActive, setIsActive] = useState(category?.is_active ?? true);
   const [imageFile, setImageFile] = useState<File | null>(null);
@@ -42,6 +44,8 @@ export function CategoryFormModal({
         name: name.trim(),
         image_url: imageUrl,
         offer_badge: offerBadge.trim() || null,
+        color,
+        tint,
         sort_order: sortOrder,
         is_active: isActive,
       };
@@ -81,6 +85,17 @@ export function CategoryFormModal({
             placeholder="e.g. 20% OFF"
           />
         </label>
+
+        <div className="admin-form__row">
+          <label className="admin-field">
+            <span>Accent colour</span>
+            <input type="color" value={color} onChange={(e) => setColor(e.target.value)} />
+          </label>
+          <label className="admin-field">
+            <span>Tint (fallback background)</span>
+            <input type="color" value={tint} onChange={(e) => setTint(e.target.value)} />
+          </label>
+        </div>
 
         <label className="admin-field">
           <span>Sort order</span>

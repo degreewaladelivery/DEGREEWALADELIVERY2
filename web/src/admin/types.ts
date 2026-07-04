@@ -5,6 +5,10 @@ export interface CategoryRow {
   name: string;
   image_url: string | null;
   offer_badge: string | null;
+  /** Accent colour — drives the category page's hero banner + homepage tile hover/badge. */
+  color: string;
+  /** Soft background tint — used as the emoji-fallback tile colour if no photo is set. */
+  tint: string;
   sort_order: number;
   is_active: boolean;
   created_at: string;

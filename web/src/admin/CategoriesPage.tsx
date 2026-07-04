@@ -42,6 +42,7 @@ export function CategoriesPage() {
               {cat.offer_badge && <span className="admin-card__badge">{cat.offer_badge}</span>}
             </div>
             <div className="admin-card__body">
+              <span className="admin-swatch" style={{ background: cat.color }} title={cat.color} />
               <strong>{cat.name}</strong>
               {!cat.is_active && <span className="admin-tag admin-tag--muted">Inactive</span>}
               <div className="admin-card__actions">
