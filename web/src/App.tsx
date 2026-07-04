@@ -1,4 +1,4 @@
-import { createBrowserRouter, RouterProvider } from 'react-router-dom';
+import { createBrowserRouter, RouterProvider, Outlet } from 'react-router-dom';
 import { Layout } from './components/layout/Layout';
 import { Home } from './pages/Home';
 import { ShopList } from './pages/ShopList';
@@ -8,10 +8,18 @@ import { Payment } from './pages/Payment';
 import { OrderSuccess } from './pages/OrderSuccess';
 import { Login } from './pages/Login';
 import { ComingSoon, RouteError } from './pages/ComingSoon';
+import { AdminAuthProvider } from './admin/AdminAuthContext';
+import { AdminLogin } from './admin/AdminLogin';
+import { AdminLayout } from './admin/AdminLayout';
+import { RequireAdmin } from './admin/RequireAdmin';
+import { CategoriesPage } from './admin/CategoriesPage';
+import { CategoryDetailPage } from './admin/CategoryDetailPage';
 
 /**
- * The app's route map. Every page shares the <Layout> (header + footer);
- * react-router swaps the matched page into <Layout>'s <Outlet/>.
+ * The app's route map. Every customer-facing page shares the <Layout>
+ * (header + footer); react-router swaps the matched page into <Layout>'s
+ * <Outlet/>. The /admin/* tree is a separate, self-contained back-office
+ * app (its own layout + auth guard, no marketing chrome).
  */
 const router = createBrowserRouter([
   {
@@ -28,6 +36,29 @@ const router = createBrowserRouter([
       { path: '/track', element: <ComingSoon title="Track Your Order" /> },
       { path: '/help', element: <ComingSoon title="Help Center" /> },
       { path: '*', element: <ComingSoon title="Page not found" /> },
+    ],
+  },
+  {
+    path: '/admin',
+    element: (
+      <AdminAuthProvider>
+        <Outlet />
+      </AdminAuthProvider>
+    ),
+    errorElement: <RouteError />,
+    children: [
+      { path: 'login', element: <AdminLogin /> },
+      {
+        element: (
+          <RequireAdmin>
+            <AdminLayout />
+          </RequireAdmin>
+        ),
+        children: [
+          { path: 'categories', element: <CategoriesPage /> },
+          { path: 'categories/:categoryId', element: <CategoryDetailPage /> },
+        ],
+      },
     ],
   },
 ]);

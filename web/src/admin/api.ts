@@ -1,0 +1,128 @@
+import { supabase } from '../lib/supabase';
+import type { CategoryRow, SubcategoryRow, ProductRow } from './types';
+
+/* ---- Categories ----------------------------------------------------------- */
+
+export async function listCategories(): Promise<CategoryRow[]> {
+  const { data, error } = await supabase.from('categories').select('*').order('sort_order');
+  if (error) throw error;
+  return data;
+}
+
+export interface CategoryInput {
+  name: string;
+  image_url: string | null;
+  offer_badge: string | null;
+  sort_order: number;
+  is_active: boolean;
+}
+
+export async function createCategory(input: CategoryInput): Promise<CategoryRow> {
+  const { data, error } = await supabase.from('categories').insert(input).select().single();
+  if (error) throw error;
+  return data;
+}
+
+export async function updateCategory(id: string, input: Partial<CategoryInput>): Promise<CategoryRow> {
+  const { data, error } = await supabase.from('categories').update(input).eq('id', id).select().single();
+  if (error) throw error;
+  return data;
+}
+
+export async function deleteCategory(id: string): Promise<void> {
+  const { error } = await supabase.from('categories').delete().eq('id', id);
+  if (error) throw error;
+}
+
+/* ---- Subcategories ---------------------------------------------------------- */
+
+export async function listSubcategories(categoryId: string): Promise<SubcategoryRow[]> {
+  const { data, error } = await supabase
+    .from('subcategories')
+    .select('*')
+    .eq('category_id', categoryId)
+    .order('sort_order');
+  if (error) throw error;
+  return data;
+}
+
+export interface SubcategoryInput {
+  category_id: string;
+  name: string;
+  sort_order: number;
+  is_active: boolean;
+}
+
+export async function createSubcategory(input: SubcategoryInput): Promise<SubcategoryRow> {
+  const { data, error } = await supabase.from('subcategories').insert(input).select().single();
+  if (error) throw error;
+  return data;
+}
+
+export async function updateSubcategory(id: string, input: Partial<SubcategoryInput>): Promise<SubcategoryRow> {
+  const { data, error } = await supabase.from('subcategories').update(input).eq('id', id).select().single();
+  if (error) throw error;
+  return data;
+}
+
+export async function deleteSubcategory(id: string): Promise<void> {
+  const { error } = await supabase.from('subcategories').delete().eq('id', id);
+  if (error) throw error;
+}
+
+/* ---- Products (items) --------------------------------------------------- */
+
+export async function listProducts(categoryId: string): Promise<ProductRow[]> {
+  const { data, error } = await supabase
+    .from('products')
+    .select('*')
+    .eq('category_id', categoryId)
+    .order('created_at', { ascending: false });
+  if (error) throw error;
+  return data;
+}
+
+export interface ProductInput {
+  category_id: string;
+  subcategory_id: string | null;
+  name: string;
+  description: string | null;
+  barcode: string | null;
+  gst_percent: number;
+  mrp: number;
+  retail_price: number;
+  image_url: string | null;
+  is_active: boolean;
+}
+
+export async function createProduct(input: ProductInput): Promise<ProductRow> {
+  const { data, error } = await supabase.from('products').insert(input).select().single();
+  if (error) throw error;
+  return data;
+}
+
+export async function updateProduct(id: string, input: Partial<ProductInput>): Promise<ProductRow> {
+  const { data, error } = await supabase.from('products').update(input).eq('id', id).select().single();
+  if (error) throw error;
+  return data;
+}
+
+export async function deleteProduct(id: string): Promise<void> {
+  const { error } = await supabase.from('products').delete().eq('id', id);
+  if (error) throw error;
+}
+
+/* ---- Image upload --------------------------------------------------------- */
+
+/** Uploads to the public `catalog-images` bucket and returns its public URL. */
+export async function uploadCatalogImage(file: File, folder: 'categories' | 'products'): Promise<string> {
+  const ext = file.name.split('.').pop() ?? 'jpg';
+  const path = `${folder}/${crypto.randomUUID()}.${ext}`;
+  const { error } = await supabase.storage.from('catalog-images').upload(path, file, {
+    cacheControl: '3600',
+    upsert: false,
+  });
+  if (error) throw error;
+  const { data } = supabase.storage.from('catalog-images').getPublicUrl(path);
+  return data.publicUrl;
+}

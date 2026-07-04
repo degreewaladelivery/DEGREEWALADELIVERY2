@@ -22,11 +22,16 @@
  * src/main.tsx (and, optionally, this file).
  */
 
+/** The admin panel (/admin/*) is a real working tool, not part of the design
+ *  preview — it's exempted from the click/submit interceptors below. */
+const isAdminRoute = () => window.location.pathname.startsWith('/admin');
+
 export function enableDesignPreviewMode() {
   // Neutralise clicks on links / buttons.
   document.addEventListener(
     'click',
     (e) => {
+      if (isAdminRoute()) return;
       const target = e.target as HTMLElement | null;
       const el = target?.closest('a, button, [role="button"]');
       // Exception: keep the mobile hamburger (☰) menu toggle clickable.
@@ -39,5 +44,12 @@ export function enableDesignPreviewMode() {
   );
 
   // Neutralise form submissions (search, login, checkout) incl. Enter key.
-  document.addEventListener('submit', (e) => e.preventDefault(), true);
+  document.addEventListener(
+    'submit',
+    (e) => {
+      if (isAdminRoute()) return;
+      e.preventDefault();
+    },
+    true,
+  );
 }
