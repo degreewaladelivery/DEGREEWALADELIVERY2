@@ -1,25 +1,17 @@
 import { useEffect, useState, useCallback } from 'react';
 import { Link, useParams } from 'react-router-dom';
-import {
-  listCategories,
-  listSubcategories,
-  listProducts,
-  deleteSubcategory,
-  deleteProduct,
-} from './api';
-import type { CategoryRow, SubcategoryRow, ProductRow } from './types';
+import { listCategories, listSubcategories, listShops, deleteSubcategory } from './api';
+import type { CategoryRow, SubcategoryRow, ShopRow } from './types';
 import { SubcategoryFormModal } from './SubcategoryFormModal';
-import { ProductFormModal } from './ProductFormModal';
 
 export function CategoryDetailPage() {
   const { categoryId } = useParams<{ categoryId: string }>();
   const [category, setCategory] = useState<CategoryRow | null>(null);
   const [subcategories, setSubcategories] = useState<SubcategoryRow[]>([]);
-  const [products, setProducts] = useState<ProductRow[]>([]);
+  const [shops, setShops] = useState<ShopRow[]>([]);
   const [error, setError] = useState<string | null>(null);
 
   const [editingSub, setEditingSub] = useState<SubcategoryRow | null | 'new'>(null);
-  const [editingProduct, setEditingProduct] = useState<ProductRow | null | 'new'>(null);
 
   const load = useCallback(() => {
     if (!categoryId) return;
@@ -27,7 +19,9 @@ export function CategoryDetailPage() {
       .then((cats) => setCategory(cats.find((c) => c.id === categoryId) ?? null))
       .catch((err) => setError(err instanceof Error ? err.message : 'Failed to load category'));
     listSubcategories(categoryId).then(setSubcategories).catch(() => {});
-    listProducts(categoryId).then(setProducts).catch(() => {});
+    listShops()
+      .then((all) => setShops(all.filter((s) => s.category_id === categoryId)))
+      .catch(() => {});
   }, [categoryId]);
 
   useEffect(load, [load]);
@@ -35,14 +29,8 @@ export function CategoryDetailPage() {
   if (!categoryId) return null;
 
   const onDeleteSub = async (sub: SubcategoryRow) => {
-    if (!confirm(`Delete subcategory "${sub.name}"? Its items move to "no subcategory".`)) return;
+    if (!confirm(`Delete subcategory "${sub.name}"? Shops tagged with it become untagged.`)) return;
     await deleteSubcategory(sub.id);
-    load();
-  };
-
-  const onDeleteProduct = async (p: ProductRow) => {
-    if (!confirm(`Delete item "${p.name}"?`)) return;
-    await deleteProduct(p.id);
     load();
   };
 
@@ -60,7 +48,7 @@ export function CategoryDetailPage() {
 
       {error && <p className="admin-login__error">{error}</p>}
 
-      {/* ---- Subcategories ---- */}
+      {/* ---- Subcategories (classify shops within this category) ---- */}
       <section className="admin-section">
         <div className="admin-section__head">
           <h2>Subcategories</h2>
@@ -70,7 +58,7 @@ export function CategoryDetailPage() {
         </div>
         {subcategories.length === 0 ? (
           <p className="admin-empty">
-            No subcategories — items added below will show directly under this category.
+            No subcategories — e.g. add "Veg" / "Non-Veg" to tag shops in this category.
           </p>
         ) : (
           <div className="admin-pills">
@@ -94,17 +82,16 @@ export function CategoryDetailPage() {
         )}
       </section>
 
-      {/* ---- Items ---- */}
+      {/* ---- Shops in this category ---- */}
       <section className="admin-section">
         <div className="admin-section__head">
-          <h2>Items</h2>
-          <button className="admin-btn admin-btn--primary admin-btn--sm" onClick={() => setEditingProduct('new')}>
-            + Add Item
-          </button>
+          <h2>Shops</h2>
+          <Link to="/admin/shops" className="admin-btn admin-btn--sm">
+            + Add Shop
+          </Link>
         </div>
-
-        {products.length === 0 ? (
-          <p className="admin-empty">No items yet.</p>
+        {shops.length === 0 ? (
+          <p className="admin-empty">No shops in this category yet.</p>
         ) : (
           <table className="admin-table">
             <thead>
@@ -112,32 +99,27 @@ export function CategoryDetailPage() {
                 <th></th>
                 <th>Name</th>
                 <th>Subcategory</th>
-                <th>MRP</th>
-                <th>Retail</th>
-                <th>GST%</th>
+                <th>Rating</th>
+                <th>Delivery</th>
                 <th>Status</th>
                 <th></th>
               </tr>
             </thead>
             <tbody>
-              {products.map((p) => (
-                <tr key={p.id} className={p.is_active ? '' : 'is-inactive'}>
+              {shops.map((s) => (
+                <tr key={s.id} className={s.is_active ? '' : 'is-inactive'}>
                   <td className="admin-table__thumb">
-                    {p.image_url ? <img src={p.image_url} alt="" /> : <span>—</span>}
+                    {s.image_url ? <img src={s.image_url} alt="" /> : <span>—</span>}
                   </td>
-                  <td>{p.name}</td>
-                  <td>{subName(p.subcategory_id) ?? <em>—</em>}</td>
-                  <td>₹{p.mrp}</td>
-                  <td>₹{p.retail_price}</td>
-                  <td>{p.gst_percent}%</td>
-                  <td>{p.is_active ? 'Active' : <span className="admin-tag admin-tag--muted">Inactive</span>}</td>
+                  <td>{s.name}</td>
+                  <td>{subName(s.subcategory_id) ?? <em>—</em>}</td>
+                  <td>{s.rating > 0 ? `★ ${s.rating.toFixed(1)}` : '—'}</td>
+                  <td>{s.delivery_time ?? '—'}</td>
+                  <td>{s.is_active ? 'Active' : <span className="admin-tag admin-tag--muted">Inactive</span>}</td>
                   <td className="admin-table__actions">
-                    <button className="admin-btn admin-btn--sm admin-btn--ghost" onClick={() => setEditingProduct(p)}>
-                      Edit
-                    </button>
-                    <button className="admin-btn admin-btn--sm admin-btn--danger" onClick={() => onDeleteProduct(p)}>
-                      Delete
-                    </button>
+                    <Link to={`/admin/shops/${s.id}`} className="admin-btn admin-btn--sm admin-btn--ghost">
+                      Open
+                    </Link>
                   </td>
                 </tr>
               ))}
@@ -153,19 +135,6 @@ export function CategoryDetailPage() {
           onClose={() => setEditingSub(null)}
           onSaved={() => {
             setEditingSub(null);
-            load();
-          }}
-        />
-      )}
-
-      {editingProduct && (
-        <ProductFormModal
-          categoryId={categoryId}
-          subcategories={subcategories}
-          product={editingProduct === 'new' ? null : editingProduct}
-          onClose={() => setEditingProduct(null)}
-          onSaved={() => {
-            setEditingProduct(null);
             load();
           }}
         />

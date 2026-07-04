@@ -1,4 +1,4 @@
-import { Outlet, Link } from 'react-router-dom';
+import { Outlet, Link, NavLink } from 'react-router-dom';
 import { useAdminAuth } from './AdminAuthContext';
 import './admin.css';
 
@@ -11,6 +11,20 @@ export function AdminLayout() {
         <Link to="/admin/categories" className="admin-header__brand">
           🛵 Degree<span className="admin-login__accent">wala</span> Admin
         </Link>
+        <nav className="admin-header__nav">
+          <NavLink
+            to="/admin/categories"
+            className={({ isActive }) => 'admin-header__link' + (isActive ? ' is-active' : '')}
+          >
+            Categories
+          </NavLink>
+          <NavLink
+            to="/admin/shops"
+            className={({ isActive }) => 'admin-header__link' + (isActive ? ' is-active' : '')}
+          >
+            Shops
+          </NavLink>
+        </nav>
         <button className="admin-btn admin-btn--ghost" onClick={() => signOut()}>
           Sign out
         </button>
