@@ -9,7 +9,7 @@ import {
   TouchableOpacity,
   Dimensions,
 } from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
+import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
 import { categories, featuredShops, getShopCount } from '@shared/mockData';
 import { categoryPalette } from '@shared/tokens';
 import { colors, spacing, radius, fontSizes, fontWeights, shadows } from '../theme';
@@ -35,6 +35,7 @@ const VOTES = ['By 8.3K+', 'By 2.1K+', 'By 950+', 'By 1.4K+'];
 export function HomeScreen() {
   const [query, setQuery] = useState('');
   const heroArt = getBrandImage('hero');
+  const insets = useSafeAreaInsets();
 
   return (
     <SafeAreaView style={styles.safe} edges={['top']}>
@@ -74,7 +75,13 @@ export function HomeScreen() {
           </View>
         </View>
 
-        {/* ---- Promo banner ---- */}
+        {/* ---- Promo banner ----
+            hero.jpg is a square (1400x1400) photo with a watermark baked into
+            the bottom edge. RN's <Image> always center-crops, so instead of
+            relying on resizeMode we render it at its natural square size and
+            pin it to the top of a shorter box — the overflow (bottom ~10%,
+            where the watermark sits) gets clipped, same effect as the web
+            app's `object-position: center top`. */}
         {heroArt && (
           <View style={styles.banner}>
             <Image source={heroArt} style={styles.bannerImg} resizeMode="cover" />
@@ -183,7 +190,8 @@ export function HomeScreen() {
           })}
         </View>
 
-        <View style={{ height: spacing['3xl'] }} />
+        {/* Reserve space so the floating bottom-tab pill never covers the last card. */}
+        <View style={{ height: 78 + insets.bottom }} />
       </ScrollView>
     </SafeAreaView>
   );
@@ -231,8 +239,19 @@ const styles = StyleSheet.create({
   },
   searchInput: { flex: 1, fontSize: fontSizes.md, color: colors.text, padding: 0 },
 
-  banner: { marginTop: spacing.xs },
-  bannerImg: { width: SCREEN_W, aspectRatio: 1 / 0.9 },
+  banner: {
+    marginTop: spacing.xs,
+    width: SCREEN_W,
+    height: SCREEN_W * 0.9, // slightly shorter than the square source photo
+    overflow: 'hidden',
+  },
+  bannerImg: {
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    width: SCREEN_W,
+    height: SCREEN_W, // full square photo, anchored to the top so the excess bottom slice clips off
+  },
   bannerCta: {
     position: 'absolute',
     left: '50%',
