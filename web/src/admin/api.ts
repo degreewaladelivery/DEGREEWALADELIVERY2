@@ -49,6 +49,7 @@ export async function listSubcategories(categoryId: string): Promise<Subcategory
 export interface SubcategoryInput {
   category_id: string;
   name: string;
+  image_url: string | null;
   sort_order: number;
   is_active: boolean;
 }
@@ -115,7 +116,10 @@ export async function deleteProduct(id: string): Promise<void> {
 /* ---- Image upload --------------------------------------------------------- */
 
 /** Uploads to the public `catalog-images` bucket and returns its public URL. */
-export async function uploadCatalogImage(file: File, folder: 'categories' | 'products'): Promise<string> {
+export async function uploadCatalogImage(
+  file: File,
+  folder: 'categories' | 'subcategories' | 'products'
+): Promise<string> {
   const ext = file.name.split('.').pop() ?? 'jpg';
   const path = `${folder}/${crypto.randomUUID()}.${ext}`;
   const { error } = await supabase.storage.from('catalog-images').upload(path, file, {

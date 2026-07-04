@@ -201,11 +201,21 @@
   gap: 8px;
   background: var(--surface, #f4f6f9);
   border-radius: var(--radius-pill, 999px);
-  padding: 6px 8px 6px 14px;
+  padding: 6px 8px 6px 6px;
   font-size: 13px;
   font-weight: 600;
 }
 .admin-pill.is-inactive { opacity: 0.55; }
+.admin-pill__img {
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  object-fit: cover;
+  flex-shrink: 0;
+}
+.admin-pill__img--empty {
+  background: var(--border, #eceef2);
+}
 .admin-pill__action {
   font-size: 12px;
   font-weight: 600;

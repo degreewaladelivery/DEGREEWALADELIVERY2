@@ -1,6 +1,6 @@
 import { useState, type FormEvent } from 'react';
 import { Modal } from './Modal';
-import { createSubcategory, updateSubcategory } from './api';
+import { createSubcategory, updateSubcategory, uploadCatalogImage } from './api';
 import type { SubcategoryRow } from './types';
 
 export function SubcategoryFormModal({
@@ -18,15 +18,34 @@ export function SubcategoryFormModal({
   const [name, setName] = useState(subcategory?.name ?? '');
   const [sortOrder, setSortOrder] = useState(subcategory?.sort_order ?? 0);
   const [isActive, setIsActive] = useState(subcategory?.is_active ?? true);
+  const [imageFile, setImageFile] = useState<File | null>(null);
+  const [imagePreview, setImagePreview] = useState(subcategory?.image_url ?? '');
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
+
+  const onPickImage = (file: File | undefined) => {
+    if (!file) return;
+    setImageFile(file);
+    setImagePreview(URL.createObjectURL(file));
+  };
 
   const onSubmit = async (e: FormEvent) => {
     e.preventDefault();
     setSaving(true);
     setError(null);
     try {
-      const input = { category_id: categoryId, name: name.trim(), sort_order: sortOrder, is_active: isActive };
+      let imageUrl = subcategory?.image_url ?? null;
+      if (imageFile) {
+        imageUrl = await uploadCatalogImage(imageFile, 'subcategories');
+      }
+
+      const input = {
+        category_id: categoryId,
+        name: name.trim(),
+        image_url: imageUrl,
+        sort_order: sortOrder,
+        is_active: isActive,
+      };
       if (subcategory) {
         await updateSubcategory(subcategory.id, input);
       } else {
@@ -47,6 +66,12 @@ export function SubcategoryFormModal({
           <span>Subcategory name</span>
           <input value={name} onChange={(e) => setName(e.target.value)} required autoFocus />
         </label>
+
+        <label className="admin-field">
+          <span>Image</span>
+          <input type="file" accept="image/*" onChange={(e) => onPickImage(e.target.files?.[0])} />
+        </label>
+        {imagePreview && <img src={imagePreview} alt="" className="admin-form__preview" />}
 
         <label className="admin-field">
           <span>Sort order</span>

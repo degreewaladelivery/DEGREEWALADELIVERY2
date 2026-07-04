@@ -76,6 +76,11 @@ export function CategoryDetailPage() {
           <div className="admin-pills">
             {subcategories.map((s) => (
               <div key={s.id} className={'admin-pill' + (s.is_active ? '' : ' is-inactive')}>
+                {s.image_url ? (
+                  <img src={s.image_url} alt="" className="admin-pill__img" />
+                ) : (
+                  <span className="admin-pill__img admin-pill__img--empty" />
+                )}
                 <span>{s.name}</span>
                 <button className="admin-pill__action" onClick={() => setEditingSub(s)}>
                   Edit

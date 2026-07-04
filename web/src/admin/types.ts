@@ -15,6 +15,7 @@ export interface SubcategoryRow {
   id: string;
   category_id: string;
   name: string;
+  image_url: string | null;
   sort_order: number;
   is_active: boolean;
   created_at: string;
