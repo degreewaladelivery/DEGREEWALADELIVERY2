@@ -4,10 +4,11 @@ import {
   listCategories,
   listSubcategories,
   listProducts,
+  listShops,
   deleteSubcategory,
   deleteProduct,
 } from './api';
-import type { CategoryRow, SubcategoryRow, ProductRow } from './types';
+import type { CategoryRow, SubcategoryRow, ProductRow, ShopRow } from './types';
 import { SubcategoryFormModal } from './SubcategoryFormModal';
 import { ProductFormModal } from './ProductFormModal';
 
@@ -16,6 +17,7 @@ export function CategoryDetailPage() {
   const [category, setCategory] = useState<CategoryRow | null>(null);
   const [subcategories, setSubcategories] = useState<SubcategoryRow[]>([]);
   const [products, setProducts] = useState<ProductRow[]>([]);
+  const [shops, setShops] = useState<ShopRow[]>([]);
   const [error, setError] = useState<string | null>(null);
 
   const [editingSub, setEditingSub] = useState<SubcategoryRow | null | 'new'>(null);
@@ -28,6 +30,7 @@ export function CategoryDetailPage() {
       .catch((err) => setError(err instanceof Error ? err.message : 'Failed to load category'));
     listSubcategories(categoryId).then(setSubcategories).catch(() => {});
     listProducts(categoryId).then(setProducts).catch(() => {});
+    listShops().then(setShops).catch(() => {});
   }, [categoryId]);
 
   useEffect(load, [load]);
@@ -162,6 +165,7 @@ export function CategoryDetailPage() {
         <ProductFormModal
           categoryId={categoryId}
           subcategories={subcategories}
+          shops={shops}
           product={editingProduct === 'new' ? null : editingProduct}
           onClose={() => setEditingProduct(null)}
           onSaved={() => {

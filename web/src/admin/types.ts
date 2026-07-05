@@ -26,6 +26,8 @@ export interface ProductRow {
   id: string;
   category_id: string;
   subcategory_id: string | null;
+  /** Optional link to a shop — when set, this category item also shows in that shop. */
+  shop_id: string | null;
   name: string;
   description: string | null;
   /** Admin-only field — never sent to customer-facing clients. */

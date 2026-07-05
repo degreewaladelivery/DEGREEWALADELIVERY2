@@ -86,6 +86,7 @@ export async function listProducts(categoryId: string): Promise<ProductRow[]> {
 export interface ProductInput {
   category_id: string;
   subcategory_id: string | null;
+  shop_id: string | null;
   name: string;
   description: string | null;
   barcode: string | null;
@@ -94,6 +95,17 @@ export interface ProductInput {
   retail_price: number;
   image_url: string | null;
   is_active: boolean;
+}
+
+/** Category items that were linked to a shop (they also show in that shop). */
+export async function listProductsLinkedToShop(shopId: string): Promise<ProductRow[]> {
+  const { data, error } = await supabase
+    .from('products')
+    .select('*')
+    .eq('shop_id', shopId)
+    .order('created_at', { ascending: false });
+  if (error) throw error;
+  return data;
 }
 
 export async function createProduct(input: ProductInput): Promise<ProductRow> {

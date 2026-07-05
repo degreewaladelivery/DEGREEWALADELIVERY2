@@ -4,10 +4,12 @@ import {
   listShops,
   listShopCategories,
   listShopProducts,
+  listProductsLinkedToShop,
+  listCategories,
   deleteShopCategory,
   deleteShopProduct,
 } from './api';
-import type { ShopRow, ShopCategoryRow, ShopProductRow } from './types';
+import type { ShopRow, ShopCategoryRow, ShopProductRow, ProductRow, CategoryRow } from './types';
 import { ShopCategoryFormModal } from './ShopCategoryFormModal';
 import { ShopProductFormModal } from './ShopProductFormModal';
 
@@ -16,6 +18,8 @@ export function ShopDetailPage() {
   const [shop, setShop] = useState<ShopRow | null>(null);
   const [shopCategories, setShopCategories] = useState<ShopCategoryRow[]>([]);
   const [products, setProducts] = useState<ShopProductRow[]>([]);
+  const [linkedProducts, setLinkedProducts] = useState<ProductRow[]>([]);
+  const [categories, setCategories] = useState<CategoryRow[]>([]);
   const [error, setError] = useState<string | null>(null);
 
   const [editingCat, setEditingCat] = useState<ShopCategoryRow | null | 'new'>(null);
@@ -28,6 +32,8 @@ export function ShopDetailPage() {
       .catch((err) => setError(err instanceof Error ? err.message : 'Failed to load shop'));
     listShopCategories(shopId).then(setShopCategories).catch(() => {});
     listShopProducts(shopId).then(setProducts).catch(() => {});
+    listProductsLinkedToShop(shopId).then(setLinkedProducts).catch(() => {});
+    listCategories().then(setCategories).catch(() => {});
   }, [shopId]);
 
   useEffect(load, [load]);
@@ -48,6 +54,8 @@ export function ShopDetailPage() {
 
   const catName = (id: string | null) =>
     id ? shopCategories.find((c) => c.id === id)?.name ?? '—' : null;
+
+  const parentCategoryName = (id: string) => categories.find((c) => c.id === id)?.name ?? '—';
 
   return (
     <div>
@@ -145,6 +153,49 @@ export function ShopDetailPage() {
           </table>
         )}
       </section>
+
+      {/* ---- Items linked in from the Categories tab (read-only here) ---- */}
+      {linkedProducts.length > 0 && (
+        <section className="admin-section">
+          <div className="admin-section__head">
+            <h2>Also shown here</h2>
+          </div>
+          <p className="admin-empty" style={{ paddingTop: 0 }}>
+            These items live in the Categories tab and were linked to this shop. Edit or remove them
+            from their category.
+          </p>
+          <table className="admin-table">
+            <thead>
+              <tr>
+                <th></th>
+                <th>Name</th>
+                <th>From category</th>
+                <th>MRP</th>
+                <th>Retail</th>
+                <th>GST%</th>
+                <th>Status</th>
+              </tr>
+            </thead>
+            <tbody>
+              {linkedProducts.map((p) => (
+                <tr key={p.id} className={p.is_active ? '' : 'is-inactive'}>
+                  <td className="admin-table__thumb">
+                    {p.image_url ? <img src={p.image_url} alt="" /> : <span>—</span>}
+                  </td>
+                  <td data-label="Name">{p.name}</td>
+                  <td data-label="From category">
+                    <Link to={`/admin/categories/${p.category_id}`}>{parentCategoryName(p.category_id)}</Link>
+                  </td>
+                  <td data-label="MRP">₹{p.mrp}</td>
+                  <td data-label="Retail">₹{p.retail_price}</td>
+                  <td data-label="GST%">{p.gst_percent}%</td>
+                  <td data-label="Status">{p.is_active ? 'Active' : <span className="admin-tag admin-tag--muted">Inactive</span>}</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </section>
+      )}
 
       {editingCat && (
         <ShopCategoryFormModal

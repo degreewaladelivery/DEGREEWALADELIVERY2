@@ -2,17 +2,19 @@ import { useState, type FormEvent } from 'react';
 import { Modal } from './Modal';
 import { ImagePicker } from './ImagePicker';
 import { createProduct, updateProduct, uploadCatalogImage } from './api';
-import type { ProductRow, SubcategoryRow } from './types';
+import type { ProductRow, SubcategoryRow, ShopRow } from './types';
 
 export function ProductFormModal({
   categoryId,
   subcategories,
+  shops,
   product,
   onClose,
   onSaved,
 }: {
   categoryId: string;
   subcategories: SubcategoryRow[];
+  shops: ShopRow[];
   /** null = creating a new item; otherwise editing this one. */
   product: ProductRow | null;
   onClose: () => void;
@@ -20,6 +22,7 @@ export function ProductFormModal({
 }) {
   const [name, setName] = useState(product?.name ?? '');
   const [subcategoryId, setSubcategoryId] = useState(product?.subcategory_id ?? '');
+  const [shopId, setShopId] = useState(product?.shop_id ?? '');
   const [description, setDescription] = useState(product?.description ?? '');
   const [barcode, setBarcode] = useState(product?.barcode ?? '');
   const [gstPercent, setGstPercent] = useState(product?.gst_percent ?? 0);
@@ -56,6 +59,7 @@ export function ProductFormModal({
       const input = {
         category_id: categoryId,
         subcategory_id: subcategoryId || null,
+        shop_id: shopId || null,
         name: name.trim(),
         description: description.trim() || null,
         barcode: barcode.trim() || null,
@@ -92,6 +96,18 @@ export function ProductFormModal({
           <select value={subcategoryId} onChange={(e) => setSubcategoryId(e.target.value)}>
             <option value="">No subcategory (directly in category)</option>
             {subcategories.map((s) => (
+              <option key={s.id} value={s.id}>
+                {s.name}
+              </option>
+            ))}
+          </select>
+        </label>
+
+        <label className="admin-field">
+          <span>Also show in shop <em>(optional)</em></span>
+          <select value={shopId} onChange={(e) => setShopId(e.target.value)}>
+            <option value="">Not shown in any shop</option>
+            {shops.map((s) => (
               <option key={s.id} value={s.id}>
                 {s.name}
               </option>
