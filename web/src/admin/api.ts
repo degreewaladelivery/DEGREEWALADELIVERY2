@@ -1,5 +1,5 @@
 import { supabase } from '../lib/supabase';
-import type { CategoryRow, SubcategoryRow, ProductRow } from './types';
+import type { CategoryRow, SubcategoryRow, ProductRow, ShopRow, ShopCategoryRow, ShopProductRow } from './types';
 
 /* ---- Categories ----------------------------------------------------------- */
 
@@ -113,12 +113,129 @@ export async function deleteProduct(id: string): Promise<void> {
   if (error) throw error;
 }
 
+/* ============================================================================
+ * Shops — independent of Category/Subcategory/Product above.
+ * ========================================================================== */
+
+export async function listShops(): Promise<ShopRow[]> {
+  const { data, error } = await supabase.from('shops').select('*').order('sort_order');
+  if (error) throw error;
+  return data;
+}
+
+export interface ShopInput {
+  name: string;
+  image_url: string | null;
+  description: string | null;
+  rating: number | null;
+  delivery_time: string | null;
+  is_featured: boolean;
+  sort_order: number;
+  is_active: boolean;
+}
+
+export async function createShop(input: ShopInput): Promise<ShopRow> {
+  const { data, error } = await supabase.from('shops').insert(input).select().single();
+  if (error) throw error;
+  return data;
+}
+
+export async function updateShop(id: string, input: Partial<ShopInput>): Promise<ShopRow> {
+  const { data, error } = await supabase.from('shops').update(input).eq('id', id).select().single();
+  if (error) throw error;
+  return data;
+}
+
+export async function deleteShop(id: string): Promise<void> {
+  const { error } = await supabase.from('shops').delete().eq('id', id);
+  if (error) throw error;
+}
+
+/* ---- A shop's own categories ------------------------------------------------ */
+
+export async function listShopCategories(shopId: string): Promise<ShopCategoryRow[]> {
+  const { data, error } = await supabase
+    .from('shop_categories')
+    .select('*')
+    .eq('shop_id', shopId)
+    .order('sort_order');
+  if (error) throw error;
+  return data;
+}
+
+export interface ShopCategoryInput {
+  shop_id: string;
+  name: string;
+  image_url: string | null;
+  sort_order: number;
+  is_active: boolean;
+}
+
+export async function createShopCategory(input: ShopCategoryInput): Promise<ShopCategoryRow> {
+  const { data, error } = await supabase.from('shop_categories').insert(input).select().single();
+  if (error) throw error;
+  return data;
+}
+
+export async function updateShopCategory(id: string, input: Partial<ShopCategoryInput>): Promise<ShopCategoryRow> {
+  const { data, error } = await supabase.from('shop_categories').update(input).eq('id', id).select().single();
+  if (error) throw error;
+  return data;
+}
+
+export async function deleteShopCategory(id: string): Promise<void> {
+  const { error } = await supabase.from('shop_categories').delete().eq('id', id);
+  if (error) throw error;
+}
+
+/* ---- A shop's items --------------------------------------------------------- */
+
+export async function listShopProducts(shopId: string): Promise<ShopProductRow[]> {
+  const { data, error } = await supabase
+    .from('shop_products')
+    .select('*')
+    .eq('shop_id', shopId)
+    .order('created_at', { ascending: false });
+  if (error) throw error;
+  return data;
+}
+
+export interface ShopProductInput {
+  shop_id: string;
+  shop_category_id: string | null;
+  name: string;
+  description: string | null;
+  barcode: string | null;
+  gst_percent: number;
+  mrp: number;
+  retail_price: number;
+  image_url: string | null;
+  is_active: boolean;
+}
+
+export async function createShopProduct(input: ShopProductInput): Promise<ShopProductRow> {
+  const { data, error } = await supabase.from('shop_products').insert(input).select().single();
+  if (error) throw error;
+  return data;
+}
+
+export async function updateShopProduct(id: string, input: Partial<ShopProductInput>): Promise<ShopProductRow> {
+  const { data, error } = await supabase.from('shop_products').update(input).eq('id', id).select().single();
+  if (error) throw error;
+  return data;
+}
+
+export async function deleteShopProduct(id: string): Promise<void> {
+  const { error } = await supabase.from('shop_products').delete().eq('id', id);
+  if (error) throw error;
+}
+
 /* ---- Image upload --------------------------------------------------------- */
 
 /** Uploads to the public `catalog-images` bucket and returns its public URL. */
 export async function uploadCatalogImage(
   file: File,
-  folder: 'categories' | 'subcategories' | 'products'
+  folder: 'categories' | 'subcategories' | 'products' | 'shops' | 'shop-categories' | 'shop-products'
 ): Promise<string> {
   const ext = file.name.split('.').pop() ?? 'jpg';
   const path = `${folder}/${crypto.randomUUID()}.${ext}`;

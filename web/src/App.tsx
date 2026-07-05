@@ -14,6 +14,8 @@ import { AdminLayout } from './admin/AdminLayout';
 import { RequireAdmin } from './admin/RequireAdmin';
 import { CategoriesPage } from './admin/CategoriesPage';
 import { CategoryDetailPage } from './admin/CategoryDetailPage';
+import { ShopsPage } from './admin/ShopsPage';
+import { ShopDetailPage } from './admin/ShopDetailPage';
 
 /**
  * The app's route map. Every customer-facing page shares the <Layout>
@@ -57,6 +59,8 @@ const router = createBrowserRouter([
         children: [
           { path: 'categories', element: <CategoriesPage /> },
           { path: 'categories/:categoryId', element: <CategoryDetailPage /> },
+          { path: 'shops', element: <ShopsPage /> },
+          { path: 'shops/:shopId', element: <ShopDetailPage /> },
         ],
       },
     ],
