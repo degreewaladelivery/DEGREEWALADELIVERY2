@@ -4,6 +4,9 @@ import { fetchCategoryPage, type CategoryPage } from '../lib/catalog';
 import { ProductCard } from '../components/cards/ProductCard';
 import './ShopList.css';
 
+/** Brand orange — used as the header overlay for every category. */
+const BRAND = '#FF6B00';
+
 /** A category page: shows the category's items, filterable by subcategory. */
 export function ShopList() {
   const { key = '' } = useParams();
@@ -42,18 +45,18 @@ export function ShopList() {
 
   return (
     <div className="shoplist">
-      {/* Category banner — the category's photo behind a branded overlay,
-          or a solid brand-colour gradient when there's no image. */}
+      {/* Category banner — the category's photo behind a brand-orange overlay
+          (same colour for every category), or a solid orange fill if no image. */}
       <div
         className="shoplist__banner"
         style={
           category.imageUrl
             ? {
-                backgroundImage: `linear-gradient(135deg, ${category.color}e6, rgba(15,20,30,0.6)), url("${category.imageUrl}")`,
+                backgroundImage: `linear-gradient(135deg, ${BRAND}e6, rgba(15,20,30,0.6)), url("${category.imageUrl}")`,
                 backgroundSize: 'cover',
                 backgroundPosition: 'center',
               }
-            : { background: `linear-gradient(135deg, ${category.color}, ${category.color}cc)` }
+            : { background: `linear-gradient(135deg, ${BRAND}, ${BRAND}cc)` }
         }
       >
         <div className="container shoplist__banner-inner">
