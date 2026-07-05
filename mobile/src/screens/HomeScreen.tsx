@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import {
   View,
   Text,
@@ -10,7 +10,8 @@ import {
   Dimensions,
 } from 'react-native';
 import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
-import { categories, featuredShops, getShopCount } from '@shared/mockData';
+import { fetchCategories, fetchShops, fetchCategoryItemCounts } from '../lib/catalog';
+import type { Category, Shop } from '@shared/types';
 import { categoryPalette } from '@shared/tokens';
 import { colors, spacing, radius, fontSizes, fontWeights, shadows } from '../theme';
 import { getBrandImage, getCategoryImage, getShopImage } from '../lib/images';
@@ -34,8 +35,20 @@ const VOTES = ['By 8.3K+', 'By 2.1K+', 'By 950+', 'By 1.4K+'];
 
 export function HomeScreen() {
   const [query, setQuery] = useState('');
+  const [categories, setCategories] = useState<Category[]>([]);
+  const [shops, setShops] = useState<Shop[]>([]);
+  const [itemCounts, setItemCounts] = useState<Record<string, number>>({});
   const heroArt = getBrandImage('hero');
   const insets = useSafeAreaInsets();
+
+  // Live catalog from Supabase — same data the website + admin panel use.
+  useEffect(() => {
+    fetchCategories().then(setCategories).catch(() => {});
+    fetchShops().then(setShops).catch(() => {});
+    fetchCategoryItemCounts().then(setItemCounts).catch(() => {});
+  }, []);
+
+  const featuredShops = shops.filter((s) => s.isFeatured);
 
   return (
     <SafeAreaView style={styles.safe} edges={['top']}>
@@ -122,7 +135,7 @@ export function HomeScreen() {
               <TouchableOpacity key={c.id} style={styles.recoCard} activeOpacity={0.85}>
                 <View style={styles.recoImgWrap}>
                   <Thumb
-                    src={getCategoryImage(c.key)}
+                    src={c.imageUrl ?? getCategoryImage(c.key)}
                     emoji={c.emoji}
                     tint={c.tint}
                     fontSize={40}
@@ -137,7 +150,9 @@ export function HomeScreen() {
                 <Text style={styles.recoName}>{c.name}</Text>
                 <View style={styles.fastRow}>
                   <ZapIcon size={12} color={colors.success} />
-                  <Text style={styles.fastText}>{getShopCount(c.key)} shops near you</Text>
+                  <Text style={styles.fastText}>
+                    {itemCounts[c.id] ?? 0} item{(itemCounts[c.id] ?? 0) === 1 ? '' : 's'}
+                  </Text>
                 </View>
               </TouchableOpacity>
             ))}
@@ -146,7 +161,7 @@ export function HomeScreen() {
 
         {/* ---- Featured feed ---- */}
         <View style={[styles.section, styles.feedSection]}>
-          <Text style={styles.heading}>61 shops delivering to you</Text>
+          <Text style={styles.heading}>{shops.length} shops delivering to you</Text>
           <Text style={styles.subheading}>Featured</Text>
 
           {featuredShops.map((s, i) => {
@@ -155,7 +170,7 @@ export function HomeScreen() {
               <TouchableOpacity key={s.id} style={styles.featCard} activeOpacity={0.9}>
                 <View style={styles.featImgWrap}>
                   <Thumb
-                    src={getShopImage(s.id)}
+                    src={s.imageUrl ?? getShopImage(s.id)}
                     emoji={pal.emoji}
                     tint={pal.tint}
                     fontSize={64}
