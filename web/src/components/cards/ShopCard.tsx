@@ -13,7 +13,7 @@ export function ShopCard({ shop }: { shop: Shop }) {
     <Link to={`/shop/${shop.id}`} className="shop-card">
       <div className="shop-card__thumb">
         <Thumb
-          src={getShopImage(shop.id)}
+          src={shop.imageUrl ?? getShopImage(shop.id)}
           emoji={pal.emoji}
           tint={pal.tint}
           color={pal.border}

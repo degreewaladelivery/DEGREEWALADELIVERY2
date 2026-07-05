@@ -1,5 +1,4 @@
 import { Link, useNavigate } from 'react-router-dom';
-import { getShopById } from '@shared/mockData';
 import { useCartStore, selectCount, selectSubtotal } from '../store/cartStore';
 import { formatRupees } from '../lib/format';
 import './Cart.css';
@@ -10,7 +9,6 @@ const TAX_RATE = 0.05;
 export function Cart() {
   const navigate = useNavigate();
   const items = useCartStore((s) => s.items);
-  const shopId = useCartStore((s) => s.shopId);
   const addItem = useCartStore((s) => s.addItem);
   const decrement = useCartStore((s) => s.decrement);
 
@@ -19,7 +17,6 @@ export function Cart() {
   const subtotal = selectSubtotal(items);
   const taxes = Math.round(subtotal * TAX_RATE);
   const total = subtotal + (count > 0 ? DELIVERY_FEE : 0) + taxes;
-  const shop = shopId ? getShopById(shopId) : undefined;
 
   if (count === 0) {
     return (
@@ -35,7 +32,6 @@ export function Cart() {
   return (
     <div className="container cart">
       <h1 className="cart__heading">Your Cart</h1>
-      {shop && <p className="cart__shop">From <strong>{shop.name}</strong></p>}
 
       <div className="cart__grid">
         {/* Line items */}

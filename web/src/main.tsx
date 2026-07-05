@@ -1,7 +1,6 @@
 import { StrictMode } from 'react'
 import { createRoot } from 'react-dom/client'
 import { applyThemeVars } from './theme/cssVars'
-import { enableDesignPreviewMode } from './lib/designPreview'
 import './index.css'
 import App from './App.tsx'
 
@@ -9,9 +8,9 @@ import App from './App.tsx'
 // so every component can use var(--brand) and friends from the start.
 applyThemeVars()
 
-// DESIGN-PREVIEW MODE: buttons & links do nothing (animations still play).
-// Remove this line to restore full navigation/cart functionality.
-enableDesignPreviewMode()
+// (Design-preview mode is OFF: the site is live and fully interactive, backed
+// by real Supabase catalog data. To re-freeze it as a click-less design demo,
+// import and call enableDesignPreviewMode() from './lib/designPreview'.)
 
 createRoot(document.getElementById('root')!).render(
   <StrictMode>

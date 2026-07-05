@@ -49,6 +49,8 @@ export interface Category {
   color: string;
   /** Soft background tint for this category's cards. */
   tint: string;
+  /** Admin-uploaded photo (Supabase). Falls back to bundled image / emoji. */
+  imageUrl?: string;
   /** e.g. Food -> ['Veg', 'Non-Veg']; empty array if none. */
   subCategories: string[];
   sortOrder: number;

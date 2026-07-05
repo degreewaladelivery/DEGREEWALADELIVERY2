@@ -1,6 +1,7 @@
-import { useRef, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { categories, featuredShops, getShopCount } from '@shared/mockData';
+import { fetchCategories, fetchShops, fetchCategoryItemCounts } from '../lib/catalog';
+import type { Category, Shop } from '@shared/types';
 import { categoryPalette } from '@shared/tokens';
 import { Button } from '../components/ui/Button';
 import { CategoryCard } from '../components/cards/CategoryCard';
@@ -67,8 +68,20 @@ const APP_FEATURES = [
 
 export function Home() {
   const [query, setQuery] = useState('');
+  const [categories, setCategories] = useState<Category[]>([]);
+  const [shops, setShops] = useState<Shop[]>([]);
+  const [itemCounts, setItemCounts] = useState<Record<string, number>>({});
   const navigate = useNavigate();
   const railRef = useRef<HTMLDivElement>(null);
+
+  // Live catalog from Supabase — reflects whatever the admin panel has saved.
+  useEffect(() => {
+    fetchCategories().then(setCategories).catch(() => {});
+    fetchShops().then(setShops).catch(() => {});
+    fetchCategoryItemCounts().then(setItemCounts).catch(() => {});
+  }, []);
+
+  const featuredShops = shops.filter((s) => s.isFeatured);
 
   const heroArt = getBrandImage('hero');
   const appPhone = getBrandImage('app-phone');
@@ -139,13 +152,13 @@ export function Home() {
             {categories.map((c, i) => (
               <Link key={c.id} to={`/category/${c.key}`} className="mx-reco-card">
                 <span className="mx-reco-card__img">
-                  <Thumb src={getCategoryImage(c.key)} emoji={c.emoji} tint={c.tint} color={c.color} alt={c.name} fontSize={40} />
+                  <Thumb src={c.imageUrl ?? getCategoryImage(c.key)} emoji={c.emoji} tint={c.tint} color={c.color} alt={c.name} fontSize={40} />
                   {c.key === 'food' && (
                     <span className="mx-reco-card__offer">{MX_OFFERS[i % MX_OFFERS.length]}</span>
                   )}
                 </span>
                 <strong className="mx-reco-card__name">{c.name}</strong>
-                <span className="mx-fast"><ZapIcon size={12} /> {getShopCount(c.key)} shops near you</span>
+                <span className="mx-fast"><ZapIcon size={12} /> {itemCounts[c.id] ?? 0} items</span>
               </Link>
             ))}
           </div>
@@ -153,14 +166,14 @@ export function Home() {
 
         {/* Featured feed (big cards) */}
         <div className="container mx-feed">
-          <h2 className="mx-heading">61 shops delivering to you</h2>
+          <h2 className="mx-heading">{shops.length} shops delivering to you</h2>
           <p className="mx-subheading">Featured</p>
           {featuredShops.map((s, i) => {
             const pal = categoryPalette[s.categoryKey];
             return (
               <Link key={s.id} to={`/shop/${s.id}`} className="mx-feat">
                 <span className="mx-feat__img">
-                  <Thumb src={getShopImage(s.id)} emoji={pal.emoji} tint={pal.tint} color={pal.border} alt={s.name} fontSize={64} />
+                  <Thumb src={s.imageUrl ?? getShopImage(s.id)} emoji={pal.emoji} tint={pal.tint} color={pal.border} alt={s.name} fontSize={64} />
                   <span className="mx-feat__bookmark"><BookmarkIcon size={20} /></span>
                   <span className="mx-feat__dots">
                     {Array.from({ length: 6 }).map((_, d) => (
@@ -276,7 +289,7 @@ export function Home() {
             <div className="carousel__rail" ref={railRef}>
               {categories.map((cat) => (
                 <div className="carousel__item" key={cat.id}>
-                  <CategoryCard category={cat} count={getShopCount(cat.key)} />
+                  <CategoryCard category={cat} count={itemCounts[cat.id] ?? 0} />
                 </div>
               ))}
             </div>

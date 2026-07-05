@@ -1,5 +1,6 @@
+import { useEffect, useState } from 'react';
 import { Link, useParams } from 'react-router-dom';
-import { getProductsByShop, getShopById } from '@shared/mockData';
+import { fetchShopPage, type ShopPage } from '../lib/catalog';
 import { categoryPalette } from '@shared/tokens';
 import type { Product } from '@shared/types';
 import { Thumb } from '../components/ui/Thumb';
@@ -21,13 +22,30 @@ function groupBySection(products: Product[]): Record<string, Product[]> {
 
 export function ShopItems() {
   const { shopId = '' } = useParams();
-  const shop = getShopById(shopId);
+  const [page, setPage] = useState<ShopPage | null>(null);
+  const [loading, setLoading] = useState(true);
 
   // Cart bar state (only relevant for the current shop).
   const count = useCartStore((s) => selectCount(s.items));
   const subtotal = useCartStore((s) => selectSubtotal(s.items));
 
-  if (!shop) {
+  useEffect(() => {
+    let active = true;
+    setLoading(true);
+    fetchShopPage(shopId)
+      .then((p) => active && setPage(p))
+      .catch(() => active && setPage(null))
+      .finally(() => active && setLoading(false));
+    return () => {
+      active = false;
+    };
+  }, [shopId]);
+
+  if (loading) {
+    return <div className="container shopitems__empty"><p>Loading…</p></div>;
+  }
+
+  if (!page) {
     return (
       <div className="container shopitems__empty">
         <h2>Shop not found</h2>
@@ -36,18 +54,19 @@ export function ShopItems() {
     );
   }
 
+  const { shop, products } = page;
   const pal = categoryPalette[shop.categoryKey];
-  const sections = groupBySection(getProductsByShop(shop.id));
+  const sections = groupBySection(products);
 
   return (
     <div className="shopitems">
       {/* Shop header */}
       <div className="container">
-        <Link to={`/category/${shop.categoryKey}`} className="shopitems__back">← Back</Link>
+        <Link to="/" className="shopitems__back">← Back</Link>
         <div className="shopitems__header">
           <div className="shopitems__thumb">
             <Thumb
-              src={getShopImage(shop.id)}
+              src={shop.imageUrl ?? getShopImage(shop.id)}
               emoji={pal.emoji}
               tint={pal.tint}
               color={pal.border}
@@ -59,8 +78,8 @@ export function ShopItems() {
             <h1>{shop.name}</h1>
             {shop.description && <p className="shopitems__desc">{shop.description}</p>}
             <div className="shopitems__facts">
-              <span className="shopitems__rating">★ {shop.rating.toFixed(1)}</span>
-              <span>⏱ {shop.deliveryTime}</span>
+              {shop.rating > 0 && <span className="shopitems__rating">★ {shop.rating.toFixed(1)}</span>}
+              {shop.deliveryTime && <span>⏱ {shop.deliveryTime}</span>}
               {shop.subCategory && <span className="shopitems__tag">{shop.subCategory}</span>}
             </div>
           </div>
@@ -69,16 +88,20 @@ export function ShopItems() {
 
       {/* Menu, grouped by section */}
       <div className="container shopitems__menu">
-        {Object.entries(sections).map(([section, items]) => (
-          <div key={section} className="menu-section">
-            <h3 className="menu-section__title">{section}</h3>
-            <div className="menu-section__list">
-              {items.map((p) => (
-                <ProductCard key={p.id} product={p} />
-              ))}
+        {products.length === 0 ? (
+          <p className="shopitems__none">No items here yet — check back soon!</p>
+        ) : (
+          Object.entries(sections).map(([section, items]) => (
+            <div key={section} className="menu-section">
+              <h3 className="menu-section__title">{section}</h3>
+              <div className="menu-section__list">
+                {items.map((p) => (
+                  <ProductCard key={p.id} product={p} />
+                ))}
+              </div>
             </div>
-          </div>
-        ))}
+          ))
+        )}
       </div>
 
       {/* Sticky cart bar */}

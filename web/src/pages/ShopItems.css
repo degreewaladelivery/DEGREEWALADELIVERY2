@@ -125,6 +125,12 @@
   gap: 18px;
 }
 
+.shopitems__none {
+  color: var(--text-muted, #6b7280);
+  text-align: center;
+  padding-block: 40px;
+}
+
 @media (max-width: 560px) {
   .shopitems__header { gap: 14px; padding: 16px; }
   .shopitems__thumb { width: 84px; height: 84px; }

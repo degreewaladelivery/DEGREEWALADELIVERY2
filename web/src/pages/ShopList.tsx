@@ -1,15 +1,34 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { Link, useParams } from 'react-router-dom';
-import { getCategoryByKey, getShopsByCategory } from '@shared/mockData';
-import { ShopCard } from '../components/cards/ShopCard';
+import { fetchCategoryPage, type CategoryPage } from '../lib/catalog';
+import { ProductCard } from '../components/cards/ProductCard';
 import './ShopList.css';
 
+/** A category page: shows the category's items, filterable by subcategory. */
 export function ShopList() {
   const { key = '' } = useParams();
-  const category = getCategoryByKey(key);
+  const [page, setPage] = useState<CategoryPage | null>(null);
+  const [loading, setLoading] = useState(true);
   const [activeSub, setActiveSub] = useState<string | null>(null);
 
-  if (!category) {
+  useEffect(() => {
+    let active = true;
+    setLoading(true);
+    setActiveSub(null);
+    fetchCategoryPage(key)
+      .then((p) => active && setPage(p))
+      .catch(() => active && setPage(null))
+      .finally(() => active && setLoading(false));
+    return () => {
+      active = false;
+    };
+  }, [key]);
+
+  if (loading) {
+    return <div className="container shoplist__empty"><p>Loading…</p></div>;
+  }
+
+  if (!page) {
     return (
       <div className="container shoplist__empty">
         <h2>Category not found</h2>
@@ -18,10 +37,8 @@ export function ShopList() {
     );
   }
 
-  const allShops = getShopsByCategory(category.key);
-  const shops = activeSub
-    ? allShops.filter((s) => s.subCategory === activeSub)
-    : allShops;
+  const { category, products } = page;
+  const items = activeSub ? products.filter((p) => p.section === activeSub) : products;
 
   return (
     <div className="shoplist">
@@ -34,7 +51,7 @@ export function ShopList() {
           <Link to="/" className="shoplist__back">← Home</Link>
           <span className="shoplist__emoji">{category.emoji}</span>
           <h1 className="shoplist__title">{category.name}</h1>
-          <p className="shoplist__count">{allShops.length} shops near Balehonnuru</p>
+          <p className="shoplist__count">{products.length} item{products.length === 1 ? '' : 's'} available</p>
         </div>
       </div>
 
@@ -60,12 +77,12 @@ export function ShopList() {
           </div>
         )}
 
-        {shops.length === 0 ? (
-          <p className="shoplist__none">No shops here yet — check back soon!</p>
+        {items.length === 0 ? (
+          <p className="shoplist__none">No items here yet — check back soon!</p>
         ) : (
-          <div className="shoplist__grid">
-            {shops.map((shop) => (
-              <ShopCard key={shop.id} shop={shop} />
+          <div className="shoplist__items">
+            {items.map((p) => (
+              <ProductCard key={p.id} product={p} />
             ))}
           </div>
         )}
