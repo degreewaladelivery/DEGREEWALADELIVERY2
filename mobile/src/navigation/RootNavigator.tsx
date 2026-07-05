@@ -1,11 +1,28 @@
 import { NavigationContainer } from '@react-navigation/native';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
+import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import { HomeScreen } from '../screens/HomeScreen';
+import { CategoryScreen } from '../screens/CategoryScreen';
+import { ShopScreen } from '../screens/ShopScreen';
+import { CartScreen } from '../screens/CartScreen';
 import { PlaceholderScreen } from '../screens/PlaceholderScreen';
 import { HomeIcon, TagIcon, CartIcon, UserIcon } from '../components/icons';
 import { colors, fontWeights, shadows } from '../theme';
+import type { HomeStackParamList } from './types';
 
 const Tab = createBottomTabNavigator();
+const HomeStack = createNativeStackNavigator<HomeStackParamList>();
+
+/** Home tab is itself a stack: Home feed → Category → Shop. */
+function HomeStackNavigator() {
+  return (
+    <HomeStack.Navigator screenOptions={{ headerShown: false }}>
+      <HomeStack.Screen name="HomeMain" component={HomeScreen} />
+      <HomeStack.Screen name="Category" component={CategoryScreen} />
+      <HomeStack.Screen name="Shop" component={ShopScreen} />
+    </HomeStack.Navigator>
+  );
+}
 
 /** Home / Offers / Cart / Account — mirrors the web app's floating bottom nav. */
 export function RootNavigator() {
@@ -33,7 +50,7 @@ export function RootNavigator() {
       >
         <Tab.Screen
           name="Home"
-          component={HomeScreen}
+          component={HomeStackNavigator}
           options={{ tabBarIcon: ({ color }) => <HomeIcon size={22} color={color} /> }}
         />
         <Tab.Screen
@@ -44,10 +61,9 @@ export function RootNavigator() {
         </Tab.Screen>
         <Tab.Screen
           name="Cart"
+          component={CartScreen}
           options={{ tabBarIcon: ({ color }) => <CartIcon size={22} color={color} /> }}
-        >
-          {() => <PlaceholderScreen title="Your Cart" emoji="🛒" />}
-        </Tab.Screen>
+        />
         <Tab.Screen
           name="Account"
           options={{ tabBarIcon: ({ color }) => <UserIcon size={22} color={color} /> }}

@@ -10,7 +10,10 @@ import {
   Dimensions,
 } from 'react-native';
 import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
+import { useNavigation } from '@react-navigation/native';
+import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { fetchCategories, fetchShops, fetchCategoryItemCounts } from '../lib/catalog';
+import type { HomeStackParamList } from '../navigation/types';
 import type { Category, Shop } from '@shared/types';
 import { categoryPalette } from '@shared/tokens';
 import { colors, spacing, radius, fontSizes, fontWeights, shadows } from '../theme';
@@ -34,6 +37,7 @@ const OFFERS = [
 const VOTES = ['By 8.3K+', 'By 2.1K+', 'By 950+', 'By 1.4K+'];
 
 export function HomeScreen() {
+  const navigation = useNavigation<NativeStackNavigationProp<HomeStackParamList, 'HomeMain'>>();
   const [query, setQuery] = useState('');
   const [categories, setCategories] = useState<Category[]>([]);
   const [shops, setShops] = useState<Shop[]>([]);
@@ -132,7 +136,12 @@ export function HomeScreen() {
             contentContainerStyle={styles.recoRail}
           >
             {categories.map((c, i) => (
-              <TouchableOpacity key={c.id} style={styles.recoCard} activeOpacity={0.85}>
+              <TouchableOpacity
+                key={c.id}
+                style={styles.recoCard}
+                activeOpacity={0.85}
+                onPress={() => navigation.navigate('Category', { categoryKey: c.key })}
+              >
                 <View style={styles.recoImgWrap}>
                   <Thumb
                     src={c.imageUrl ?? getCategoryImage(c.key)}
@@ -167,7 +176,12 @@ export function HomeScreen() {
           {featuredShops.map((s, i) => {
             const pal = categoryPalette[s.categoryKey];
             return (
-              <TouchableOpacity key={s.id} style={styles.featCard} activeOpacity={0.9}>
+              <TouchableOpacity
+                key={s.id}
+                style={styles.featCard}
+                activeOpacity={0.9}
+                onPress={() => navigation.navigate('Shop', { shopId: s.id })}
+              >
                 <View style={styles.featImgWrap}>
                   <Thumb
                     src={s.imageUrl ?? getShopImage(s.id)}
