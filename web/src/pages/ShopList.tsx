@@ -42,10 +42,19 @@ export function ShopList() {
 
   return (
     <div className="shoplist">
-      {/* Category banner */}
+      {/* Category banner — the category's photo behind a branded overlay,
+          or a solid brand-colour gradient when there's no image. */}
       <div
         className="shoplist__banner"
-        style={{ background: `linear-gradient(135deg, ${category.color}, ${category.color}cc)` }}
+        style={
+          category.imageUrl
+            ? {
+                backgroundImage: `linear-gradient(135deg, ${category.color}e6, rgba(15,20,30,0.6)), url("${category.imageUrl}")`,
+                backgroundSize: 'cover',
+                backgroundPosition: 'center',
+              }
+            : { background: `linear-gradient(135deg, ${category.color}, ${category.color}cc)` }
+        }
       >
         <div className="container shoplist__banner-inner">
           <Link to="/" className="shoplist__back">← Home</Link>

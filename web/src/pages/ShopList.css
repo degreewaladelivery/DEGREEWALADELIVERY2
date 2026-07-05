@@ -1,9 +1,13 @@
 .shoplist__banner {
   color: #fff;
   padding-block: 28px 30px;
+  min-height: 210px;
+  display: flex;
+  align-items: flex-end;
 }
 .shoplist__banner-inner {
   position: relative;
+  width: 100%;
 }
 .shoplist__back {
   display: inline-block;
@@ -18,17 +22,19 @@
 .shoplist__emoji {
   font-size: 44px;
   display: block;
-  filter: drop-shadow(0 6px 10px rgba(0, 0, 0, 0.18));
+  filter: drop-shadow(0 6px 10px rgba(0, 0, 0, 0.35));
 }
 .shoplist__title {
   color: #fff;
   font-size: clamp(26px, 4vw, 36px);
   margin-top: 6px;
+  text-shadow: 0 2px 12px rgba(0, 0, 0, 0.45);
 }
 .shoplist__count {
   font-size: 14px;
-  color: rgba(255, 255, 255, 0.9);
+  color: rgba(255, 255, 255, 0.95);
   margin-top: 4px;
+  text-shadow: 0 1px 8px rgba(0, 0, 0, 0.5);
 }
 
 .shoplist__body {
