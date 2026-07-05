@@ -29,3 +29,7 @@ yarn-error.log*
 *.tsbuildinfo
 .cache/
 .vercel
+
+# watchman transient files
+.watchman-cookie-*
+**/.watchman-cookie-*
