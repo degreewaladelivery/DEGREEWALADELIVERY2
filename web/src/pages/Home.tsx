@@ -158,7 +158,7 @@ export function Home() {
                   )}
                 </span>
                 <strong className="mx-reco-card__name">{c.name}</strong>
-                <span className="mx-fast"><ZapIcon size={12} /> {itemCounts[c.id] ?? 0} items</span>
+                <span className="mx-fast"><ZapIcon size={12} /> {itemCounts[c.id] ?? 0} item{(itemCounts[c.id] ?? 0) === 1 ? '' : 's'}</span>
               </Link>
             ))}
           </div>

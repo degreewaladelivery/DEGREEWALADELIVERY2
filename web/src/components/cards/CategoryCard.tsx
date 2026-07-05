@@ -21,7 +21,7 @@ export function CategoryCard({ category, count }: CategoryCardProps) {
 
   return (
     <Link to={`/category/${category.key}`} className="cat-card" style={styleVars}>
-      {count > 0 && <span className="cat-card__count">{count} items</span>}
+      {count > 0 && <span className="cat-card__count">{count} item{count === 1 ? '' : 's'}</span>}
       <div className="cat-card__thumb">
         <Thumb
           src={category.imageUrl ?? getCategoryImage(category.key)}
