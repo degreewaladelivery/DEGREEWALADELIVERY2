@@ -257,6 +257,51 @@
 .admin-table__thumb img { width: 40px; height: 40px; border-radius: 8px; object-fit: cover; display: block; }
 .admin-table__actions { display: flex; gap: 6px; white-space: nowrap; }
 
+/* Mobile: stack each item's fields into a labeled card instead of a table row. */
+@media (max-width: 640px) {
+  .admin-table thead { display: none; }
+  .admin-table,
+  .admin-table tbody,
+  .admin-table tr,
+  .admin-table td {
+    display: block;
+    width: 100%;
+  }
+  .admin-table tr {
+    border: 1px solid var(--border, #eceef2);
+    border-radius: var(--radius-md, 12px);
+    padding: 12px;
+    margin-bottom: 12px;
+  }
+  .admin-table td {
+    border-bottom: none;
+    padding: 6px 0;
+  }
+  .admin-table td[data-label] {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+  }
+  .admin-table td[data-label]::before {
+    content: attr(data-label);
+    font-size: 12px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    color: var(--text-muted, #6b7280);
+    flex-shrink: 0;
+  }
+  .admin-table__thumb { width: auto; padding-bottom: 10px !important; }
+  .admin-table__thumb img { width: 64px; height: 64px; }
+  .admin-table__actions {
+    justify-content: flex-end;
+    padding-top: 10px !important;
+    margin-top: 4px;
+    border-top: 1px solid var(--border, #eceef2);
+  }
+}
+
 /* ---- Modal ---------------------------------------------------------------- */
 .admin-modal__backdrop {
   position: fixed;

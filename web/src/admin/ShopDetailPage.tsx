@@ -125,12 +125,12 @@ export function ShopDetailPage() {
                   <td className="admin-table__thumb">
                     {p.image_url ? <img src={p.image_url} alt="" /> : <span>—</span>}
                   </td>
-                  <td>{p.name}</td>
-                  <td>{catName(p.shop_category_id) ?? <em>—</em>}</td>
-                  <td>₹{p.mrp}</td>
-                  <td>₹{p.retail_price}</td>
-                  <td>{p.gst_percent}%</td>
-                  <td>{p.is_active ? 'Active' : <span className="admin-tag admin-tag--muted">Inactive</span>}</td>
+                  <td data-label="Name">{p.name}</td>
+                  <td data-label="Category">{catName(p.shop_category_id) ?? <em>—</em>}</td>
+                  <td data-label="MRP">₹{p.mrp}</td>
+                  <td data-label="Retail">₹{p.retail_price}</td>
+                  <td data-label="GST%">{p.gst_percent}%</td>
+                  <td data-label="Status">{p.is_active ? 'Active' : <span className="admin-tag admin-tag--muted">Inactive</span>}</td>
                   <td className="admin-table__actions">
                     <button className="admin-btn admin-btn--sm admin-btn--ghost" onClick={() => setEditingProduct(p)}>
                       Edit
