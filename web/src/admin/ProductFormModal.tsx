@@ -1,24 +1,24 @@
 import { useState, type FormEvent } from 'react';
 import { Modal } from './Modal';
 import { createProduct, updateProduct, uploadCatalogImage } from './api';
-import type { ProductRow, ShopCategoryRow } from './types';
+import type { ProductRow, SubcategoryRow } from './types';
 
 export function ProductFormModal({
-  shopId,
-  shopCategories,
+  categoryId,
+  subcategories,
   product,
   onClose,
   onSaved,
 }: {
-  shopId: string;
-  shopCategories: ShopCategoryRow[];
+  categoryId: string;
+  subcategories: SubcategoryRow[];
   /** null = creating a new item; otherwise editing this one. */
   product: ProductRow | null;
   onClose: () => void;
   onSaved: () => void;
 }) {
   const [name, setName] = useState(product?.name ?? '');
-  const [shopCategoryId, setShopCategoryId] = useState(product?.shop_category_id ?? '');
+  const [subcategoryId, setSubcategoryId] = useState(product?.subcategory_id ?? '');
   const [description, setDescription] = useState(product?.description ?? '');
   const [barcode, setBarcode] = useState(product?.barcode ?? '');
   const [gstPercent, setGstPercent] = useState(product?.gst_percent ?? 0);
@@ -47,8 +47,8 @@ export function ProductFormModal({
       }
 
       const input = {
-        shop_id: shopId,
-        shop_category_id: shopCategoryId || null,
+        category_id: categoryId,
+        subcategory_id: subcategoryId || null,
         name: name.trim(),
         description: description.trim() || null,
         barcode: barcode.trim() || null,
@@ -81,12 +81,12 @@ export function ProductFormModal({
         </label>
 
         <label className="admin-field">
-          <span>Category (optional)</span>
-          <select value={shopCategoryId} onChange={(e) => setShopCategoryId(e.target.value)}>
-            <option value="">No category (directly in shop)</option>
-            {shopCategories.map((c) => (
-              <option key={c.id} value={c.id}>
-                {c.name}
+          <span>Subcategory (optional)</span>
+          <select value={subcategoryId} onChange={(e) => setSubcategoryId(e.target.value)}>
+            <option value="">No subcategory (directly in category)</option>
+            {subcategories.map((s) => (
+              <option key={s.id} value={s.id}>
+                {s.name}
               </option>
             ))}
           </select>
