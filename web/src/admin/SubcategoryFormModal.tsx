@@ -1,5 +1,6 @@
 import { useState, type FormEvent } from 'react';
 import { Modal } from './Modal';
+import { ImagePicker } from './ImagePicker';
 import { createSubcategory, updateSubcategory, uploadCatalogImage } from './api';
 import type { SubcategoryRow } from './types';
 
@@ -23,10 +24,14 @@ export function SubcategoryFormModal({
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  const onPickImage = (file: File | undefined) => {
-    if (!file) return;
+  const onPickImage = (file: File) => {
     setImageFile(file);
     setImagePreview(URL.createObjectURL(file));
+  };
+
+  const onRemoveImage = () => {
+    setImageFile(null);
+    setImagePreview('');
   };
 
   const onSubmit = async (e: FormEvent) => {
@@ -37,6 +42,8 @@ export function SubcategoryFormModal({
       let imageUrl = subcategory?.image_url ?? null;
       if (imageFile) {
         imageUrl = await uploadCatalogImage(imageFile, 'subcategories');
+      } else if (!imagePreview) {
+        imageUrl = null;
       }
 
       const input = {
@@ -67,11 +74,7 @@ export function SubcategoryFormModal({
           <input value={name} onChange={(e) => setName(e.target.value)} required autoFocus />
         </label>
 
-        <label className="admin-field">
-          <span>Image</span>
-          <input type="file" accept="image/*" onChange={(e) => onPickImage(e.target.files?.[0])} />
-        </label>
-        {imagePreview && <img src={imagePreview} alt="" className="admin-form__preview" />}
+        <ImagePicker label="Image" preview={imagePreview} onPick={onPickImage} onRemove={onRemoveImage} />
 
         <label className="admin-field">
           <span>Sort order</span>

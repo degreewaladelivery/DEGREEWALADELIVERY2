@@ -303,6 +303,8 @@
   border-radius: var(--radius-md, 12px);
   border: 1px solid var(--border, #eceef2);
 }
+.admin-image-picker { display: flex; flex-direction: column; align-items: flex-start; gap: 8px; }
+.admin-image-picker .admin-form__preview { width: auto; max-width: 100%; }
 
 .admin-field { display: flex; flex-direction: column; gap: 6px; font-size: 13px; font-weight: 600; color: var(--text, #15172b); }
 .admin-field em { font-weight: 400; color: var(--text-muted, #6b7280); font-style: normal; }

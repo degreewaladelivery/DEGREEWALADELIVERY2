@@ -1,5 +1,6 @@
 import { useState, type FormEvent } from 'react';
 import { Modal } from './Modal';
+import { ImagePicker } from './ImagePicker';
 import { createShopCategory, updateShopCategory, uploadCatalogImage } from './api';
 import type { ShopCategoryRow } from './types';
 
@@ -23,10 +24,14 @@ export function ShopCategoryFormModal({
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  const onPickImage = (file: File | undefined) => {
-    if (!file) return;
+  const onPickImage = (file: File) => {
     setImageFile(file);
     setImagePreview(URL.createObjectURL(file));
+  };
+
+  const onRemoveImage = () => {
+    setImageFile(null);
+    setImagePreview('');
   };
 
   const onSubmit = async (e: FormEvent) => {
@@ -37,6 +42,8 @@ export function ShopCategoryFormModal({
       let imageUrl = shopCategory?.image_url ?? null;
       if (imageFile) {
         imageUrl = await uploadCatalogImage(imageFile, 'shop-categories');
+      } else if (!imagePreview) {
+        imageUrl = null;
       }
 
       const input = { shop_id: shopId, name: name.trim(), image_url: imageUrl, sort_order: sortOrder, is_active: isActive };
@@ -61,11 +68,7 @@ export function ShopCategoryFormModal({
           <input value={name} onChange={(e) => setName(e.target.value)} required autoFocus />
         </label>
 
-        <label className="admin-field">
-          <span>Image</span>
-          <input type="file" accept="image/*" onChange={(e) => onPickImage(e.target.files?.[0])} />
-        </label>
-        {imagePreview && <img src={imagePreview} alt="" className="admin-form__preview" />}
+        <ImagePicker label="Image" preview={imagePreview} onPick={onPickImage} onRemove={onRemoveImage} />
 
         <label className="admin-field">
           <span>Sort order</span>

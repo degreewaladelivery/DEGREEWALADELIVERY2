@@ -1,5 +1,6 @@
 import { useState, type FormEvent } from 'react';
 import { Modal } from './Modal';
+import { ImagePicker } from './ImagePicker';
 import { createShopProduct, updateShopProduct, uploadCatalogImage } from './api';
 import type { ShopProductRow, ShopCategoryRow } from './types';
 
@@ -30,10 +31,14 @@ export function ShopProductFormModal({
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  const onPickImage = (file: File | undefined) => {
-    if (!file) return;
+  const onPickImage = (file: File) => {
     setImageFile(file);
     setImagePreview(URL.createObjectURL(file));
+  };
+
+  const onRemoveImage = () => {
+    setImageFile(null);
+    setImagePreview('');
   };
 
   const onSubmit = async (e: FormEvent) => {
@@ -44,6 +49,8 @@ export function ShopProductFormModal({
       let imageUrl = product?.image_url ?? null;
       if (imageFile) {
         imageUrl = await uploadCatalogImage(imageFile, 'shop-products');
+      } else if (!imagePreview) {
+        imageUrl = null;
       }
 
       const input = {
@@ -137,11 +144,7 @@ export function ShopProductFormModal({
           </label>
         </div>
 
-        <label className="admin-field">
-          <span>Item image</span>
-          <input type="file" accept="image/*" onChange={(e) => onPickImage(e.target.files?.[0])} />
-        </label>
-        {imagePreview && <img src={imagePreview} alt="" className="admin-form__preview" />}
+        <ImagePicker label="Item image" preview={imagePreview} onPick={onPickImage} onRemove={onRemoveImage} />
 
         <label className="admin-field admin-field--row">
           <input type="checkbox" checked={isActive} onChange={(e) => setIsActive(e.target.checked)} />
