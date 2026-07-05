@@ -1,8 +1,8 @@
-import { useState, type FormEvent } from 'react';
+import { useState, useEffect, type FormEvent } from 'react';
 import { Modal } from './Modal';
 import { ImagePicker } from './ImagePicker';
-import { createProduct, updateProduct, uploadCatalogImage } from './api';
-import type { ProductRow, SubcategoryRow, ShopRow } from './types';
+import { createProduct, updateProduct, uploadCatalogImage, listShopCategories } from './api';
+import type { ProductRow, SubcategoryRow, ShopRow, ShopCategoryRow } from './types';
 
 export function ProductFormModal({
   categoryId,
@@ -23,6 +23,8 @@ export function ProductFormModal({
   const [name, setName] = useState(product?.name ?? '');
   const [subcategoryId, setSubcategoryId] = useState(product?.subcategory_id ?? '');
   const [shopId, setShopId] = useState(product?.shop_id ?? '');
+  const [shopCategoryId, setShopCategoryId] = useState(product?.shop_category_id ?? '');
+  const [shopCategories, setShopCategories] = useState<ShopCategoryRow[]>([]);
   const [description, setDescription] = useState(product?.description ?? '');
   const [barcode, setBarcode] = useState(product?.barcode ?? '');
   const [gstPercent, setGstPercent] = useState(product?.gst_percent ?? 0);
@@ -33,6 +35,21 @@ export function ProductFormModal({
   const [imagePreview, setImagePreview] = useState(product?.image_url ?? '');
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
+
+  // Load the linked shop's own categories so we can offer them below.
+  useEffect(() => {
+    if (!shopId) {
+      setShopCategories([]);
+      return;
+    }
+    let active = true;
+    listShopCategories(shopId)
+      .then((rows) => active && setShopCategories(rows))
+      .catch(() => active && setShopCategories([]));
+    return () => {
+      active = false;
+    };
+  }, [shopId]);
 
   const onPickImage = (file: File) => {
     setImageFile(file);
@@ -60,6 +77,7 @@ export function ProductFormModal({
         category_id: categoryId,
         subcategory_id: subcategoryId || null,
         shop_id: shopId || null,
+        shop_category_id: shopId ? shopCategoryId || null : null,
         name: name.trim(),
         description: description.trim() || null,
         barcode: barcode.trim() || null,
@@ -105,7 +123,13 @@ export function ProductFormModal({
 
         <label className="admin-field">
           <span>Also show in shop <em>(optional)</em></span>
-          <select value={shopId} onChange={(e) => setShopId(e.target.value)}>
+          <select
+            value={shopId}
+            onChange={(e) => {
+              setShopId(e.target.value);
+              setShopCategoryId(''); // reset — a new shop has its own categories
+            }}
+          >
             <option value="">Not shown in any shop</option>
             {shops.map((s) => (
               <option key={s.id} value={s.id}>
@@ -114,6 +138,20 @@ export function ProductFormModal({
             ))}
           </select>
         </label>
+
+        {shopId && shopCategories.length > 0 && (
+          <label className="admin-field">
+            <span>Shop category <em>(optional)</em></span>
+            <select value={shopCategoryId} onChange={(e) => setShopCategoryId(e.target.value)}>
+              <option value="">Directly in the shop (no category)</option>
+              {shopCategories.map((c) => (
+                <option key={c.id} value={c.id}>
+                  {c.name}
+                </option>
+              ))}
+            </select>
+          </label>
+        )}
 
         <label className="admin-field">
           <span>Description <em>(public)</em></span>

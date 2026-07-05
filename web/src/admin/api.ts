@@ -87,6 +87,7 @@ export interface ProductInput {
   category_id: string;
   subcategory_id: string | null;
   shop_id: string | null;
+  shop_category_id: string | null;
   name: string;
   description: string | null;
   barcode: string | null;

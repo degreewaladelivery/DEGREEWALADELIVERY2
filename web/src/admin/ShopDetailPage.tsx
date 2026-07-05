@@ -169,6 +169,7 @@ export function ShopDetailPage() {
               <tr>
                 <th></th>
                 <th>Name</th>
+                <th>Shop category</th>
                 <th>From category</th>
                 <th>MRP</th>
                 <th>Retail</th>
@@ -183,6 +184,7 @@ export function ShopDetailPage() {
                     {p.image_url ? <img src={p.image_url} alt="" /> : <span>—</span>}
                   </td>
                   <td data-label="Name">{p.name}</td>
+                  <td data-label="Shop category">{catName(p.shop_category_id) ?? <em>—</em>}</td>
                   <td data-label="From category">
                     <Link to={`/admin/categories/${p.category_id}`}>{parentCategoryName(p.category_id)}</Link>
                   </td>
