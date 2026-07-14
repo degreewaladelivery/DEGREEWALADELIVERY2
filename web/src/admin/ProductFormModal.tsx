@@ -27,9 +27,9 @@ export function ProductFormModal({
   const [shopCategories, setShopCategories] = useState<ShopCategoryRow[]>([]);
   const [description, setDescription] = useState(product?.description ?? '');
   const [barcode, setBarcode] = useState(product?.barcode ?? '');
-  const [gstPercent, setGstPercent] = useState(product?.gst_percent ?? 0);
-  const [mrp, setMrp] = useState(product?.mrp ?? 0);
-  const [retailPrice, setRetailPrice] = useState(product?.retail_price ?? 0);
+  const [gstPercent, setGstPercent] = useState<number | ''>(product?.gst_percent ?? '');
+  const [mrp, setMrp] = useState<number | ''>(product?.mrp ?? '');
+  const [retailPrice, setRetailPrice] = useState<number | ''>(product?.retail_price ?? '');
   const [isActive, setIsActive] = useState(product?.is_active ?? true);
   const [imageFile, setImageFile] = useState<File | null>(null);
   const [imagePreview, setImagePreview] = useState(product?.image_url ?? '');
@@ -81,9 +81,9 @@ export function ProductFormModal({
         name: name.trim(),
         description: description.trim() || null,
         barcode: barcode.trim() || null,
-        gst_percent: gstPercent,
-        mrp,
-        retail_price: retailPrice,
+        gst_percent: gstPercent === '' ? 0 : gstPercent,
+        mrp: mrp === '' ? 0 : mrp,
+        retail_price: retailPrice === '' ? 0 : retailPrice,
         image_url: imageUrl,
         is_active: isActive,
       };
@@ -170,8 +170,9 @@ export function ProductFormModal({
               type="number"
               step="0.01"
               min="0"
+              placeholder="e.g. 5"
               value={gstPercent}
-              onChange={(e) => setGstPercent(Number(e.target.value))}
+              onChange={(e) => setGstPercent(e.target.value === '' ? '' : Number(e.target.value))}
             />
           </label>
           <label className="admin-field">
@@ -180,8 +181,9 @@ export function ProductFormModal({
               type="number"
               step="0.01"
               min="0"
+              placeholder="e.g. 120"
               value={mrp}
-              onChange={(e) => setMrp(Number(e.target.value))}
+              onChange={(e) => setMrp(e.target.value === '' ? '' : Number(e.target.value))}
               required
             />
           </label>
@@ -191,8 +193,9 @@ export function ProductFormModal({
               type="number"
               step="0.01"
               min="0"
+              placeholder="e.g. 99"
               value={retailPrice}
-              onChange={(e) => setRetailPrice(Number(e.target.value))}
+              onChange={(e) => setRetailPrice(e.target.value === '' ? '' : Number(e.target.value))}
               required
             />
           </label>
