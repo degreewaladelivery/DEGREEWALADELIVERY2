@@ -5,6 +5,7 @@ import {
   listSubcategories,
   listProducts,
   listShops,
+  listProductsCrossListedTo,
   deleteSubcategory,
   deleteProduct,
 } from './api';
@@ -18,6 +19,7 @@ export function CategoryDetailPage() {
   const [categories, setCategories] = useState<CategoryRow[]>([]);
   const [subcategories, setSubcategories] = useState<SubcategoryRow[]>([]);
   const [products, setProducts] = useState<ProductRow[]>([]);
+  const [crossListed, setCrossListed] = useState<ProductRow[]>([]);
   const [shops, setShops] = useState<ShopRow[]>([]);
   const [error, setError] = useState<string | null>(null);
 
@@ -35,6 +37,7 @@ export function CategoryDetailPage() {
     listSubcategories(categoryId).then(setSubcategories).catch(() => {});
     listProducts(categoryId).then(setProducts).catch(() => {});
     listShops().then(setShops).catch(() => {});
+    listProductsCrossListedTo(categoryId).then(setCrossListed).catch(() => {});
   }, [categoryId]);
 
   useEffect(load, [load]);
@@ -55,6 +58,8 @@ export function CategoryDetailPage() {
 
   const subName = (id: string | null) =>
     id ? subcategories.find((s) => s.id === id)?.name ?? '—' : null;
+
+  const catNameById = (id: string) => categories.find((c) => c.id === id)?.name ?? '—';
 
   // Next serial to auto-suggest for a new item: highest existing + 1, else 1.
   const nextSerial = products.length ? Math.max(...products.map((p) => p.serial_no)) + 1 : 1;
@@ -160,6 +165,54 @@ export function CategoryDetailPage() {
           </table>
         )}
       </section>
+
+      {/* ---- Items cross-listed into this category from another (read-only) ---- */}
+      {crossListed.length > 0 && (
+        <section className="admin-section">
+          <div className="admin-section__head">
+            <h2>Also shown here</h2>
+          </div>
+          <p className="admin-empty" style={{ paddingTop: 0 }}>
+            These items live in another category and were also shown here. Edit or remove them from
+            their own category.
+          </p>
+          <table className="admin-table">
+            <thead>
+              <tr>
+                <th>#</th>
+                <th></th>
+                <th>Name</th>
+                <th>From category</th>
+                <th>MRP</th>
+                <th>Retail</th>
+                <th>GST%</th>
+                <th>Status</th>
+              </tr>
+            </thead>
+            <tbody>
+              {crossListed.map((p) => (
+                <tr key={p.id} className={p.is_active ? '' : 'is-inactive'}>
+                  <td data-label="#" className="admin-table__serial">{p.serial_no}</td>
+                  <td className="admin-table__thumb">
+                    {p.image_url ? <img src={p.image_url} alt="" /> : <span>—</span>}
+                  </td>
+                  <td data-label="Name">
+                    {p.name}
+                    {p.unit && <span className="admin-item-unit">{p.unit}</span>}
+                  </td>
+                  <td data-label="From category">
+                    <Link to={`/admin/categories/${p.category_id}`}>{catNameById(p.category_id)}</Link>
+                  </td>
+                  <td data-label="MRP">₹{p.mrp}</td>
+                  <td data-label="Retail">₹{p.retail_price}</td>
+                  <td data-label="GST%">{p.gst_percent}%</td>
+                  <td data-label="Status">{p.is_active ? 'Active' : <span className="admin-tag admin-tag--muted">Inactive</span>}</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </section>
+      )}
 
       {editingSub && (
         <SubcategoryFormModal

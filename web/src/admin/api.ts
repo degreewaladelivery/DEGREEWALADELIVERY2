@@ -141,6 +141,21 @@ export async function listProductExtraCategories(productId: string): Promise<str
   return (data ?? []).map((r) => r.category_id);
 }
 
+/** Items cross-listed INTO this category from another (their home is elsewhere). */
+export async function listProductsCrossListedTo(categoryId: string): Promise<ProductRow[]> {
+  const links = await supabase.from('product_categories').select('product_id').eq('category_id', categoryId);
+  if (links.error) throw links.error;
+  const ids = (links.data ?? []).map((l) => l.product_id);
+  if (ids.length === 0) return [];
+  const { data, error } = await supabase
+    .from('products')
+    .select('*')
+    .in('id', ids)
+    .order('serial_no', { ascending: true });
+  if (error) throw error;
+  return data;
+}
+
 /** Replace an item's extra-category links with exactly `categoryIds`. */
 export async function setProductExtraCategories(productId: string, categoryIds: string[]): Promise<void> {
   const del = await supabase.from('product_categories').delete().eq('product_id', productId);
