@@ -351,13 +351,18 @@
 .admin-image-picker { display: flex; flex-direction: column; align-items: flex-start; gap: 8px; }
 .admin-image-picker .admin-form__preview { width: auto; max-width: 100%; }
 
-.admin-field { display: flex; flex-direction: column; gap: 6px; font-size: 13px; font-weight: 600; color: var(--text, #15172b); }
+/* min-width:0 lets grid/flex children shrink below their intrinsic size, so
+   the 3-across price row never overflows the modal. */
+.admin-field { display: flex; flex-direction: column; gap: 6px; min-width: 0; font-size: 13px; font-weight: 600; color: var(--text, #15172b); }
 .admin-field em { font-weight: 400; color: var(--text-muted, #6b7280); font-style: normal; }
 .admin-field input:not([type='checkbox']),
 .admin-field select,
 .admin-field textarea {
   font: inherit;
   font-weight: 400;
+  width: 100%;
+  min-width: 0;
+  box-sizing: border-box;
   padding: 9px 12px;
   border: 1px solid var(--border-strong, #dfe3ea);
   border-radius: var(--radius-md, 12px);
