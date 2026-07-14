@@ -256,6 +256,7 @@
 .admin-table__thumb { width: 44px; }
 .admin-table__thumb img { width: 40px; height: 40px; border-radius: 8px; object-fit: cover; display: block; }
 .admin-table__actions { display: flex; gap: 6px; white-space: nowrap; }
+.admin-item-unit { display: block; font-size: 12px; font-weight: 400; color: var(--text-muted, #6b7280); margin-top: 2px; }
 
 /* Mobile: stack each item's fields into a labeled card instead of a table row. */
 @media (max-width: 640px) {

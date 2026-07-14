@@ -14,6 +14,7 @@ export function ItemRow({ product }: { product: Product }) {
     <View style={styles.row}>
       <View style={styles.info}>
         <Text style={styles.name}>{product.name}</Text>
+        {product.unit ? <Text style={styles.unit}>{product.unit}</Text> : null}
         {product.description ? (
           <Text style={styles.desc} numberOfLines={2}>
             {product.description}
@@ -53,6 +54,7 @@ const styles = StyleSheet.create({
   },
   info: { flex: 1 },
   name: { fontSize: fontSizes.md + 0.5, fontWeight: fontWeights.bold, color: colors.text },
+  unit: { fontSize: fontSizes.xs + 0.5, fontWeight: fontWeights.semibold, color: colors.textMuted, marginTop: 2 },
   desc: { fontSize: fontSizes.sm, color: colors.textMuted, marginTop: 2 },
   price: { fontSize: fontSizes.md, fontWeight: fontWeights.heading, color: colors.text, marginTop: 6 },
 

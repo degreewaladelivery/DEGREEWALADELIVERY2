@@ -21,6 +21,14 @@
   font-family: 'Inter', sans-serif;
 }
 
+.product-card__unit {
+  display: block;
+  margin-top: 2px;
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--text-muted, #6b7280);
+}
+
 .product-card__desc {
   margin-top: 3px;
   font-size: 13px;

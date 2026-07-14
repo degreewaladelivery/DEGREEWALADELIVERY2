@@ -90,6 +90,7 @@ export interface ProductInput {
   shop_category_id: string | null;
   name: string;
   description: string | null;
+  unit: string | null;
   barcode: string | null;
   gst_percent: number;
   mrp: number;
@@ -218,6 +219,7 @@ export interface ShopProductInput {
   shop_category_id: string | null;
   name: string;
   description: string | null;
+  unit: string | null;
   barcode: string | null;
   gst_percent: number;
   mrp: number;

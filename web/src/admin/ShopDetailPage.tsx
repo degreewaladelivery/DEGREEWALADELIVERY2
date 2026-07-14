@@ -133,7 +133,10 @@ export function ShopDetailPage() {
                   <td className="admin-table__thumb">
                     {p.image_url ? <img src={p.image_url} alt="" /> : <span>—</span>}
                   </td>
-                  <td data-label="Name">{p.name}</td>
+                  <td data-label="Name">
+                    {p.name}
+                    {p.unit && <span className="admin-item-unit">{p.unit}</span>}
+                  </td>
                   <td data-label="Category">{catName(p.shop_category_id) ?? <em>—</em>}</td>
                   <td data-label="MRP">₹{p.mrp}</td>
                   <td data-label="Retail">₹{p.retail_price}</td>

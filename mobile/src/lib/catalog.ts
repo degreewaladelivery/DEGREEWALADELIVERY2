@@ -31,6 +31,7 @@ interface ProdRow {
   id: string;
   name: string;
   description: string | null;
+  unit: string | null;
   retail_price: number;
   image_url: string | null;
   subcategory_id?: string | null;
@@ -86,6 +87,7 @@ function mapProduct(row: ProdRow, shopId: string, section?: string): Product {
     description: row.description ?? undefined,
     price: Number(row.retail_price),
     imageUrl: row.image_url ?? undefined,
+    unit: row.unit ?? undefined,
     isAvailable: true, // the *_catalog views only return active rows
     section,
   };
@@ -143,7 +145,7 @@ export async function fetchCategoryPage(keyOrId: string): Promise<CategoryPage |
 
   const { data: prods, error } = await supabase
     .from('products_catalog')
-    .select('id,name,description,retail_price,image_url,subcategory_id')
+    .select('id,name,description,unit,retail_price,image_url,subcategory_id')
     .eq('category_id', category.id)
     .order('created_at', { ascending: false });
   if (error) throw error;
@@ -180,8 +182,8 @@ export async function fetchShopPage(shopId: string): Promise<ShopPage | null> {
   for (const s of scats ?? []) scName[s.id] = s.name;
 
   const [own, linked] = await Promise.all([
-    supabase.from('shop_products_catalog').select('id,name,description,retail_price,image_url,shop_category_id').eq('shop_id', shopId),
-    supabase.from('products_catalog').select('id,name,description,retail_price,image_url,shop_category_id').eq('shop_id', shopId),
+    supabase.from('shop_products_catalog').select('id,name,description,unit,retail_price,image_url,shop_category_id').eq('shop_id', shopId),
+    supabase.from('products_catalog').select('id,name,description,unit,retail_price,image_url,shop_category_id').eq('shop_id', shopId),
   ]);
   if (own.error) throw own.error;
   if (linked.error) throw linked.error;

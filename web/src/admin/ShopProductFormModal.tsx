@@ -21,6 +21,7 @@ export function ShopProductFormModal({
   const [name, setName] = useState(product?.name ?? '');
   const [shopCategoryId, setShopCategoryId] = useState(product?.shop_category_id ?? '');
   const [description, setDescription] = useState(product?.description ?? '');
+  const [unit, setUnit] = useState(product?.unit ?? '');
   const [barcode, setBarcode] = useState(product?.barcode ?? '');
   const [gstPercent, setGstPercent] = useState<number | ''>(product?.gst_percent ?? '');
   const [mrp, setMrp] = useState<number | ''>(product?.mrp ?? '');
@@ -58,6 +59,7 @@ export function ShopProductFormModal({
         shop_category_id: shopCategoryId || null,
         name: name.trim(),
         description: description.trim() || null,
+        unit: unit.trim() || null,
         barcode: barcode.trim() || null,
         gst_percent: gstPercent === '' ? 0 : gstPercent,
         mrp: mrp === '' ? 0 : mrp,
@@ -102,6 +104,11 @@ export function ShopProductFormModal({
         <label className="admin-field">
           <span>Description <em>(public)</em></span>
           <textarea value={description} onChange={(e) => setDescription(e.target.value)} rows={2} />
+        </label>
+
+        <label className="admin-field">
+          <span>Pack size / unit <em>(optional)</em></span>
+          <input value={unit} onChange={(e) => setUnit(e.target.value)} placeholder="e.g. 1 kg, 500 ml, 6 pcs" />
         </label>
 
         <label className="admin-field">

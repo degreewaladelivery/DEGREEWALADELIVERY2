@@ -16,6 +16,7 @@ export function ProductCard({ product }: { product: Product }) {
     <div className={`product-card${unavailable ? ' is-unavailable' : ''}`}>
       <div className="product-card__info">
         <h4 className="product-card__name">{product.name}</h4>
+        {product.unit && <span className="product-card__unit">{product.unit}</span>}
         {product.description && <p className="product-card__desc">{product.description}</p>}
         <span className="product-card__price">{formatRupees(product.price)}</span>
       </div>

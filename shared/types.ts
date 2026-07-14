@@ -85,6 +85,8 @@ export interface Product {
   price: number;
   imageUrl?: string;
   isAvailable: boolean;
+  /** Optional pack size / unit, shown as typed, e.g. "1 kg", "500 ml", "6 pcs". */
+  unit?: string;
   /** Optional grouping inside a shop's menu, e.g. "Starters". */
   section?: string;
 }

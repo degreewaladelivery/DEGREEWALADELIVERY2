@@ -128,7 +128,10 @@ export function CategoryDetailPage() {
                   <td className="admin-table__thumb">
                     {p.image_url ? <img src={p.image_url} alt="" /> : <span>—</span>}
                   </td>
-                  <td data-label="Name">{p.name}</td>
+                  <td data-label="Name">
+                    {p.name}
+                    {p.unit && <span className="admin-item-unit">{p.unit}</span>}
+                  </td>
                   <td data-label="Subcategory">{subName(p.subcategory_id) ?? <em>—</em>}</td>
                   <td data-label="MRP">₹{p.mrp}</td>
                   <td data-label="Retail">₹{p.retail_price}</td>
