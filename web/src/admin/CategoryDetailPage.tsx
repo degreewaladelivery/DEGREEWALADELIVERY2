@@ -56,6 +56,9 @@ export function CategoryDetailPage() {
   const subName = (id: string | null) =>
     id ? subcategories.find((s) => s.id === id)?.name ?? '—' : null;
 
+  // Next serial to auto-suggest for a new item: highest existing + 1, else 1.
+  const nextSerial = products.length ? Math.max(...products.map((p) => p.serial_no)) + 1 : 1;
+
   return (
     <div>
       <Link to="/admin/categories" className="admin-back">
@@ -176,6 +179,7 @@ export function CategoryDetailPage() {
           categories={categories}
           subcategories={subcategories}
           shops={shops}
+          nextSerial={nextSerial}
           product={editingProduct === 'new' ? null : editingProduct}
           onClose={() => setEditingProduct(null)}
           onSaved={() => {

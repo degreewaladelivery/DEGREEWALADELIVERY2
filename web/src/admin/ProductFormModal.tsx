@@ -16,6 +16,7 @@ export function ProductFormModal({
   categories,
   subcategories,
   shops,
+  nextSerial,
   product,
   onClose,
   onSaved,
@@ -24,13 +25,15 @@ export function ProductFormModal({
   categories: CategoryRow[];
   subcategories: SubcategoryRow[];
   shops: ShopRow[];
+  /** Auto-suggested serial for a new item (next number in this category). */
+  nextSerial: number;
   /** null = creating a new item; otherwise editing this one. */
   product: ProductRow | null;
   onClose: () => void;
   onSaved: () => void;
 }) {
   const [name, setName] = useState(product?.name ?? '');
-  const [serialNo, setSerialNo] = useState<number | ''>(product?.serial_no ?? '');
+  const [serialNo, setSerialNo] = useState<number | ''>(product ? product.serial_no : nextSerial);
   const [subcategoryId, setSubcategoryId] = useState(product?.subcategory_id ?? '');
   const [shopId, setShopId] = useState(product?.shop_id ?? '');
   const [shopCategoryId, setShopCategoryId] = useState(product?.shop_category_id ?? '');
@@ -108,7 +111,7 @@ export function ProductFormModal({
         name: name.trim(),
         description: description.trim() || null,
         unit: unit.trim() || null,
-        serial_no: serialNo === '' ? 0 : serialNo,
+        serial_no: serialNo === '' ? nextSerial : serialNo,
         barcode: barcode.trim() || null,
         gst_percent: gstPercent === '' ? 0 : gstPercent,
         mrp: mrp === '' ? 0 : mrp,
@@ -136,12 +139,12 @@ export function ProductFormModal({
         </label>
 
         <label className="admin-field">
-          <span>Serial number <em>(sorts ascending)</em></span>
+          <span>Serial number <em>(required — sorts ascending)</em></span>
           <input
             type="number"
             step="1"
-            min="0"
-            placeholder="e.g. 1"
+            min="1"
+            required
             value={serialNo}
             onChange={(e) => setSerialNo(e.target.value === '' ? '' : Number(e.target.value))}
           />

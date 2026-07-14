@@ -57,6 +57,9 @@ export function ShopDetailPage() {
 
   const parentCategoryName = (id: string) => categories.find((c) => c.id === id)?.name ?? '—';
 
+  // Next serial to auto-suggest for a new shop item: highest existing + 1, else 1.
+  const nextSerial = products.length ? Math.max(...products.map((p) => p.serial_no)) + 1 : 1;
+
   return (
     <div>
       <Link to="/admin/shops" className="admin-back">
@@ -220,6 +223,7 @@ export function ShopDetailPage() {
         <ShopProductFormModal
           shopId={shopId}
           shopCategories={shopCategories}
+          nextSerial={nextSerial}
           product={editingProduct === 'new' ? null : editingProduct}
           onClose={() => setEditingProduct(null)}
           onSaved={() => {
