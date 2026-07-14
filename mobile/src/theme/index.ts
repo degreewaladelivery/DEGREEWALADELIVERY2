@@ -1,13 +1,3 @@
-/**
- * theme/index.ts
- * --------------------------------------------------------------------------
- * Turns shared/tokens.ts (the one source of design truth, also used by the
- * web app) into values React Native can consume directly: colors/spacing/
- * radius/fontSizes are already plain numbers/strings, so they're re-exported
- * as-is. Shadows are CSS box-shadow strings on web, so here they're
- * hand-translated into RN shadow style objects (iOS shadow* props +
- * Android elevation).
- */
 import { Platform } from 'react-native';
 import { colors, spacing, radius, fontSizes, categoryPalette } from '@shared/tokens';
 
@@ -36,8 +26,6 @@ export const shadows = {
   brand: shadow(8, 0.28, 24, 8),
 };
 
-// Poppins isn't linked as a custom font yet, so headings use the system
-// font at heavy weight — swap in Poppins-Bold later without touching call sites.
 export const fontWeights = {
   heading: '800' as const,
   bold: '700' as const,

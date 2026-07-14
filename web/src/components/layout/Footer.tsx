@@ -3,7 +3,6 @@ import './Footer.css';
 
 const LINKS = ['About', 'Help', 'Track Order', 'Contact', 'Terms & Privacy'];
 
-/** Clean, centered site footer: brand, one compact link row, copyright. */
 export function Footer() {
   return (
     <footer className="site-footer">

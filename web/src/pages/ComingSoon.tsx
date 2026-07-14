@@ -1,9 +1,5 @@
 import { Link, useRouteError } from 'react-router-dom';
 
-/**
- * Doubles as a friendly placeholder for not-yet-built routes (Track, Help)
- * and as the router's error/404 fallback.
- */
 export function ComingSoon({ title = 'Coming Soon' }: { title?: string }) {
   return (
     <div className="container cart-empty">
@@ -15,7 +11,6 @@ export function ComingSoon({ title = 'Coming Soon' }: { title?: string }) {
   );
 }
 
-/** Router error boundary (e.g. unknown URL). */
 export function RouteError() {
   const error = useRouteError();
   console.error(error);

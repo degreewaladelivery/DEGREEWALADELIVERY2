@@ -25,9 +25,9 @@ export function ProductFormModal({
   categories: CategoryRow[];
   subcategories: SubcategoryRow[];
   shops: ShopRow[];
-  /** Auto-suggested serial for a new item (next number in this category). */
+
   nextSerial: number;
-  /** null = creating a new item; otherwise editing this one. */
+
   product: ProductRow | null;
   onClose: () => void;
   onSaved: () => void;
@@ -51,7 +51,6 @@ export function ProductFormModal({
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  // Editing: load the extra categories this item is already cross-listed into.
   useEffect(() => {
     if (!product) return;
     let active = true;
@@ -66,7 +65,6 @@ export function ProductFormModal({
   const toggleExtraCategory = (id: string) =>
     setExtraCategoryIds((ids) => (ids.includes(id) ? ids.filter((x) => x !== id) : [...ids, id]));
 
-  // Load the linked shop's own categories so we can offer them below.
   useEffect(() => {
     if (!shopId) {
       setShopCategories([]);
@@ -168,7 +166,7 @@ export function ProductFormModal({
             value={shopId}
             onChange={(e) => {
               setShopId(e.target.value);
-              setShopCategoryId(''); // reset — a new shop has its own categories
+              setShopCategoryId('');
             }}
           >
             <option value="">Not shown in any shop</option>

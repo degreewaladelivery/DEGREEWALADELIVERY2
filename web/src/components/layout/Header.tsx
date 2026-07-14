@@ -13,8 +13,6 @@ const NAV_LINKS = [
   { label: 'Help', to: '/help' },
 ];
 
-/** The sticky top bar: brand, nav, location selector and cart.
- *  On mobile the nav collapses into a hamburger menu. */
 export function Header() {
   const count = useCartStore((s) => selectCount(s.items));
   const [menuOpen, setMenuOpen] = useState(false);
@@ -22,7 +20,7 @@ export function Header() {
   return (
     <header className="site-header">
       <div className="container site-header__inner">
-        {/* Hamburger (mobile only) */}
+
         <button
           className="nav-toggle"
           onClick={() => setMenuOpen((o) => !o)}
@@ -32,7 +30,6 @@ export function Header() {
           {menuOpen ? <XIcon size={22} /> : <MenuIcon size={22} />}
         </button>
 
-        {/* Brand */}
         <Link to="/" className="brand" aria-label="Degreewala Delivery home" onClick={() => setMenuOpen(false)}>
           <span className="brand__mark">🛵</span>
           <span className="brand__col">
@@ -43,7 +40,6 @@ export function Header() {
           </span>
         </Link>
 
-        {/* Desktop navigation */}
         <nav className="site-nav">
           {NAV_LINKS.map((link) => (
             <NavLink
@@ -58,7 +54,6 @@ export function Header() {
           ))}
         </nav>
 
-        {/* Location (desktop) + cart */}
         <div className="site-header__right">
           <button className="location-pill" type="button">
             <span className="location-pill__icon"><MapPinIcon size={18} /></span>
@@ -75,7 +70,6 @@ export function Header() {
         </div>
       </div>
 
-      {/* Mobile dropdown menu */}
       <div className={'mobile-menu' + (menuOpen ? ' is-open' : '')}>
         <div className="container">
           <div className="mobile-menu__location">

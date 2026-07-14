@@ -1,9 +1,3 @@
--- ============================================================================
--- Manual serial number on items — the admin types it while adding an item and
--- every item list (admin + customer) shows items sorted ascending by it.
--- Defaults to 0 (unnumbered items sort first, then by newest).
--- ============================================================================
-
 alter table products add column serial_no int not null default 0;
 alter table shop_products add column serial_no int not null default 0;
 

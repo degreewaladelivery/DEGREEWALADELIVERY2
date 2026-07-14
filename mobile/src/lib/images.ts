@@ -1,11 +1,3 @@
-/**
- * lib/images.ts
- * --------------------------------------------------------------------------
- * React Native's bundler needs static `require(...)` calls (no dynamic
- * template strings like Vite's import.meta.glob), so each image is mapped
- * by key here once. Missing keys just return undefined and callers fall
- * back to an emoji tile — same offline-safe behaviour as the web app.
- */
 import type { CategoryKey } from '@shared/types';
 
 const categoryImages: Partial<Record<CategoryKey, number>> = {

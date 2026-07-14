@@ -9,5 +9,4 @@ if (!url || !anonKey) {
   );
 }
 
-/** Single Supabase client for the whole web app — anon key only (RLS does the rest). */
 export const supabase = createClient(url, anonKey);

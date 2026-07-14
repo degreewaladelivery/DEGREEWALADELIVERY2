@@ -10,7 +10,6 @@ export function AdminLogin() {
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
 
-  // Already signed in as an admin — go straight to the panel.
   if (session && isAdmin) return <Navigate to="/admin/categories" replace />;
 
   const onSubmit = async (e: FormEvent) => {

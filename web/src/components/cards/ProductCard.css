@@ -73,7 +73,6 @@
   border-radius: var(--radius-pill, 999px);
 }
 
-/* Quantity stepper */
 .stepper {
   display: inline-flex;
   align-items: center;

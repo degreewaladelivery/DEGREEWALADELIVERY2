@@ -3,7 +3,6 @@ import { useCartStore, selectCount } from '../../store/cartStore';
 import { HomeIcon, TagIcon, CartIcon, UserIcon } from '../ui/icons';
 import './BottomNav.css';
 
-/** Fixed bottom tab bar shown on phones only — quick access to the app's main sections. */
 export function BottomNav() {
   const count = useCartStore((s) => selectCount(s.items));
 
@@ -14,7 +13,6 @@ export function BottomNav() {
         <span className="bottom-nav__label">Home</span>
       </NavLink>
 
-      {/* Hash link to the on-page offers section — never marked active (no distinct route). */}
       <Link to="/#offers" className="bottom-nav__tab">
         <span className="bottom-nav__icon"><TagIcon size={22} /></span>
         <span className="bottom-nav__label">Offers</span>

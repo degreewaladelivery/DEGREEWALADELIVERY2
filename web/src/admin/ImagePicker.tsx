@@ -1,7 +1,3 @@
-/**
- * Once an image is set, hide the file input entirely — show the preview
- * with a Remove button instead of a picker sitting on top of a picture.
- */
 export function ImagePicker({
   label,
   preview,

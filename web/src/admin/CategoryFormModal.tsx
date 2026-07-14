@@ -9,7 +9,7 @@ export function CategoryFormModal({
   onClose,
   onSaved,
 }: {
-  /** null = creating a new category; otherwise editing this one. */
+
   category: CategoryRow | null;
   onClose: () => void;
   onSaved: () => void;

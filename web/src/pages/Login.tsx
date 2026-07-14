@@ -2,7 +2,6 @@ import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import './Login.css';
 
-/** Customer login: phone number only (+91), no OTP — per the spec. */
 export function Login() {
   const navigate = useNavigate();
   const [phone, setPhone] = useState('');
@@ -22,7 +21,7 @@ export function Login() {
           className="login__form"
           onSubmit={(e) => {
             e.preventDefault();
-            // Design phase: no backend yet — just go home.
+
             if (valid) navigate('/');
           }}
         >

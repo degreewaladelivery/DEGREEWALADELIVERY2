@@ -9,7 +9,7 @@ export function ShopFormModal({
   onClose,
   onSaved,
 }: {
-  /** null = creating a new shop; otherwise editing this one. */
+
   shop: ShopRow | null;
   onClose: () => void;
   onSaved: () => void;

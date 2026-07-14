@@ -17,7 +17,6 @@
   align-items: start;
 }
 
-/* Line items */
 .cart__lines {
   background: #fff;
   border: 1px solid var(--border, #eceef2);
@@ -52,7 +51,6 @@
   text-align: right;
 }
 
-/* a lighter stepper variant for the cart */
 .stepper--light {
   background: #fff;
   border: 1.5px solid var(--brand, #ff6b00);
@@ -65,7 +63,6 @@
   color: var(--brand, #ff6b00);
 }
 
-/* Bill summary */
 .cart__bill {
   background: #fff;
   border: 1px solid var(--border, #eceef2);
@@ -98,7 +95,6 @@
   margin-top: 18px;
 }
 
-/* Empty state */
 .cart-empty {
   text-align: center;
   padding-block: 80px;

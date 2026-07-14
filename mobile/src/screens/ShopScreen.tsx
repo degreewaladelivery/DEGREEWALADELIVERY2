@@ -73,7 +73,6 @@ export function ShopScreen() {
             <Text style={styles.back}>← Back</Text>
           </TouchableOpacity>
 
-          {/* Shop header */}
           <View style={styles.header}>
             <View style={styles.thumb}>
               <Thumb src={shop.imageUrl} emoji="🏬" tint="#FFF3E0" fontSize={44} />
@@ -88,7 +87,6 @@ export function ShopScreen() {
             </View>
           </View>
 
-          {/* Menu grouped by section */}
           {products.length === 0 ? (
             <Text style={styles.none}>No items here yet — check back soon!</Text>
           ) : (

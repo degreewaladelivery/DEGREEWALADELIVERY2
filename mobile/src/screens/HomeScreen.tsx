@@ -23,7 +23,6 @@ import { MapPinIcon, SearchIcon, MicIcon, SlidersIcon, ZapIcon, BookmarkIcon, Pe
 
 const { width: SCREEN_W } = Dimensions.get('window');
 
-/** Offers cycled across cards — same placeholder copy as the web app. */
 const OFFERS = [
   '₹75 OFF above ₹199',
   '40% OFF up to ₹120',
@@ -45,7 +44,6 @@ export function HomeScreen() {
   const heroArt = getBrandImage('hero');
   const insets = useSafeAreaInsets();
 
-  // Live catalog from Supabase — same data the website + admin panel use.
   useEffect(() => {
     fetchCategories().then(setCategories).catch(() => {});
     fetchShops().then(setShops).catch(() => {});
@@ -61,7 +59,7 @@ export function HomeScreen() {
         stickyHeaderIndices={[1]}
         showsVerticalScrollIndicator={false}
       >
-        {/* ---- Location + avatar ---- */}
+
         <View style={styles.top}>
           <TouchableOpacity style={styles.loc} activeOpacity={0.7}>
             <MapPinIcon size={20} color={colors.brand} />
@@ -77,7 +75,6 @@ export function HomeScreen() {
           </View>
         </View>
 
-        {/* ---- Sticky search bar ---- */}
         <View style={styles.searchBarWrap}>
           <View style={styles.search}>
             <SearchIcon size={18} color={colors.brand} />
@@ -92,13 +89,6 @@ export function HomeScreen() {
           </View>
         </View>
 
-        {/* ---- Promo banner ----
-            hero.jpg is a square (1400x1400) photo with a watermark baked into
-            the bottom edge. RN's <Image> always center-crops, so instead of
-            relying on resizeMode we render it at its natural square size and
-            pin it to the top of a shorter box — the overflow (bottom ~10%,
-            where the watermark sits) gets clipped, same effect as the web
-            app's `object-position: center top`. */}
         {heroArt && (
           <View style={styles.banner}>
             <Image source={heroArt} style={styles.bannerImg} resizeMode="cover" />
@@ -108,7 +98,6 @@ export function HomeScreen() {
           </View>
         )}
 
-        {/* ---- Filter pills ---- */}
         <ScrollView
           horizontal
           showsHorizontalScrollIndicator={false}
@@ -127,7 +116,6 @@ export function HomeScreen() {
           </TouchableOpacity>
         </ScrollView>
 
-        {/* ---- Recommended for you (categories) ---- */}
         <View style={styles.section}>
           <Text style={styles.heading}>Recommended for you</Text>
           <ScrollView
@@ -168,7 +156,6 @@ export function HomeScreen() {
           </ScrollView>
         </View>
 
-        {/* ---- Featured feed ---- */}
         <View style={[styles.section, styles.feedSection]}>
           <Text style={styles.heading}>{shops.length} shops delivering to you</Text>
           <Text style={styles.subheading}>Featured</Text>
@@ -219,7 +206,6 @@ export function HomeScreen() {
           })}
         </View>
 
-        {/* Reserve space so the floating bottom-tab pill never covers the last card. */}
         <View style={{ height: 78 + insets.bottom }} />
       </ScrollView>
     </SafeAreaView>
@@ -271,7 +257,7 @@ const styles = StyleSheet.create({
   banner: {
     marginTop: spacing.xs,
     width: SCREEN_W,
-    height: SCREEN_W * 0.9, // slightly shorter than the square source photo
+    height: SCREEN_W * 0.9,
     overflow: 'hidden',
   },
   bannerImg: {
@@ -279,7 +265,7 @@ const styles = StyleSheet.create({
     top: 0,
     left: 0,
     width: SCREEN_W,
-    height: SCREEN_W, // full square photo, anchored to the top so the excess bottom slice clips off
+    height: SCREEN_W,
   },
   bannerCta: {
     position: 'absolute',

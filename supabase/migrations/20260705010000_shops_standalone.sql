@@ -1,16 +1,8 @@
--- ============================================================================
--- Shops: a second, fully independent top-level entity alongside Categories.
--- Deliberately NOT linked to categories/subcategories/products in any way —
--- Shops has its own parallel structure (Shop -> optional ShopCategory ->
--- ShopProduct) so nothing here can ever touch or break the Categories tab.
--- ============================================================================
-
 create table shops (
   id uuid primary key default gen_random_uuid(),
   name text not null,
   image_url text,
   description text,
-  -- Both optional: a shop may not have a rating or a delivery-time estimate yet.
   rating numeric(2, 1),
   delivery_time text,
   is_featured boolean not null default false,
@@ -34,7 +26,6 @@ create policy "Admins have full access to shops"
 create trigger shops_set_updated_at before update on shops
   for each row execute function set_updated_at();
 
--- ---- A shop's own optional categories --------------------------------------
 create table shop_categories (
   id uuid primary key default gen_random_uuid(),
   shop_id uuid not null references shops (id) on delete cascade,
@@ -61,9 +52,6 @@ create policy "Admins have full access to shop categories"
 create trigger shop_categories_set_updated_at before update on shop_categories
   for each row execute function set_updated_at();
 
--- ---- A shop's items ---------------------------------------------------------
--- Same shape/rules as `products`: `barcode` is admin-only (no public SELECT
--- policy on this table; customer apps read shop_products_catalog instead).
 create table shop_products (
   id uuid primary key default gen_random_uuid(),
   shop_id uuid not null references shops (id) on delete cascade,

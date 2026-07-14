@@ -1,14 +1,3 @@
-/**
- * lib/supabase.ts
- * --------------------------------------------------------------------------
- * The mobile app's Supabase client — the same project the website and admin
- * panel use, so a save in the admin panel shows up here too.
- *
- * The anon key is safe to embed in the app: it only grants what Row Level
- * Security allows (public reads of active catalog rows; barcodes stay hidden
- * behind the *_catalog views). No session is persisted — the app reads the
- * public catalog anonymously.
- */
 import 'react-native-url-polyfill/auto';
 import { createClient } from '@supabase/supabase-js';
 

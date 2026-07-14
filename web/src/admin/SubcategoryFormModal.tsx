@@ -11,7 +11,7 @@ export function SubcategoryFormModal({
   onSaved,
 }: {
   categoryId: string;
-  /** null = creating a new subcategory; otherwise editing this one. */
+
   subcategory: SubcategoryRow | null;
   onClose: () => void;
   onSaved: () => void;

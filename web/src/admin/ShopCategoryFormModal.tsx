@@ -11,7 +11,7 @@ export function ShopCategoryFormModal({
   onSaved,
 }: {
   shopId: string;
-  /** null = creating a new shop category; otherwise editing this one. */
+
   shopCategory: ShopCategoryRow | null;
   onClose: () => void;
   onSaved: () => void;

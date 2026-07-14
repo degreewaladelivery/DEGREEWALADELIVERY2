@@ -1,10 +1,3 @@
-/**
- * store/cartStore.ts
- * --------------------------------------------------------------------------
- * The cart, in a tiny Zustand store (mirror of the web app's cartStore).
- * A cart belongs to ONE shop at a time — adding an item from a different
- * shop replaces the cart.
- */
 import { create } from 'zustand';
 import type { Product } from '@shared/types';
 

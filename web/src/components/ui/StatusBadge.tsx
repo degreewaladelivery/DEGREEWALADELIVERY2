@@ -2,7 +2,6 @@ import type { OrderStatus } from '@shared/types';
 import { orderStatusColors, orderStatusLabels } from '@shared/tokens';
 import './StatusBadge.css';
 
-/** A coloured pill showing an order's current status. */
 export function StatusBadge({ status }: { status: OrderStatus }) {
   const color = orderStatusColors[status];
   return (

@@ -14,9 +14,9 @@ export function ShopProductFormModal({
 }: {
   shopId: string;
   shopCategories: ShopCategoryRow[];
-  /** Auto-suggested serial for a new item (next number in this shop). */
+
   nextSerial: number;
-  /** null = creating a new item; otherwise editing this one. */
+
   product: ShopProductRow | null;
   onClose: () => void;
   onSaved: () => void;

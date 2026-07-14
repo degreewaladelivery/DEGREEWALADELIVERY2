@@ -1,11 +1,3 @@
-/**
- * lib/catalog.ts
- * --------------------------------------------------------------------------
- * The mobile app's read-only catalog layer — a mirror of web/src/lib/catalog.ts.
- * Fetches live data from Supabase (anon key + public RLS / *_catalog views) and
- * maps snake_case DB rows into the camelCase shared types the screens speak, so
- * the app shows exactly what the admin panel has (same as the website).
- */
 import { supabase } from './supabase';
 import { categoryPalette } from '@shared/tokens';
 import type { Category, Shop, Product, CategoryKey } from '@shared/types';
@@ -89,7 +81,7 @@ function mapProduct(row: ProdRow, shopId: string, section?: string): Product {
     price: Number(row.retail_price),
     imageUrl: row.image_url ?? undefined,
     unit: row.unit ?? undefined,
-    isAvailable: true, // the *_catalog views only return active rows
+    isAvailable: true,
     section,
   };
 }
@@ -130,7 +122,6 @@ export interface CategoryPage {
   products: Product[];
 }
 
-/** A category + its items (each item's `section` = its subcategory name). */
 export async function fetchCategoryPage(keyOrId: string): Promise<CategoryPage | null> {
   const categories = await fetchCategories();
   const category = categories.find((c) => c.id === keyOrId || c.key === keyOrId);
@@ -151,7 +142,6 @@ export async function fetchCategoryPage(keyOrId: string): Promise<CategoryPage |
     .eq('category_id', category.id);
   if (error) throw error;
 
-  // Items cross-listed into this category from another category.
   const { data: links } = await supabase
     .from('product_categories')
     .select('product_id')
@@ -176,7 +166,6 @@ export interface ShopPage {
   products: Product[];
 }
 
-/** A shop + its items: the shop's own products plus any category items linked to it. */
 export async function fetchShopPage(shopId: string): Promise<ShopPage | null> {
   const { data: shopRow, error } = await supabase
     .from('shops')

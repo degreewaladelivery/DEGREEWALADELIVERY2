@@ -1,21 +1,6 @@
-/**
- * lib/catalog.ts
- * --------------------------------------------------------------------------
- * The customer site's read-only data layer. Fetches live catalog data from
- * Supabase (anon key + public RLS policies / *_catalog views) and maps the
- * snake_case DB rows into the camelCase shared types the UI already speaks.
- *
- * This is what makes the site "showcase whatever the admin panel has": every
- * page reads through here on load, so a save in the admin shows up on refresh.
- * Barcodes never come through — customers read the products_catalog view,
- * which omits that column.
- */
-
 import { supabase } from './supabase';
 import { categoryPalette } from '@shared/tokens';
 import type { Category, Shop, Product, CategoryKey } from '@shared/types';
-
-/* ---- row shapes (only the columns we read) ------------------------------- */
 
 interface CatRow {
   id: string;
@@ -46,16 +31,12 @@ interface ProdRow {
   shop_category_id?: string | null;
 }
 
-/* ---- helpers ------------------------------------------------------------- */
-
-/** "Non-Veg Food" -> "non-veg-food". Category slug used for routing + palette. */
 export function slugify(name: string): string {
   return name.toLowerCase().trim().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '');
 }
 
 const DEFAULT_PALETTE = { emoji: '🏬', tint: '#F4F6F9', border: '#FF6B00' };
 
-/** Look up a category's emoji/tint/accent by name; safe fallback for unknowns. */
 function paletteFor(name: string) {
   const pal = (categoryPalette as Record<string, { emoji: string; tint: string; border: string }>)[slugify(name)];
   return pal ?? DEFAULT_PALETTE;
@@ -81,8 +62,7 @@ function mapShop(row: ShopRow): Shop {
   return {
     id: row.id,
     name: row.name,
-    // Shops are independent of categories; 'food' just gives a valid default
-    // palette for the emoji fallback (real shops render their uploaded photo).
+
     categoryKey: 'food' as CategoryKey,
     description: row.description ?? undefined,
     imageUrl: row.image_url ?? undefined,
@@ -102,14 +82,11 @@ function mapProduct(row: ProdRow, shopId: string, section?: string): Product {
     price: Number(row.retail_price),
     imageUrl: row.image_url ?? undefined,
     unit: row.unit ?? undefined,
-    isAvailable: true, // the *_catalog views only return active rows
+    isAvailable: true,
     section,
   };
 }
 
-/* ---- fetchers ------------------------------------------------------------ */
-
-/** All active categories, each with its subcategory names attached. */
 export async function fetchCategories(): Promise<Category[]> {
   const [cats, subs] = await Promise.all([
     supabase.from('categories').select('id,name,image_url,sort_order,is_active').eq('is_active', true).order('sort_order'),
@@ -123,7 +100,6 @@ export async function fetchCategories(): Promise<Category[]> {
   return (cats.data ?? []).map((c) => mapCategory(c as CatRow, namesByCat[c.id] ?? []));
 }
 
-/** How many items live in each category (keyed by category id) — home badges. */
 export async function fetchCategoryItemCounts(): Promise<Record<string, number>> {
   const { data, error } = await supabase.from('products_catalog').select('category_id');
   if (error) throw error;
@@ -132,7 +108,6 @@ export async function fetchCategoryItemCounts(): Promise<Record<string, number>>
   return counts;
 }
 
-/** All active shops (featured ones first via sort_order). */
 export async function fetchShops(): Promise<Shop[]> {
   const { data, error } = await supabase
     .from('shops')
@@ -148,7 +123,6 @@ export interface CategoryPage {
   products: Product[];
 }
 
-/** A category + its items, grouped-ready (each item's `section` = subcategory). */
 export async function fetchCategoryPage(keyOrId: string): Promise<CategoryPage | null> {
   const categories = await fetchCategories();
   const category = categories.find((c) => c.id === keyOrId || c.key === keyOrId);
@@ -169,7 +143,6 @@ export async function fetchCategoryPage(keyOrId: string): Promise<CategoryPage |
     .eq('category_id', category.id);
   if (error) throw error;
 
-  // Items cross-listed into this category from another category (product_categories).
   const { data: links } = await supabase
     .from('product_categories')
     .select('product_id')
@@ -194,7 +167,6 @@ export interface ShopPage {
   products: Product[];
 }
 
-/** A shop + its items: the shop's own products plus any category items linked to it. */
 export async function fetchShopPage(shopId: string): Promise<ShopPage | null> {
   const { data: shopRow, error } = await supabase
     .from('shops')

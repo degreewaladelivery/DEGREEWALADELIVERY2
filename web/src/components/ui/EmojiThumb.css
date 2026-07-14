@@ -4,7 +4,7 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  border-radius: inherit; /* match the parent card's corners */
+  border-radius: inherit;
   user-select: none;
 }
 

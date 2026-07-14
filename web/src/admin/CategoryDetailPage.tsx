@@ -61,7 +61,6 @@ export function CategoryDetailPage() {
 
   const catNameById = (id: string) => categories.find((c) => c.id === id)?.name ?? '—';
 
-  // Next serial to auto-suggest for a new item: highest existing + 1, else 1.
   const nextSerial = products.length ? Math.max(...products.map((p) => p.serial_no)) + 1 : 1;
 
   return (
@@ -75,7 +74,6 @@ export function CategoryDetailPage() {
 
       {error && <p className="admin-login__error">{error}</p>}
 
-      {/* ---- Subcategories ---- */}
       <section className="admin-section">
         <div className="admin-section__head">
           <h2>Subcategories</h2>
@@ -109,7 +107,6 @@ export function CategoryDetailPage() {
         )}
       </section>
 
-      {/* ---- Items ---- */}
       <section className="admin-section">
         <div className="admin-section__head">
           <h2>Items</h2>
@@ -166,7 +163,6 @@ export function CategoryDetailPage() {
         )}
       </section>
 
-      {/* ---- Items cross-listed into this category from another (read-only) ---- */}
       {crossListed.length > 0 && (
         <section className="admin-section">
           <div className="admin-section__head">

@@ -10,7 +10,6 @@ import { getShopImage } from '../lib/images';
 import { formatRupees } from '../lib/format';
 import './ShopItems.css';
 
-/** Group products into their menu sections, preserving order. */
 function groupBySection(products: Product[]): Record<string, Product[]> {
   const groups: Record<string, Product[]> = {};
   for (const p of products) {
@@ -25,7 +24,6 @@ export function ShopItems() {
   const [page, setPage] = useState<ShopPage | null>(null);
   const [loading, setLoading] = useState(true);
 
-  // Cart bar state (only relevant for the current shop).
   const count = useCartStore((s) => selectCount(s.items));
   const subtotal = useCartStore((s) => selectSubtotal(s.items));
 
@@ -60,7 +58,7 @@ export function ShopItems() {
 
   return (
     <div className="shopitems">
-      {/* Shop header */}
+
       <div className="container">
         <Link to="/" className="shopitems__back">← Back</Link>
         <div className="shopitems__header">
@@ -86,7 +84,6 @@ export function ShopItems() {
         </div>
       </div>
 
-      {/* Menu, grouped by section */}
       <div className="container shopitems__menu">
         {products.length === 0 ? (
           <p className="shopitems__none">No items here yet — check back soon!</p>
@@ -104,7 +101,6 @@ export function ShopItems() {
         )}
       </div>
 
-      {/* Sticky cart bar */}
       {count > 0 && (
         <div className="cart-bar">
           <div className="container cart-bar__inner">

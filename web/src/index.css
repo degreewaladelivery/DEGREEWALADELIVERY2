@@ -1,14 +1,7 @@
-/* ==========================================================================
-   index.css — global styles for the whole site
-   - a light reset, base typography, and a few utility classes
-   - colours/spacing come from the CSS variables we inject in cssVars.ts
-   - fallback values (after the comma) keep things sane before JS runs
-   ========================================================================== */
-
 *,
 *::before,
 *::after {
-  box-sizing: border-box; /* width includes padding+border — far easier layouts */
+  box-sizing: border-box;
   margin: 0;
   padding: 0;
 }
@@ -55,9 +48,6 @@ ul {
   list-style: none;
 }
 
-/* ---- Reusable layout helpers -------------------------------------------- */
-
-/* Centred page container with comfortable side padding. */
 .container {
   width: 100%;
   max-width: 1180px;
@@ -65,7 +55,6 @@ ul {
   padding-inline: 20px;
 }
 
-/* A section title with the little orange underline used across the site. */
 .section-heading {
   text-align: center;
   margin-bottom: 28px;
@@ -90,12 +79,10 @@ ul {
   margin: 10px auto 0;
 }
 
-/* Generic vertical rhythm for big page sections. */
 .section {
   padding-block: 56px;
 }
 
-/* Screen-reader-only (accessible labels without visible text). */
 .sr-only {
   position: absolute;
   width: 1px;
@@ -108,7 +95,6 @@ ul {
   border: 0;
 }
 
-/* ---- Mobile spacing (phones) -------------------------------------------- */
 @media (max-width: 640px) {
   .container {
     padding-inline: 16px;

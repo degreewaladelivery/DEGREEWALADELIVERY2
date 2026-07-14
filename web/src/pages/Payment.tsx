@@ -43,7 +43,7 @@ export function Payment() {
 
       <div className="payment__grid">
         <div className="payment__main">
-          {/* Delivery address */}
+
           <section className="pay-card">
             <h3>📍 Delivery Address</h3>
             <textarea
@@ -54,7 +54,6 @@ export function Payment() {
             />
           </section>
 
-          {/* Payment method */}
           <section className="pay-card">
             <h3>💳 Payment Method</h3>
             <label className={'pay-method' + (method === 'cod' ? ' is-active' : '')}>
@@ -82,7 +81,6 @@ export function Payment() {
           </section>
         </div>
 
-        {/* Summary */}
         <aside className="payment__summary">
           <h3>Order Summary</h3>
           <div className="bill-row"><span>Items ({count})</span><span>{formatRupees(subtotal)}</span></div>

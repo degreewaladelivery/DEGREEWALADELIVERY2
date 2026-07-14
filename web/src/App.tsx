@@ -17,12 +17,6 @@ import { CategoryDetailPage } from './admin/CategoryDetailPage';
 import { ShopsPage } from './admin/ShopsPage';
 import { ShopDetailPage } from './admin/ShopDetailPage';
 
-/**
- * The app's route map. Every customer-facing page shares the <Layout>
- * (header + footer); react-router swaps the matched page into <Layout>'s
- * <Outlet/>. The /admin/* tree is a separate, self-contained back-office
- * app (its own layout + auth guard, no marketing chrome).
- */
 const router = createBrowserRouter([
   {
     element: <Layout />,

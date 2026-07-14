@@ -34,7 +34,7 @@ export function Cart() {
       <h1 className="cart__heading">Your Cart</h1>
 
       <div className="cart__grid">
-        {/* Line items */}
+
         <div className="cart__lines">
           {lines.map((line) => (
             <div key={line.product.id} className="cart-line">
@@ -54,7 +54,6 @@ export function Cart() {
           ))}
         </div>
 
-        {/* Bill summary */}
         <aside className="cart__bill">
           <h3>Bill Details</h3>
           <div className="bill-row">

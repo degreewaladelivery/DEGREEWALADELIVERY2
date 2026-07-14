@@ -13,11 +13,6 @@ interface ButtonProps extends ButtonHTMLAttributes<HTMLButtonElement> {
   children: ReactNode;
 }
 
-/**
- * The one button we reuse everywhere. The visual style comes from a few
- * classes (.btn + variant + size) so we stay consistent. The same classes
- * can also be applied to a react-router <Link> when a button needs to navigate.
- */
 export function Button({
   variant = 'primary',
   size = 'md',

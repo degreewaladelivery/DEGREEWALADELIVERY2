@@ -41,7 +41,6 @@
   padding-block: 28px 48px;
 }
 
-/* Sub-category pills */
 .subcat-row {
   display: flex;
   gap: 10px;
@@ -73,7 +72,6 @@
   gap: 20px;
 }
 
-/* Items list (a category's products, stacked rows) */
 .shoplist__items {
   display: grid;
   gap: 12px;

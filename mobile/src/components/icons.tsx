@@ -1,11 +1,3 @@
-/**
- * components/icons.tsx
- * --------------------------------------------------------------------------
- * React Native port of the web app's Feather-style line-icons
- * (web/src/components/ui/icons.tsx), using react-native-svg. Unlike CSS,
- * RN has no `currentColor` cascade, so each icon takes an explicit `color`
- * prop instead of inheriting it.
- */
 import Svg, { Path, Circle, Rect, Line, Polygon, Polyline } from 'react-native-svg';
 
 interface IconProps {
@@ -19,8 +11,6 @@ const base = {
   strokeLinecap: 'round' as const,
   strokeLinejoin: 'round' as const,
 };
-
-/* ---- Hero badges -------------------------------------------------------- */
 
 export const GridIcon = ({ size = 22, color = '#15172B' }: IconProps) => (
   <Svg width={size} height={size} viewBox="0 0 24 24">
@@ -53,8 +43,6 @@ export const LockIcon = ({ size = 22, color = '#15172B' }: IconProps) => (
     <Path d="M7 11V7a5 5 0 0 1 10 0v4" stroke={color} {...base} />
   </Svg>
 );
-
-/* ---- Why Choose --------------------------------------------------------- */
 
 export const LeafIcon = ({ size = 22, color = '#15172B' }: IconProps) => (
   <Svg width={size} height={size} viewBox="0 0 24 24">
@@ -99,8 +87,6 @@ export const CalendarIcon = ({ size = 22, color = '#15172B' }: IconProps) => (
   </Svg>
 );
 
-/* ---- Stats -------------------------------------------------------------- */
-
 export const BuildingIcon = ({ size = 22, color = '#15172B' }: IconProps) => (
   <Svg width={size} height={size} viewBox="0 0 24 24">
     <Path d="M3 21h18" stroke={color} {...base} />
@@ -135,8 +121,6 @@ export const BagIcon = ({ size = 22, color = '#15172B' }: IconProps) => (
     <Path d="M16 10a4 4 0 0 1-8 0" stroke={color} {...base} />
   </Svg>
 );
-
-/* ---- App features / header ---------------------------------------------- */
 
 export const TagIcon = ({ size = 22, color = '#15172B' }: IconProps) => (
   <Svg width={size} height={size} viewBox="0 0 24 24">

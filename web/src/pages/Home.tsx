@@ -19,9 +19,6 @@ import './Home.css';
 
 const POPULAR_SEARCHES = ['Food', 'Grocery', 'Medicine', 'Cakes', 'Meat'];
 
-/* ---- Mobile (Zomato-style) feed data ------------------------------------ */
-
-/** Display offers cycled across the mobile shop cards. */
 const MX_OFFERS = [
   '₹75 OFF above ₹199',
   '40% OFF up to ₹120',
@@ -33,7 +30,6 @@ const MX_OFFERS = [
   'Buy 1 Get 1',
 ];
 
-/** "By 8.3K+" style vote counts under the rating pill on featured cards. */
 const MX_VOTES = ['By 8.3K+', 'By 2.1K+', 'By 950+', 'By 1.4K+'];
 
 const HERO_BADGES = [
@@ -74,7 +70,6 @@ export function Home() {
   const navigate = useNavigate();
   const railRef = useRef<HTMLDivElement>(null);
 
-  // Live catalog from Supabase — reflects whatever the admin panel has saved.
   useEffect(() => {
     fetchCategories().then(setCategories).catch(() => {});
     fetchShops().then(setShops).catch(() => {});
@@ -92,11 +87,9 @@ export function Home() {
 
   return (
     <div className="home">
-      {/* ============ MOBILE HOME (Zomato-style app feed) ============ */}
-      {/* Hidden on desktop. `display: contents` on mobile, so the sticky
-          search bar stays pinned for the whole page. */}
+
       <section className="mx" aria-label="Explore">
-        {/* Location + profile avatar */}
+
         <div className="container mx-top">
           <button type="button" className="mx-loc">
             <span className="mx-loc__pin"><MapPinIcon size={20} /></span>
@@ -108,7 +101,6 @@ export function Home() {
           <span className="mx-avatar" aria-label="Account">A</span>
         </div>
 
-        {/* Sticky search bar */}
         <div className="mx-searchbar">
           <div className="container mx-searchbar__row">
             <form
@@ -130,7 +122,6 @@ export function Home() {
           </div>
         </div>
 
-        {/* Full-bleed promo banner */}
         {heroArt && (
           <div className="mx-banner">
             <img src={heroArt} alt="Degreewala delivery" />
@@ -138,14 +129,12 @@ export function Home() {
           </div>
         )}
 
-        {/* Filter pills */}
         <div className="container mx-filters">
           <button type="button" className="mx-pill"><SlidersIcon size={14} /> Filters ▾</button>
           <button type="button" className="mx-pill"><span className="mx-bolt"><ZapIcon size={13} /></span> Near &amp; Fast</button>
           <button type="button" className="mx-pill">No packaging charges</button>
         </div>
 
-        {/* Recommended rail (categories) */}
         <div className="container mx-reco">
           <h2 className="mx-heading">Recommended for you</h2>
           <div className="mx-reco__rail">
@@ -164,7 +153,6 @@ export function Home() {
           </div>
         </div>
 
-        {/* Featured feed (big cards) */}
         <div className="container mx-feed">
           <h2 className="mx-heading">{shops.length} shops delivering to you</h2>
           <p className="mx-subheading">Featured</p>
@@ -202,7 +190,6 @@ export function Home() {
         </div>
       </section>
 
-      {/* ================= HERO ================= */}
       <section className="hero dt-only">
         <div className="container hero__inner">
           <div className="hero__left">
@@ -254,7 +241,6 @@ export function Home() {
             </div>
           </div>
 
-          {/* Hero illustration: your brand/hero.png if present, else a fallback */}
           <div className="hero__right">
             {heroArt ? (
               <img className="hero__img" src={heroArt} alt="Degreewala delivery" />
@@ -275,7 +261,6 @@ export function Home() {
         </div>
       </section>
 
-      {/* ================= TOP CATEGORIES (carousel) ================= */}
       <section className="section dt-only" id="categories">
         <div className="container">
           <div className="section-heading">
@@ -298,7 +283,6 @@ export function Home() {
         </div>
       </section>
 
-      {/* ================= FEATURED (dark navy panel) ================= */}
       <section className="section dt-only" id="offers">
         <div className="container">
           <div className="featured-panel">
@@ -330,7 +314,6 @@ export function Home() {
         </div>
       </section>
 
-      {/* ================= STATS (peach card) ================= */}
       <section className="section stats-section dt-only">
         <div className="container">
           <div className="stats-card">
@@ -348,7 +331,6 @@ export function Home() {
         </div>
       </section>
 
-      {/* ================= WHY CHOOSE (row) ================= */}
       <section className="section dt-only">
         <div className="container">
           <div className="section-heading">
@@ -367,7 +349,6 @@ export function Home() {
         </div>
       </section>
 
-      {/* ================= APP CTA (with phone mockup) ================= */}
       <section className="section dt-only">
         <div className="container">
           <div className="app-cta">
@@ -380,7 +361,6 @@ export function Home() {
               </div>
             </div>
 
-            {/* Phone mockup: brand/app-phone.png if present, else a CSS mockup */}
             <div className="app-cta__phone">
               {appPhone ? (
                 <img className="app-cta__phone-img" src={appPhone} alt="Degreewala app" />

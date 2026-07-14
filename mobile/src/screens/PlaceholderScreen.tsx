@@ -2,7 +2,6 @@ import { View, Text, StyleSheet } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { colors, fontSizes, fontWeights, spacing } from '../theme';
 
-/** Simple "coming soon" screen for tabs whose real content isn't built yet. */
 export function PlaceholderScreen({ title, emoji }: { title: string; emoji: string }) {
   return (
     <SafeAreaView style={styles.safe}>

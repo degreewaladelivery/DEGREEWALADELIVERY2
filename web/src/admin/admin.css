@@ -1,14 +1,9 @@
-/* Admin panel — a plain, functional back-office tool. Reuses the site's
-   design tokens (--brand, --border, --surface, etc.) for brand consistency,
-   but its own layout: no marketing chrome, no design-preview click-blocking. */
-
 .admin-loading {
   padding: 48px;
   text-align: center;
   color: var(--text-muted, #6b7280);
 }
 
-/* ---- Login ---------------------------------------------------------------- */
 .admin-login {
   min-height: 100vh;
   display: flex;
@@ -49,7 +44,6 @@
   padding: 8px 12px;
 }
 
-/* ---- Layout ---------------------------------------------------------------- */
 .admin-app {
   min-height: 100vh;
   background: var(--surface, #f4f6f9);
@@ -109,7 +103,6 @@
   padding: 16px 0;
 }
 
-/* ---- Buttons ---------------------------------------------------------------- */
 .admin-btn {
   display: inline-flex;
   align-items: center;
@@ -138,7 +131,6 @@
 .admin-btn--danger:hover { border-color: var(--danger, #f44336); background: #fdecea; }
 .admin-btn--sm { padding: 6px 12px; font-size: 13px; }
 
-/* ---- Category grid ---------------------------------------------------------- */
 .admin-grid {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
@@ -191,7 +183,6 @@
 }
 .admin-tag--muted { background: var(--surface, #f4f6f9); color: var(--text-muted, #6b7280); }
 
-/* ---- Sections (category detail) --------------------------------------------- */
 .admin-section {
   background: #fff;
   border: 1px solid var(--border, #eceef2);
@@ -240,7 +231,6 @@
 .admin-pill__action:hover { color: var(--brand, #ff6b00); }
 .admin-pill__action--danger:hover { color: var(--danger, #f44336); }
 
-/* ---- Items table -------------------------------------------------------------- */
 .admin-table { width: 100%; border-collapse: collapse; font-size: 14px; }
 .admin-table th {
   text-align: left;
@@ -259,7 +249,6 @@
 .admin-table__actions { display: flex; gap: 6px; white-space: nowrap; }
 .admin-item-unit { display: block; font-size: 12px; font-weight: 400; color: var(--text-muted, #6b7280); margin-top: 2px; }
 
-/* Mobile: stack each item's fields into a labeled card instead of a table row. */
 @media (max-width: 640px) {
   .admin-table thead { display: none; }
   .admin-table,
@@ -304,7 +293,6 @@
   }
 }
 
-/* ---- Modal ---------------------------------------------------------------- */
 .admin-modal__backdrop {
   position: fixed;
   inset: 0;
@@ -339,7 +327,6 @@
 }
 .admin-modal__body { padding: 20px; }
 
-/* ---- Forms ---------------------------------------------------------------- */
 .admin-form { display: flex; flex-direction: column; gap: 14px; }
 .admin-form__row { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; }
 .admin-form__actions { display: flex; justify-content: flex-end; gap: 10px; margin-top: 6px; }
@@ -353,8 +340,6 @@
 .admin-image-picker { display: flex; flex-direction: column; align-items: flex-start; gap: 8px; }
 .admin-image-picker .admin-form__preview { width: auto; max-width: 100%; }
 
-/* min-width:0 lets grid/flex children shrink below their intrinsic size, so
-   the 3-across price row never overflows the modal. */
 .admin-field { display: flex; flex-direction: column; gap: 6px; min-width: 0; font-size: 13px; font-weight: 600; color: var(--text, #15172b); }
 .admin-field em { font-weight: 400; color: var(--text-muted, #6b7280); font-style: normal; }
 .admin-field input:not([type='checkbox']),
@@ -377,7 +362,7 @@
   outline: none;
   border-color: var(--brand, #ff6b00);
 }
-/* Hide the native up/down spinner buttons on number fields (GST, MRP, Retail, etc.). */
+
 .admin-field input[type='number'] {
   appearance: textfield;
   -moz-appearance: textfield;
@@ -390,7 +375,6 @@
 .admin-field--row { flex-direction: row; align-items: center; gap: 8px; }
 .admin-field--row input[type='checkbox'] { width: 16px; height: 16px; }
 
-/* Multi-select checklist (e.g. "also show in other categories") */
 .admin-checklist {
   display: flex;
   flex-wrap: wrap;

@@ -1,5 +1,3 @@
-/* Button — shared classes used by <Button> and by navigation <Link>s. */
-
 .btn {
   display: inline-flex;
   align-items: center;
@@ -23,7 +21,6 @@
   cursor: not-allowed;
 }
 
-/* Sizes */
 .btn-sm { padding: 8px 14px; font-size: 13px; }
 .btn-md { padding: 11px 20px; font-size: 15px; }
 .btn-lg { padding: 15px 28px; font-size: 16px; }
@@ -35,7 +32,6 @@
   font-size: 1.05em;
 }
 
-/* Variants */
 .btn-primary {
   background: linear-gradient(135deg, var(--brand, #ff6b00), var(--brand-dark, #e85d00));
   color: #fff;

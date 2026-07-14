@@ -1,6 +1,5 @@
-/* Floating pill tab bar (Zomato-style), phones only. */
 .bottom-nav {
-  display: none; /* shown in the media query below */
+  display: none;
   position: fixed;
   left: 14px;
   right: 14px;
@@ -59,7 +58,7 @@
   .bottom-nav {
     display: flex;
   }
-  /* Reserve space so the floating bar never permanently covers the footer. */
+
   body {
     padding-bottom: 86px;
   }

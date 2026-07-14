@@ -3,9 +3,9 @@ import type { Session } from '@supabase/supabase-js';
 import { supabase } from '../lib/supabase';
 
 interface AdminAuthState {
-  /** undefined while the initial session check is still running. */
+
   session: Session | null | undefined;
-  /** Whether the logged-in user is a catalog admin (checked via the am_i_admin RPC). */
+
   isAdmin: boolean;
   signIn: (email: string, password: string) => Promise<{ error: string | null }>;
   signOut: () => Promise<void>;

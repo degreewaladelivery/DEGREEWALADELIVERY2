@@ -48,7 +48,6 @@
   color: var(--text-muted, #6b7280);
 }
 
-/* Timeline */
 .track {
   display: flex;
   justify-content: space-between;

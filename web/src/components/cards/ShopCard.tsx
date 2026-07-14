@@ -5,7 +5,6 @@ import { Thumb } from '../ui/Thumb';
 import { getShopImage } from '../../lib/images';
 import './ShopCard.css';
 
-/** A shop tile used in the featured row and the shop-list grid. */
 export function ShopCard({ shop }: { shop: Shop }) {
   const pal = categoryPalette[shop.categoryKey];
 

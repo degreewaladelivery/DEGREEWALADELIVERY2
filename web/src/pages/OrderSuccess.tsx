@@ -33,7 +33,6 @@ export function OrderSuccess() {
           </div>
         )}
 
-        {/* Mini status timeline */}
         <div className="track">
           {STEPS.map((step, i) => (
             <div key={step} className={'track__step' + (i === 0 ? ' is-done' : '')}>

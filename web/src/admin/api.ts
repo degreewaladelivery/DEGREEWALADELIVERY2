@@ -1,8 +1,6 @@
 import { supabase } from '../lib/supabase';
 import type { CategoryRow, SubcategoryRow, ProductRow, ShopRow, ShopCategoryRow, ShopProductRow } from './types';
 
-/* ---- Categories ----------------------------------------------------------- */
-
 export async function listCategories(): Promise<CategoryRow[]> {
   const { data, error } = await supabase.from('categories').select('*').order('sort_order');
   if (error) throw error;
@@ -33,8 +31,6 @@ export async function deleteCategory(id: string): Promise<void> {
   const { error } = await supabase.from('categories').delete().eq('id', id);
   if (error) throw error;
 }
-
-/* ---- Subcategories ---------------------------------------------------------- */
 
 export async function listSubcategories(categoryId: string): Promise<SubcategoryRow[]> {
   const { data, error } = await supabase
@@ -71,8 +67,6 @@ export async function deleteSubcategory(id: string): Promise<void> {
   if (error) throw error;
 }
 
-/* ---- Products (items) --------------------------------------------------- */
-
 export async function listProducts(categoryId: string): Promise<ProductRow[]> {
   const { data, error } = await supabase
     .from('products')
@@ -101,7 +95,6 @@ export interface ProductInput {
   is_active: boolean;
 }
 
-/** Category items that were linked to a shop (they also show in that shop). */
 export async function listProductsLinkedToShop(shopId: string): Promise<ProductRow[]> {
   const { data, error } = await supabase
     .from('products')
@@ -129,9 +122,6 @@ export async function deleteProduct(id: string): Promise<void> {
   if (error) throw error;
 }
 
-/* ---- Cross-listing an item into extra categories ------------------------- */
-
-/** The extra categories an item is also shown in (not its primary category). */
 export async function listProductExtraCategories(productId: string): Promise<string[]> {
   const { data, error } = await supabase
     .from('product_categories')
@@ -141,7 +131,6 @@ export async function listProductExtraCategories(productId: string): Promise<str
   return (data ?? []).map((r) => r.category_id);
 }
 
-/** Items cross-listed INTO this category from another (their home is elsewhere). */
 export async function listProductsCrossListedTo(categoryId: string): Promise<ProductRow[]> {
   const links = await supabase.from('product_categories').select('product_id').eq('category_id', categoryId);
   if (links.error) throw links.error;
@@ -156,7 +145,6 @@ export async function listProductsCrossListedTo(categoryId: string): Promise<Pro
   return data;
 }
 
-/** Replace an item's extra-category links with exactly `categoryIds`. */
 export async function setProductExtraCategories(productId: string, categoryIds: string[]): Promise<void> {
   const del = await supabase.from('product_categories').delete().eq('product_id', productId);
   if (del.error) throw del.error;
@@ -165,10 +153,6 @@ export async function setProductExtraCategories(productId: string, categoryIds: 
   const ins = await supabase.from('product_categories').insert(rows);
   if (ins.error) throw ins.error;
 }
-
-/* ============================================================================
- * Shops — independent of Category/Subcategory/Product above.
- * ========================================================================== */
 
 export async function listShops(): Promise<ShopRow[]> {
   const { data, error } = await supabase.from('shops').select('*').order('sort_order');
@@ -204,8 +188,6 @@ export async function deleteShop(id: string): Promise<void> {
   if (error) throw error;
 }
 
-/* ---- A shop's own categories ------------------------------------------------ */
-
 export async function listShopCategories(shopId: string): Promise<ShopCategoryRow[]> {
   const { data, error } = await supabase
     .from('shop_categories')
@@ -240,8 +222,6 @@ export async function deleteShopCategory(id: string): Promise<void> {
   const { error } = await supabase.from('shop_categories').delete().eq('id', id);
   if (error) throw error;
 }
-
-/* ---- A shop's items --------------------------------------------------------- */
 
 export async function listShopProducts(shopId: string): Promise<ShopProductRow[]> {
   const { data, error } = await supabase
@@ -286,9 +266,6 @@ export async function deleteShopProduct(id: string): Promise<void> {
   if (error) throw error;
 }
 
-/* ---- Image upload --------------------------------------------------------- */
-
-/** Uploads to the public `catalog-images` bucket and returns its public URL. */
 export async function uploadCatalogImage(
   file: File,
   folder: 'categories' | 'subcategories' | 'products' | 'shops' | 'shop-categories' | 'shop-products'

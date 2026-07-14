@@ -7,13 +7,12 @@ import './CategoryCard.css';
 
 interface CategoryCardProps {
   category: Category;
-  /** Live count of shops in this category (shown as a small badge). */
+
   count: number;
 }
 
-/** A single tile in the "Top Categories" grid. Clicking opens the shop list. */
 export function CategoryCard({ category, count }: CategoryCardProps) {
-  // Pass the category's palette into CSS via custom properties.
+
   const styleVars = {
     '--cat-color': category.color,
     '--cat-tint': category.tint,

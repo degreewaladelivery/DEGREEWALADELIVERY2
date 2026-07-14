@@ -1,13 +1,6 @@
--- ============================================================================
--- Optional pack size / unit label for items, e.g. "1 kg", "500 ml", "6 pcs".
--- Free text so it covers weight, volume, count — anything. Shown to customers
--- exactly as typed. Applies to both category items and shop items.
--- ============================================================================
-
 alter table products add column unit text;
 alter table shop_products add column unit text;
 
--- Expose `unit` in the public catalog views.
 drop view products_catalog;
 create view products_catalog as
   select

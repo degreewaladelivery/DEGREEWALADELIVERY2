@@ -4,10 +4,8 @@ import { fetchCategoryPage, type CategoryPage } from '../lib/catalog';
 import { ProductCard } from '../components/cards/ProductCard';
 import './ShopList.css';
 
-/** Brand orange — used as the header overlay for every category. */
 const BRAND = '#FF6B00';
 
-/** A category page: shows the category's items, filterable by subcategory. */
 export function ShopList() {
   const { key = '' } = useParams();
   const [page, setPage] = useState<CategoryPage | null>(null);
@@ -45,8 +43,7 @@ export function ShopList() {
 
   return (
     <div className="shoplist">
-      {/* Category banner — the category's photo behind a brand-orange overlay
-          (same colour for every category), or a solid orange fill if no image. */}
+
       <div
         className="shoplist__banner"
         style={
@@ -68,7 +65,7 @@ export function ShopList() {
       </div>
 
       <div className="container shoplist__body">
-        {/* Sub-category picker (Veg/Non-Veg, Chicken/Mutton/Pork, Petrol/Diesel…) */}
+
         {category.subCategories.length > 0 && (
           <div className="subcat-row">
             <button

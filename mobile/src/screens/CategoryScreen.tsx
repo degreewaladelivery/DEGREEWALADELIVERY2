@@ -58,7 +58,7 @@ export function CategoryScreen() {
   return (
     <View style={styles.screen}>
       <ScrollView showsVerticalScrollIndicator={false}>
-        {/* Banner: category photo behind a brand-orange overlay */}
+
         <View style={styles.banner}>
           {category.imageUrl ? (
             <Image source={{ uri: category.imageUrl }} style={StyleSheet.absoluteFill} resizeMode="cover" />
@@ -77,7 +77,7 @@ export function CategoryScreen() {
         </View>
 
         <View style={styles.body}>
-          {/* Subcategory filter pills */}
+
           {category.subCategories.length > 0 && (
             <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.pills}>
               <Pill label="All" active={activeSub === null} onPress={() => setActiveSub(null)} />

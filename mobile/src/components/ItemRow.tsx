@@ -4,7 +4,6 @@ import { useCartStore } from '../store/cartStore';
 import { formatRupees } from '../lib/format';
 import { colors, spacing, radius, fontSizes, fontWeights } from '../theme';
 
-/** A single item row: name, description, price, and an add/stepper control. */
 export function ItemRow({ product }: { product: Product }) {
   const qty = useCartStore((s) => s.items[product.id]?.quantity ?? 0);
   const addItem = useCartStore((s) => s.addItem);

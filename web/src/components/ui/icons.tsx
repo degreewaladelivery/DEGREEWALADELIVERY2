@@ -1,12 +1,3 @@
-/**
- * components/ui/icons.tsx
- * --------------------------------------------------------------------------
- * Inline line-icons (Feather-style, MIT). They draw with
- * `stroke="currentColor"`, so you set their colour with CSS `color`
- * (e.g. color: var(--brand) makes them orange). Crisp at any size and fully
- * recolourable — unlike emojis.
- */
-
 interface IconProps {
   size?: number;
 }
@@ -27,9 +18,6 @@ const Svg = ({ size = 22, children }: IconProps & { children: React.ReactNode })
   </svg>
 );
 
-/* ---- Hero badges -------------------------------------------------------- */
-
-/** Grid — "Wide Range of Categories" */
 export const GridIcon = ({ size }: IconProps) => (
   <Svg size={size}>
     <rect x="3" y="3" width="7" height="7" rx="1.5" />
@@ -39,7 +27,6 @@ export const GridIcon = ({ size }: IconProps) => (
   </Svg>
 );
 
-/** Truck — "Fast Delivery" / "Easy Mode of Delivery" */
 export const TruckIcon = ({ size }: IconProps) => (
   <Svg size={size}>
     <rect x="1" y="3" width="15" height="13" rx="1.5" />
@@ -49,7 +36,6 @@ export const TruckIcon = ({ size }: IconProps) => (
   </Svg>
 );
 
-/** Award — "Best Quality" */
 export const AwardIcon = ({ size }: IconProps) => (
   <Svg size={size}>
     <circle cx="12" cy="8" r="7" />
@@ -57,7 +43,6 @@ export const AwardIcon = ({ size }: IconProps) => (
   </Svg>
 );
 
-/** Lock — "Easy & Secure Payments" */
 export const LockIcon = ({ size }: IconProps) => (
   <Svg size={size}>
     <rect x="3" y="11" width="18" height="11" rx="2" />
@@ -65,9 +50,6 @@ export const LockIcon = ({ size }: IconProps) => (
   </Svg>
 );
 
-/* ---- Why Choose --------------------------------------------------------- */
-
-/** Leaf — "Healthy & Hygienic" */
 export const LeafIcon = ({ size }: IconProps) => (
   <Svg size={size}>
     <path d="M11 20A7 7 0 0 1 9.8 6.1C15.5 5 17 4.48 19 2c1 2 2 4.18 2 8 0 5.5-4.78 10-10 10z" />
@@ -75,7 +57,6 @@ export const LeafIcon = ({ size }: IconProps) => (
   </Svg>
 );
 
-/** Coffee — "Gourmet Options" */
 export const CoffeeIcon = ({ size }: IconProps) => (
   <Svg size={size}>
     <path d="M18 8h1a4 4 0 0 1 0 8h-1" />
@@ -86,7 +67,6 @@ export const CoffeeIcon = ({ size }: IconProps) => (
   </Svg>
 );
 
-/** Sparkles — "Plan a Party" */
 export const SparklesIcon = ({ size }: IconProps) => (
   <Svg size={size}>
     <path d="M12 3l1.6 4.4L18 9l-4.4 1.6L12 15l-1.6-4.4L6 9l4.4-1.6z" />
@@ -94,7 +74,6 @@ export const SparklesIcon = ({ size }: IconProps) => (
   </Svg>
 );
 
-/** Gift — "Gift Cards Collection" */
 export const GiftIcon = ({ size }: IconProps) => (
   <Svg size={size}>
     <polyline points="20 12 20 22 4 22 4 12" />
@@ -105,7 +84,6 @@ export const GiftIcon = ({ size }: IconProps) => (
   </Svg>
 );
 
-/** Calendar — "Schedule Your Order" */
 export const CalendarIcon = ({ size }: IconProps) => (
   <Svg size={size}>
     <rect x="3" y="4" width="18" height="18" rx="2" ry="2" />
@@ -115,9 +93,6 @@ export const CalendarIcon = ({ size }: IconProps) => (
   </Svg>
 );
 
-/* ---- Stats -------------------------------------------------------------- */
-
-/** Buildings — "Cities" */
 export const BuildingIcon = ({ size }: IconProps) => (
   <Svg size={size}>
     <path d="M3 21h18" />
@@ -127,7 +102,6 @@ export const BuildingIcon = ({ size }: IconProps) => (
   </Svg>
 );
 
-/** Users — "Happy Customers" */
 export const UsersIcon = ({ size }: IconProps) => (
   <Svg size={size}>
     <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2" />
@@ -137,7 +111,6 @@ export const UsersIcon = ({ size }: IconProps) => (
   </Svg>
 );
 
-/** Store — "Shops" */
 export const StoreIcon = ({ size }: IconProps) => (
   <Svg size={size}>
     <path d="M3 9 4.5 4h15L21 9" />
@@ -147,7 +120,6 @@ export const StoreIcon = ({ size }: IconProps) => (
   </Svg>
 );
 
-/** Shopping bag — "Products" */
 export const BagIcon = ({ size }: IconProps) => (
   <Svg size={size}>
     <path d="M6 2 3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4z" />
@@ -156,9 +128,6 @@ export const BagIcon = ({ size }: IconProps) => (
   </Svg>
 );
 
-/* ---- App features ------------------------------------------------------- */
-
-/** Tag — "Exclusive Offers" */
 export const TagIcon = ({ size }: IconProps) => (
   <Svg size={size}>
     <path d="M20.59 13.41l-7.17 7.17a2 2 0 0 1-2.83 0L2 12V2h10l8.59 8.59a2 2 0 0 1 0 2.82z" />
@@ -166,7 +135,6 @@ export const TagIcon = ({ size }: IconProps) => (
   </Svg>
 );
 
-/** Credit card — "Easy Payments" */
 export const CreditCardIcon = ({ size }: IconProps) => (
   <Svg size={size}>
     <rect x="1" y="4" width="22" height="16" rx="2" ry="2" />
@@ -174,7 +142,6 @@ export const CreditCardIcon = ({ size }: IconProps) => (
   </Svg>
 );
 
-/** Map pin — "Live Order Tracking" / header location */
 export const MapPinIcon = ({ size }: IconProps) => (
   <Svg size={size}>
     <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z" />
@@ -182,7 +149,6 @@ export const MapPinIcon = ({ size }: IconProps) => (
   </Svg>
 );
 
-/** Headphones — "Quick Support" */
 export const HeadphonesIcon = ({ size }: IconProps) => (
   <Svg size={size}>
     <path d="M3 18v-6a9 9 0 0 1 18 0v6" />
@@ -191,9 +157,6 @@ export const HeadphonesIcon = ({ size }: IconProps) => (
   </Svg>
 );
 
-/* ---- Header ------------------------------------------------------------- */
-
-/** House — bottom-nav "Home" tab */
 export const HomeIcon = ({ size }: IconProps) => (
   <Svg size={size}>
     <path d="M3 11l9-8 9 8" />
@@ -201,7 +164,6 @@ export const HomeIcon = ({ size }: IconProps) => (
   </Svg>
 );
 
-/** Person — bottom-nav "Account" tab */
 export const UserIcon = ({ size }: IconProps) => (
   <Svg size={size}>
     <circle cx="12" cy="8" r="4" />
@@ -209,7 +171,6 @@ export const UserIcon = ({ size }: IconProps) => (
   </Svg>
 );
 
-/** Microphone — voice search in the mobile search bar */
 export const MicIcon = ({ size }: IconProps) => (
   <Svg size={size}>
     <path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z" />
@@ -218,14 +179,12 @@ export const MicIcon = ({ size }: IconProps) => (
   </Svg>
 );
 
-/** Filled lightning bolt — "Near & Fast" tag */
 export const ZapIcon = ({ size }: IconProps) => (
   <Svg size={size}>
     <polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2" fill="currentColor" stroke="none" />
   </Svg>
 );
 
-/** Sliders — mobile "Filters" pill */
 export const SlidersIcon = ({ size }: IconProps) => (
   <Svg size={size}>
     <line x1="4" y1="21" x2="4" y2="14" />
@@ -240,14 +199,12 @@ export const SlidersIcon = ({ size }: IconProps) => (
   </Svg>
 );
 
-/** Bookmark — save-this-shop icon on featured cards */
 export const BookmarkIcon = ({ size }: IconProps) => (
   <Svg size={size}>
     <path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z" />
   </Svg>
 );
 
-/** Percent-in-circle — offer row on featured cards */
 export const PercentCircleIcon = ({ size }: IconProps) => (
   <Svg size={size}>
     <circle cx="12" cy="12" r="10" />
@@ -257,7 +214,6 @@ export const PercentCircleIcon = ({ size }: IconProps) => (
   </Svg>
 );
 
-/** Shopping cart — header cart button */
 export const CartIcon = ({ size }: IconProps) => (
   <Svg size={size}>
     <circle cx="9" cy="21" r="1" />
@@ -266,7 +222,6 @@ export const CartIcon = ({ size }: IconProps) => (
   </Svg>
 );
 
-/** Search — hero search bar */
 export const SearchIcon = ({ size }: IconProps) => (
   <Svg size={size}>
     <circle cx="11" cy="11" r="8" />
@@ -274,7 +229,6 @@ export const SearchIcon = ({ size }: IconProps) => (
   </Svg>
 );
 
-/** Hamburger menu — mobile nav toggle */
 export const MenuIcon = ({ size }: IconProps) => (
   <Svg size={size}>
     <line x1="3" y1="6" x2="21" y2="6" />
@@ -283,7 +237,6 @@ export const MenuIcon = ({ size }: IconProps) => (
   </Svg>
 );
 
-/** Close (X) — mobile nav close */
 export const XIcon = ({ size }: IconProps) => (
   <Svg size={size}>
     <line x1="18" y1="6" x2="6" y2="18" />

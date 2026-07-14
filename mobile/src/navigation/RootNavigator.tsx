@@ -13,7 +13,6 @@ import type { HomeStackParamList } from './types';
 const Tab = createBottomTabNavigator();
 const HomeStack = createNativeStackNavigator<HomeStackParamList>();
 
-/** Home tab is itself a stack: Home feed → Category → Shop. */
 function HomeStackNavigator() {
   return (
     <HomeStack.Navigator screenOptions={{ headerShown: false }}>
@@ -24,7 +23,6 @@ function HomeStackNavigator() {
   );
 }
 
-/** Home / Offers / Cart / Account — mirrors the web app's floating bottom nav. */
 export function RootNavigator() {
   return (
     <NavigationContainer>

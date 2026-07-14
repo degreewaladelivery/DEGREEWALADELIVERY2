@@ -57,7 +57,6 @@ export function ShopDetailPage() {
 
   const parentCategoryName = (id: string) => categories.find((c) => c.id === id)?.name ?? '—';
 
-  // Next serial to auto-suggest for a new shop item: highest existing + 1, else 1.
   const nextSerial = products.length ? Math.max(...products.map((p) => p.serial_no)) + 1 : 1;
 
   return (
@@ -71,7 +70,6 @@ export function ShopDetailPage() {
 
       {error && <p className="admin-login__error">{error}</p>}
 
-      {/* ---- Shop's own categories ---- */}
       <section className="admin-section">
         <div className="admin-section__head">
           <h2>Categories</h2>
@@ -105,7 +103,6 @@ export function ShopDetailPage() {
         )}
       </section>
 
-      {/* ---- Items ---- */}
       <section className="admin-section">
         <div className="admin-section__head">
           <h2>Items</h2>
@@ -162,7 +159,6 @@ export function ShopDetailPage() {
         )}
       </section>
 
-      {/* ---- Items linked in from the Categories tab (read-only here) ---- */}
       {linkedProducts.length > 0 && (
         <section className="admin-section">
           <div className="admin-section__head">
