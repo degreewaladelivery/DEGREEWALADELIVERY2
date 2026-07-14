@@ -39,6 +39,7 @@ interface ProdRow {
   name: string;
   description: string | null;
   unit: string | null;
+  serial_no: number;
   retail_price: number;
   image_url: string | null;
   subcategory_id?: string | null;
@@ -161,12 +162,11 @@ export async function fetchCategoryPage(keyOrId: string): Promise<CategoryPage |
   const subName: Record<string, string> = {};
   for (const s of subs ?? []) subName[s.id] = s.name;
 
-  const cols = 'id,name,description,unit,retail_price,image_url,subcategory_id';
+  const cols = 'id,name,description,unit,serial_no,retail_price,image_url,subcategory_id';
   const { data: prods, error } = await supabase
     .from('products_catalog')
     .select(cols)
-    .eq('category_id', category.id)
-    .order('created_at', { ascending: false });
+    .eq('category_id', category.id);
   if (error) throw error;
 
   // Items cross-listed into this category from another category (product_categories).
@@ -184,6 +184,7 @@ export async function fetchCategoryPage(keyOrId: string): Promise<CategoryPage |
   const seen = new Set<string>();
   const products = [...((prods ?? []) as ProdRow[]), ...extra]
     .filter((p) => (seen.has(p.id) ? false : (seen.add(p.id), true)))
+    .sort((a, b) => a.serial_no - b.serial_no)
     .map((p) => mapProduct(p, category.id, p.subcategory_id ? subName[p.subcategory_id] : undefined));
   return { category, products };
 }
@@ -213,18 +214,17 @@ export async function fetchShopPage(shopId: string): Promise<ShopPage | null> {
   const scName: Record<string, string> = {};
   for (const s of scats ?? []) scName[s.id] = s.name;
 
+  const shopCols = 'id,name,description,unit,serial_no,retail_price,image_url,shop_category_id';
   const [own, linked] = await Promise.all([
-    supabase.from('shop_products_catalog').select('id,name,description,unit,retail_price,image_url,shop_category_id').eq('shop_id', shopId),
-    supabase.from('products_catalog').select('id,name,description,unit,retail_price,image_url,shop_category_id').eq('shop_id', shopId),
+    supabase.from('shop_products_catalog').select(shopCols).eq('shop_id', shopId),
+    supabase.from('products_catalog').select(shopCols).eq('shop_id', shopId),
   ]);
   if (own.error) throw own.error;
   if (linked.error) throw linked.error;
 
-  const toProduct = (p: ProdRow) =>
-    mapProduct(p, shop.id, p.shop_category_id ? scName[p.shop_category_id] : undefined);
+  const products = [...((own.data ?? []) as ProdRow[]), ...((linked.data ?? []) as ProdRow[])]
+    .sort((a, b) => a.serial_no - b.serial_no)
+    .map((p) => mapProduct(p, shop.id, p.shop_category_id ? scName[p.shop_category_id] : undefined));
 
-  return {
-    shop,
-    products: [...(own.data ?? []).map((p) => toProduct(p as ProdRow)), ...(linked.data ?? []).map((p) => toProduct(p as ProdRow))],
-  };
+  return { shop, products };
 }

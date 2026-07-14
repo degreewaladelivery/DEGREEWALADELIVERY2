@@ -34,6 +34,8 @@ export interface ProductRow {
   description: string | null;
   /** Optional pack size / unit, e.g. "1 kg", "500 ml", "6 pcs". */
   unit: string | null;
+  /** Manual sort key — items are listed ascending by this. */
+  serial_no: number;
   /** Admin-only field — never sent to customer-facing clients. */
   barcode: string | null;
   gst_percent: number;
@@ -86,6 +88,8 @@ export interface ShopProductRow {
   description: string | null;
   /** Optional pack size / unit, e.g. "1 kg", "500 ml", "6 pcs". */
   unit: string | null;
+  /** Manual sort key — items are listed ascending by this. */
+  serial_no: number;
   /** Admin-only field — never sent to customer-facing clients. */
   barcode: string | null;
   gst_percent: number;

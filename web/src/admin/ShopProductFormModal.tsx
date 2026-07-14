@@ -19,6 +19,7 @@ export function ShopProductFormModal({
   onSaved: () => void;
 }) {
   const [name, setName] = useState(product?.name ?? '');
+  const [serialNo, setSerialNo] = useState<number | ''>(product?.serial_no ?? '');
   const [shopCategoryId, setShopCategoryId] = useState(product?.shop_category_id ?? '');
   const [description, setDescription] = useState(product?.description ?? '');
   const [unit, setUnit] = useState(product?.unit ?? '');
@@ -60,6 +61,7 @@ export function ShopProductFormModal({
         name: name.trim(),
         description: description.trim() || null,
         unit: unit.trim() || null,
+        serial_no: serialNo === '' ? 0 : serialNo,
         barcode: barcode.trim() || null,
         gst_percent: gstPercent === '' ? 0 : gstPercent,
         mrp: mrp === '' ? 0 : mrp,
@@ -87,6 +89,18 @@ export function ShopProductFormModal({
         <label className="admin-field">
           <span>Item name</span>
           <input value={name} onChange={(e) => setName(e.target.value)} required autoFocus />
+        </label>
+
+        <label className="admin-field">
+          <span>Serial number <em>(sorts ascending)</em></span>
+          <input
+            type="number"
+            step="1"
+            min="0"
+            placeholder="e.g. 1"
+            value={serialNo}
+            onChange={(e) => setSerialNo(e.target.value === '' ? '' : Number(e.target.value))}
+          />
         </label>
 
         <label className="admin-field">

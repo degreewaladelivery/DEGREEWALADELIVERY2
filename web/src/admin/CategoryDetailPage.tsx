@@ -116,6 +116,7 @@ export function CategoryDetailPage() {
           <table className="admin-table">
             <thead>
               <tr>
+                <th>#</th>
                 <th></th>
                 <th>Name</th>
                 <th>Subcategory</th>
@@ -129,6 +130,7 @@ export function CategoryDetailPage() {
             <tbody>
               {products.map((p) => (
                 <tr key={p.id} className={p.is_active ? '' : 'is-inactive'}>
+                  <td data-label="#" className="admin-table__serial">{p.serial_no}</td>
                   <td className="admin-table__thumb">
                     {p.image_url ? <img src={p.image_url} alt="" /> : <span>—</span>}
                   </td>

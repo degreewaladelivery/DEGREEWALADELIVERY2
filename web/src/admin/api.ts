@@ -78,6 +78,7 @@ export async function listProducts(categoryId: string): Promise<ProductRow[]> {
     .from('products')
     .select('*')
     .eq('category_id', categoryId)
+    .order('serial_no', { ascending: true })
     .order('created_at', { ascending: false });
   if (error) throw error;
   return data;
@@ -91,6 +92,7 @@ export interface ProductInput {
   name: string;
   description: string | null;
   unit: string | null;
+  serial_no: number;
   barcode: string | null;
   gst_percent: number;
   mrp: number;
@@ -231,6 +233,7 @@ export async function listShopProducts(shopId: string): Promise<ShopProductRow[]
     .from('shop_products')
     .select('*')
     .eq('shop_id', shopId)
+    .order('serial_no', { ascending: true })
     .order('created_at', { ascending: false });
   if (error) throw error;
   return data;
@@ -242,6 +245,7 @@ export interface ShopProductInput {
   name: string;
   description: string | null;
   unit: string | null;
+  serial_no: number;
   barcode: string | null;
   gst_percent: number;
   mrp: number;
