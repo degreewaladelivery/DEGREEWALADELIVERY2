@@ -15,6 +15,7 @@ import { ProductFormModal } from './ProductFormModal';
 export function CategoryDetailPage() {
   const { categoryId } = useParams<{ categoryId: string }>();
   const [category, setCategory] = useState<CategoryRow | null>(null);
+  const [categories, setCategories] = useState<CategoryRow[]>([]);
   const [subcategories, setSubcategories] = useState<SubcategoryRow[]>([]);
   const [products, setProducts] = useState<ProductRow[]>([]);
   const [shops, setShops] = useState<ShopRow[]>([]);
@@ -26,7 +27,10 @@ export function CategoryDetailPage() {
   const load = useCallback(() => {
     if (!categoryId) return;
     listCategories()
-      .then((cats) => setCategory(cats.find((c) => c.id === categoryId) ?? null))
+      .then((cats) => {
+        setCategories(cats);
+        setCategory(cats.find((c) => c.id === categoryId) ?? null);
+      })
       .catch((err) => setError(err instanceof Error ? err.message : 'Failed to load category'));
     listSubcategories(categoryId).then(setSubcategories).catch(() => {});
     listProducts(categoryId).then(setProducts).catch(() => {});
@@ -167,6 +171,7 @@ export function CategoryDetailPage() {
       {editingProduct && (
         <ProductFormModal
           categoryId={categoryId}
+          categories={categories}
           subcategories={subcategories}
           shops={shops}
           product={editingProduct === 'new' ? null : editingProduct}

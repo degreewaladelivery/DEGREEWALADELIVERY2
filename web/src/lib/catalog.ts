@@ -161,16 +161,30 @@ export async function fetchCategoryPage(keyOrId: string): Promise<CategoryPage |
   const subName: Record<string, string> = {};
   for (const s of subs ?? []) subName[s.id] = s.name;
 
+  const cols = 'id,name,description,unit,retail_price,image_url,subcategory_id';
   const { data: prods, error } = await supabase
     .from('products_catalog')
-    .select('id,name,description,unit,retail_price,image_url,subcategory_id')
+    .select(cols)
     .eq('category_id', category.id)
     .order('created_at', { ascending: false });
   if (error) throw error;
 
-  const products = (prods ?? []).map((p) =>
-    mapProduct(p as ProdRow, category.id, p.subcategory_id ? subName[p.subcategory_id] : undefined)
-  );
+  // Items cross-listed into this category from another category (product_categories).
+  const { data: links } = await supabase
+    .from('product_categories')
+    .select('product_id')
+    .eq('category_id', category.id);
+  const extraIds = (links ?? []).map((l) => l.product_id);
+  let extra: ProdRow[] = [];
+  if (extraIds.length > 0) {
+    const { data: extraProds } = await supabase.from('products_catalog').select(cols).in('id', extraIds);
+    extra = (extraProds ?? []) as ProdRow[];
+  }
+
+  const seen = new Set<string>();
+  const products = [...((prods ?? []) as ProdRow[]), ...extra]
+    .filter((p) => (seen.has(p.id) ? false : (seen.add(p.id), true)))
+    .map((p) => mapProduct(p, category.id, p.subcategory_id ? subName[p.subcategory_id] : undefined));
   return { category, products };
 }
 

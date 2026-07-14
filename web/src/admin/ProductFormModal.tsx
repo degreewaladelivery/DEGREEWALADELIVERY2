@@ -1,11 +1,19 @@
 import { useState, useEffect, type FormEvent } from 'react';
 import { Modal } from './Modal';
 import { ImagePicker } from './ImagePicker';
-import { createProduct, updateProduct, uploadCatalogImage, listShopCategories } from './api';
-import type { ProductRow, SubcategoryRow, ShopRow, ShopCategoryRow } from './types';
+import {
+  createProduct,
+  updateProduct,
+  uploadCatalogImage,
+  listShopCategories,
+  listProductExtraCategories,
+  setProductExtraCategories,
+} from './api';
+import type { ProductRow, SubcategoryRow, ShopRow, ShopCategoryRow, CategoryRow } from './types';
 
 export function ProductFormModal({
   categoryId,
+  categories,
   subcategories,
   shops,
   product,
@@ -13,6 +21,7 @@ export function ProductFormModal({
   onSaved,
 }: {
   categoryId: string;
+  categories: CategoryRow[];
   subcategories: SubcategoryRow[];
   shops: ShopRow[];
   /** null = creating a new item; otherwise editing this one. */
@@ -32,10 +41,26 @@ export function ProductFormModal({
   const [mrp, setMrp] = useState<number | ''>(product?.mrp ?? '');
   const [retailPrice, setRetailPrice] = useState<number | ''>(product?.retail_price ?? '');
   const [isActive, setIsActive] = useState(product?.is_active ?? true);
+  const [extraCategoryIds, setExtraCategoryIds] = useState<string[]>([]);
   const [imageFile, setImageFile] = useState<File | null>(null);
   const [imagePreview, setImagePreview] = useState(product?.image_url ?? '');
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
+
+  // Editing: load the extra categories this item is already cross-listed into.
+  useEffect(() => {
+    if (!product) return;
+    let active = true;
+    listProductExtraCategories(product.id)
+      .then((ids) => active && setExtraCategoryIds(ids))
+      .catch(() => {});
+    return () => {
+      active = false;
+    };
+  }, [product]);
+
+  const toggleExtraCategory = (id: string) =>
+    setExtraCategoryIds((ids) => (ids.includes(id) ? ids.filter((x) => x !== id) : [...ids, id]));
 
   // Load the linked shop's own categories so we can offer them below.
   useEffect(() => {
@@ -90,11 +115,8 @@ export function ProductFormModal({
         is_active: isActive,
       };
 
-      if (product) {
-        await updateProduct(product.id, input);
-      } else {
-        await createProduct(input);
-      }
+      const saved = product ? await updateProduct(product.id, input) : await createProduct(input);
+      await setProductExtraCategories(saved.id, extraCategoryIds);
       onSaved();
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Something went wrong');
@@ -154,6 +176,22 @@ export function ProductFormModal({
             </select>
           </label>
         )}
+
+        <div className="admin-field">
+          <span>Also show in other categories <em>(optional)</em></span>
+          <div className="admin-checklist">
+            {categories.filter((c) => c.id !== categoryId).map((c) => (
+              <label key={c.id} className="admin-check">
+                <input
+                  type="checkbox"
+                  checked={extraCategoryIds.includes(c.id)}
+                  onChange={() => toggleExtraCategory(c.id)}
+                />
+                <span>{c.name}</span>
+              </label>
+            ))}
+          </div>
+        </div>
 
         <label className="admin-field">
           <span>Description <em>(public)</em></span>

@@ -127,6 +127,28 @@ export async function deleteProduct(id: string): Promise<void> {
   if (error) throw error;
 }
 
+/* ---- Cross-listing an item into extra categories ------------------------- */
+
+/** The extra categories an item is also shown in (not its primary category). */
+export async function listProductExtraCategories(productId: string): Promise<string[]> {
+  const { data, error } = await supabase
+    .from('product_categories')
+    .select('category_id')
+    .eq('product_id', productId);
+  if (error) throw error;
+  return (data ?? []).map((r) => r.category_id);
+}
+
+/** Replace an item's extra-category links with exactly `categoryIds`. */
+export async function setProductExtraCategories(productId: string, categoryIds: string[]): Promise<void> {
+  const del = await supabase.from('product_categories').delete().eq('product_id', productId);
+  if (del.error) throw del.error;
+  if (categoryIds.length === 0) return;
+  const rows = categoryIds.map((category_id) => ({ product_id: productId, category_id }));
+  const ins = await supabase.from('product_categories').insert(rows);
+  if (ins.error) throw ins.error;
+}
+
 /* ============================================================================
  * Shops — independent of Category/Subcategory/Product above.
  * ========================================================================== */
