@@ -1,7 +1,7 @@
 import { View, Text, StyleSheet, TouchableOpacity } from 'react-native';
 import type { Product } from '@shared/types';
 import { useCartStore } from '../store/cartStore';
-import { formatRupees } from '../lib/format';
+import { formatRupees, discountPercent } from '../lib/format';
 import { Thumb } from './Thumb';
 import { colors, spacing, radius, fontSizes, fontWeights } from '../theme';
 
@@ -9,6 +9,7 @@ export function ItemRow({ product }: { product: Product }) {
   const qty = useCartStore((s) => s.items[product.id]?.quantity ?? 0);
   const addItem = useCartStore((s) => s.addItem);
   const decrement = useCartStore((s) => s.decrement);
+  const discount = discountPercent(product.mrp, product.price);
 
   return (
     <View style={styles.row}>
@@ -23,7 +24,17 @@ export function ItemRow({ product }: { product: Product }) {
             {product.description}
           </Text>
         ) : null}
-        <Text style={styles.price}>{formatRupees(product.price)}</Text>
+        {discount ? (
+          <View style={styles.priceRow}>
+            <Text style={styles.discount}>{discount}% OFF</Text>
+            <View style={styles.priceLine}>
+              <Text style={styles.price}>{formatRupees(product.price)}</Text>
+              <Text style={styles.mrp}>{formatRupees(product.mrp!)}</Text>
+            </View>
+          </View>
+        ) : (
+          <Text style={styles.price}>{formatRupees(product.price)}</Text>
+        )}
       </View>
 
       {qty === 0 ? (
@@ -69,6 +80,16 @@ const styles = StyleSheet.create({
   unit: { fontSize: fontSizes.xs + 0.5, fontWeight: fontWeights.semibold, color: colors.textMuted, marginTop: 2 },
   desc: { fontSize: fontSizes.sm, color: colors.textMuted, marginTop: 2 },
   price: { fontSize: fontSizes.md, fontWeight: fontWeights.heading, color: colors.text, marginTop: 6 },
+
+  priceRow: { marginTop: 6 },
+  discount: { fontSize: fontSizes.xs + 0.5, fontWeight: fontWeights.heading, color: colors.success },
+  priceLine: { flexDirection: 'row', alignItems: 'baseline', gap: spacing.sm, marginTop: 2 },
+  mrp: {
+    fontSize: fontSizes.sm,
+    fontWeight: fontWeights.semibold,
+    color: colors.textMuted,
+    textDecorationLine: 'line-through',
+  },
 
   addBtn: {
     borderWidth: 1.5,

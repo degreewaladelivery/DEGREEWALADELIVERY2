@@ -1,6 +1,6 @@
 import type { Product } from '@shared/types';
 import { useCartStore } from '../../store/cartStore';
-import { formatRupees } from '../../lib/format';
+import { formatRupees, discountPercent } from '../../lib/format';
 import { Thumb } from '../ui/Thumb';
 import './ProductCard.css';
 
@@ -11,6 +11,7 @@ export function ProductCard({ product }: { product: Product }) {
   const decrement = useCartStore((s) => s.decrement);
 
   const unavailable = !product.isAvailable;
+  const discount = discountPercent(product.mrp, product.price);
 
   return (
     <div className={`product-card${unavailable ? ' is-unavailable' : ''}`}>
@@ -21,7 +22,15 @@ export function ProductCard({ product }: { product: Product }) {
         <h4 className="product-card__name">{product.name}</h4>
         {product.unit && <span className="product-card__unit">{product.unit}</span>}
         {product.description && <p className="product-card__desc">{product.description}</p>}
-        <span className="product-card__price">{formatRupees(product.price)}</span>
+        {discount ? (
+          <span className="product-card__price-row">
+            <span className="product-card__discount">{discount}% OFF</span>
+            <span className="product-card__price">{formatRupees(product.price)}</span>
+            <span className="product-card__mrp">{formatRupees(product.mrp!)}</span>
+          </span>
+        ) : (
+          <span className="product-card__price">{formatRupees(product.price)}</span>
+        )}
       </div>
 
       <div className="product-card__action">
