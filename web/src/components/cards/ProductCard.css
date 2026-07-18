@@ -60,31 +60,6 @@
   font-family: 'Poppins', sans-serif;
 }
 
-.product-card__price-row {
-  display: flex;
-  align-items: baseline;
-  flex-wrap: wrap;
-  gap: 6px;
-  margin-top: 8px;
-}
-.product-card__price-row .product-card__price {
-  margin-top: 0;
-}
-
-.product-card__mrp {
-  font-size: 12px;
-  font-weight: 500;
-  color: var(--text-muted, #6b7280);
-  text-decoration: line-through;
-}
-
-.product-card__discount {
-  flex-basis: 100%;
-  font-size: 12px;
-  font-weight: 700;
-  color: var(--success, #16a34a);
-}
-
 .product-card__action {
   flex-shrink: 0;
 }
