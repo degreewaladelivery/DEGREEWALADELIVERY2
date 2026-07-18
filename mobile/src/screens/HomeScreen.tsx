@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import {
   View,
   Text,
@@ -10,7 +10,7 @@ import {
   Dimensions,
 } from 'react-native';
 import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
-import { useNavigation } from '@react-navigation/native';
+import { useNavigation, useRoute, type RouteProp } from '@react-navigation/native';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { fetchCategories, fetchShops, fetchCategoryItemCounts } from '../lib/catalog';
 import type { HomeStackParamList } from '../navigation/types';
@@ -37,6 +37,7 @@ const VOTES = ['By 8.3K+', 'By 2.1K+', 'By 950+', 'By 1.4K+'];
 
 export function HomeScreen() {
   const navigation = useNavigation<NativeStackNavigationProp<HomeStackParamList, 'HomeMain'>>();
+  const { params } = useRoute<RouteProp<HomeStackParamList, 'HomeMain'>>();
   const [query, setQuery] = useState('');
   const [categories, setCategories] = useState<Category[]>([]);
   const [shops, setShops] = useState<Shop[]>([]);
@@ -44,17 +45,27 @@ export function HomeScreen() {
   const heroArt = getBrandImage('hero');
   const insets = useSafeAreaInsets();
 
+  const scrollRef = useRef<ScrollView>(null);
+  const featuredY = useRef(0);
+
   useEffect(() => {
     fetchCategories().then(setCategories).catch(() => {});
     fetchShops().then(setShops).catch(() => {});
     fetchCategoryItemCounts().then(setItemCounts).catch(() => {});
   }, []);
 
+  useEffect(() => {
+    if (params?.scrollTo === 'featured') {
+      scrollRef.current?.scrollTo({ y: featuredY.current, animated: true });
+    }
+  }, [params?.scrollTo]);
+
   const featuredShops = shops.filter((s) => s.isFeatured);
 
   return (
     <SafeAreaView style={styles.safe} edges={['top']}>
       <ScrollView
+        ref={scrollRef}
         style={styles.screen}
         stickyHeaderIndices={[1]}
         showsVerticalScrollIndicator={false}
@@ -156,7 +167,12 @@ export function HomeScreen() {
           </ScrollView>
         </View>
 
-        <View style={[styles.section, styles.feedSection]}>
+        <View
+          style={[styles.section, styles.feedSection]}
+          onLayout={(e) => {
+            featuredY.current = e.nativeEvent.layout.y;
+          }}
+        >
           <Text style={styles.heading}>{shops.length} shops delivering to you</Text>
           <Text style={styles.subheading}>Featured</Text>
 

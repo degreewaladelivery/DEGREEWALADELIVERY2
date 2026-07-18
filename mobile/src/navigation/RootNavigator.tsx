@@ -5,13 +5,16 @@ import { HomeScreen } from '../screens/HomeScreen';
 import { CategoryScreen } from '../screens/CategoryScreen';
 import { ShopScreen } from '../screens/ShopScreen';
 import { CartScreen } from '../screens/CartScreen';
-import { PlaceholderScreen } from '../screens/PlaceholderScreen';
+import { CheckoutScreen } from '../screens/CheckoutScreen';
+import { OrderSuccessScreen } from '../screens/OrderSuccessScreen';
+import { LoginScreen } from '../screens/LoginScreen';
 import { HomeIcon, TagIcon, CartIcon, UserIcon } from '../components/icons';
 import { colors, fontWeights, shadows } from '../theme';
-import type { HomeStackParamList } from './types';
+import type { HomeStackParamList, CartStackParamList } from './types';
 
 const Tab = createBottomTabNavigator();
 const HomeStack = createNativeStackNavigator<HomeStackParamList>();
+const CartStack = createNativeStackNavigator<CartStackParamList>();
 
 function HomeStackNavigator() {
   return (
@@ -20,6 +23,16 @@ function HomeStackNavigator() {
       <HomeStack.Screen name="Category" component={CategoryScreen} />
       <HomeStack.Screen name="Shop" component={ShopScreen} />
     </HomeStack.Navigator>
+  );
+}
+
+function CartStackNavigator() {
+  return (
+    <CartStack.Navigator screenOptions={{ headerShown: false }}>
+      <CartStack.Screen name="CartMain" component={CartScreen} />
+      <CartStack.Screen name="Checkout" component={CheckoutScreen} />
+      <CartStack.Screen name="OrderSuccess" component={OrderSuccessScreen} />
+    </CartStack.Navigator>
   );
 }
 
@@ -53,22 +66,30 @@ export function RootNavigator() {
         />
         <Tab.Screen
           name="Offers"
+          component={EmptyScreen}
           options={{ tabBarIcon: ({ color }) => <TagIcon size={22} color={color} /> }}
-        >
-          {() => <PlaceholderScreen title="Offers" emoji="🏷️" />}
-        </Tab.Screen>
+          listeners={({ navigation }) => ({
+            tabPress: (e) => {
+              e.preventDefault();
+              navigation.navigate('Home', { screen: 'HomeMain', params: { scrollTo: 'featured' } });
+            },
+          })}
+        />
         <Tab.Screen
           name="Cart"
-          component={CartScreen}
+          component={CartStackNavigator}
           options={{ tabBarIcon: ({ color }) => <CartIcon size={22} color={color} /> }}
         />
         <Tab.Screen
           name="Account"
+          component={LoginScreen}
           options={{ tabBarIcon: ({ color }) => <UserIcon size={22} color={color} /> }}
-        >
-          {() => <PlaceholderScreen title="Account" emoji="👤" />}
-        </Tab.Screen>
+        />
       </Tab.Navigator>
     </NavigationContainer>
   );
+}
+
+function EmptyScreen() {
+  return null;
 }

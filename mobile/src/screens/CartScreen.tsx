@@ -1,13 +1,19 @@
-import { View, Text, ScrollView, StyleSheet, TouchableOpacity, Alert } from 'react-native';
+import { View, Text, ScrollView, StyleSheet, TouchableOpacity } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import { useNavigation } from '@react-navigation/native';
+import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { useCartStore, selectCount, selectSubtotal } from '../store/cartStore';
 import { formatRupees } from '../lib/format';
+import type { CartStackParamList } from '../navigation/types';
 import { colors, spacing, radius, fontSizes, fontWeights, shadows } from '../theme';
 
 const DELIVERY_FEE = 30;
 const TAX_RATE = 0.05;
 
+type Nav = NativeStackNavigationProp<CartStackParamList, 'CartMain'>;
+
 export function CartScreen() {
+  const navigation = useNavigation<Nav>();
   const items = useCartStore((s) => s.items);
   const addItem = useCartStore((s) => s.addItem);
   const decrement = useCartStore((s) => s.decrement);
@@ -66,7 +72,7 @@ export function CartScreen() {
         <TouchableOpacity
           style={styles.checkout}
           activeOpacity={0.9}
-          onPress={() => Alert.alert('Checkout', 'Ordering is coming soon — the orders system is next.')}
+          onPress={() => navigation.navigate('Checkout')}
         >
           <Text style={styles.checkoutText}>Proceed to Checkout</Text>
         </TouchableOpacity>
