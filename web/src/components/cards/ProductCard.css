@@ -46,18 +46,23 @@
   color: var(--text-muted, #6b7280);
 }
 
-.product-card__desc {
-  margin-top: 3px;
-  font-size: 13px;
-  color: var(--text-muted, #6b7280);
-}
-
 .product-card__price {
   display: inline-block;
   margin-top: 8px;
   font-size: 15px;
   font-weight: 700;
   font-family: 'Poppins', sans-serif;
+}
+
+.product-card__more {
+  display: block;
+  margin-top: 4px;
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--brand, #ff6b00);
+}
+.product-card__more:hover {
+  text-decoration: underline;
 }
 
 .product-card__action {

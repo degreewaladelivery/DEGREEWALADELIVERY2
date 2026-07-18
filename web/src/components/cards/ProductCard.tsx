@@ -1,3 +1,4 @@
+import { Link } from 'react-router-dom';
 import type { Product } from '@shared/types';
 import { useCartStore } from '../../store/cartStore';
 import { formatRupees } from '../../lib/format';
@@ -20,8 +21,15 @@ export function ProductCard({ product }: { product: Product }) {
       <div className="product-card__info">
         <h4 className="product-card__name">{product.name}</h4>
         {product.unit && <span className="product-card__unit">{product.unit}</span>}
-        {product.description && <p className="product-card__desc">{product.description}</p>}
         <span className="product-card__price">{formatRupees(product.price)}</span>
+        <Link
+          to={`/item/${product.id}`}
+          target="_blank"
+          rel="noopener noreferrer"
+          className="product-card__more"
+        >
+          More details
+        </Link>
       </div>
 
       <div className="product-card__action">

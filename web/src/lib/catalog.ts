@@ -29,6 +29,8 @@ interface ProdRow {
   image_url: string | null;
   subcategory_id?: string | null;
   shop_category_id?: string | null;
+  category_id?: string | null;
+  shop_id?: string | null;
 }
 
 export function slugify(name: string): string {
@@ -160,6 +162,27 @@ export async function fetchCategoryPage(keyOrId: string): Promise<CategoryPage |
     .sort((a, b) => a.serial_no - b.serial_no)
     .map((p) => mapProduct(p, category.id, p.subcategory_id ? subName[p.subcategory_id] : undefined));
   return { category, products };
+}
+
+export async function fetchProductById(id: string): Promise<Product | null> {
+  const catCols = 'id,name,description,unit,retail_price,image_url,category_id,shop_id';
+  const cat = await supabase.from('products_catalog').select(catCols).eq('id', id).maybeSingle();
+  if (cat.error) throw cat.error;
+  if (cat.data) {
+    const row = cat.data as ProdRow;
+    const parentId = row.category_id ?? row.shop_id ?? row.id;
+    return mapProduct(row, parentId);
+  }
+
+  const shopCols = 'id,name,description,unit,retail_price,image_url,shop_id';
+  const shop = await supabase.from('shop_products_catalog').select(shopCols).eq('id', id).maybeSingle();
+  if (shop.error) throw shop.error;
+  if (shop.data) {
+    const row = shop.data as ProdRow;
+    return mapProduct(row, row.shop_id ?? row.id);
+  }
+
+  return null;
 }
 
 export interface ShopPage {

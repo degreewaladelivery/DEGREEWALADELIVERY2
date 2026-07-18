@@ -3,6 +3,7 @@ import { Layout } from './components/layout/Layout';
 import { Home } from './pages/Home';
 import { ShopList } from './pages/ShopList';
 import { ShopItems } from './pages/ShopItems';
+import { ItemDetailPage } from './pages/ItemDetailPage';
 import { Cart } from './pages/Cart';
 import { Payment } from './pages/Payment';
 import { OrderSuccess } from './pages/OrderSuccess';
@@ -26,6 +27,7 @@ const router = createBrowserRouter([
       { path: '/login', element: <Login /> },
       { path: '/category/:key', element: <ShopList /> },
       { path: '/shop/:shopId', element: <ShopItems /> },
+      { path: '/item/:id', element: <ItemDetailPage /> },
       { path: '/cart', element: <Cart /> },
       { path: '/checkout', element: <Payment /> },
       { path: '/order-success', element: <OrderSuccess /> },
