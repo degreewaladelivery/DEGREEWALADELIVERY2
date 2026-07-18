@@ -1,6 +1,7 @@
 import type { Product } from '@shared/types';
 import { useCartStore } from '../../store/cartStore';
 import { formatRupees } from '../../lib/format';
+import { Thumb } from '../ui/Thumb';
 import './ProductCard.css';
 
 export function ProductCard({ product }: { product: Product }) {
@@ -13,6 +14,9 @@ export function ProductCard({ product }: { product: Product }) {
 
   return (
     <div className={`product-card${unavailable ? ' is-unavailable' : ''}`}>
+      <div className="product-card__thumb">
+        <Thumb src={product.imageUrl} emoji="🛒" tint="#F4F6F9" alt={product.name} />
+      </div>
       <div className="product-card__info">
         <h4 className="product-card__name">{product.name}</h4>
         {product.unit && <span className="product-card__unit">{product.unit}</span>}

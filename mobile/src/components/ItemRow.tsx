@@ -2,6 +2,7 @@ import { View, Text, StyleSheet, TouchableOpacity } from 'react-native';
 import type { Product } from '@shared/types';
 import { useCartStore } from '../store/cartStore';
 import { formatRupees } from '../lib/format';
+import { Thumb } from './Thumb';
 import { colors, spacing, radius, fontSizes, fontWeights } from '../theme';
 
 export function ItemRow({ product }: { product: Product }) {
@@ -11,6 +12,9 @@ export function ItemRow({ product }: { product: Product }) {
 
   return (
     <View style={styles.row}>
+      <View style={styles.thumb}>
+        <Thumb src={product.imageUrl} emoji="🛒" tint="#F4F6F9" fontSize={22} style={styles.thumbImg} />
+      </View>
       <View style={styles.info}>
         <Text style={styles.name}>{product.name}</Text>
         {product.unit ? <Text style={styles.unit}>{product.unit}</Text> : null}
@@ -51,6 +55,15 @@ const styles = StyleSheet.create({
     borderBottomWidth: 1,
     borderBottomColor: colors.border,
   },
+  thumb: {
+    width: 56,
+    height: 56,
+    borderRadius: radius.md,
+    overflow: 'hidden',
+    backgroundColor: colors.surface,
+    flexShrink: 0,
+  },
+  thumbImg: { borderRadius: 0 },
   info: { flex: 1 },
   name: { fontSize: fontSizes.md + 0.5, fontWeight: fontWeights.bold, color: colors.text },
   unit: { fontSize: fontSizes.xs + 0.5, fontWeight: fontWeights.semibold, color: colors.textMuted, marginTop: 2 },
