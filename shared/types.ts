@@ -70,9 +70,6 @@ export interface Product {
   unit?: string;
 
   section?: string;
-
-  /** Original price (MRP) before discount. Only show as struck-through when greater than price. */
-  mrp?: number;
 }
 
 export interface OrderItem {
