@@ -1,7 +1,8 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useCartStore, selectCount, selectSubtotal } from '../store/cartStore';
 import { formatRupees } from '../lib/format';
+import { getCustomer } from '../lib/auth';
 import './Payment.css';
 
 const DELIVERY_FEE = 30;
@@ -14,6 +15,10 @@ export function Payment() {
 
   const [address, setAddress] = useState('');
   const [method, setMethod] = useState<'cod' | 'razorpay'>('cod');
+
+  useEffect(() => {
+    if (!getCustomer()) navigate('/login?next=/checkout', { replace: true });
+  }, [navigate]);
 
   const count = selectCount(items);
   const subtotal = selectSubtotal(items);

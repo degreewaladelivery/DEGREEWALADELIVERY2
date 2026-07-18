@@ -4,6 +4,7 @@ import { useNavigation } from '@react-navigation/native';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { useCartStore, selectCount, selectSubtotal } from '../store/cartStore';
 import { formatRupees } from '../lib/format';
+import { getCustomer } from '../lib/auth';
 import type { CartStackParamList } from '../navigation/types';
 import { colors, spacing, radius, fontSizes, fontWeights, shadows } from '../theme';
 
@@ -72,7 +73,14 @@ export function CartScreen() {
         <TouchableOpacity
           style={styles.checkout}
           activeOpacity={0.9}
-          onPress={() => navigation.navigate('Checkout')}
+          onPress={async () => {
+            const customer = await getCustomer();
+            if (customer) {
+              navigation.navigate('Checkout');
+            } else {
+              navigation.navigate('Login', { onSuccessRoute: 'Checkout' });
+            }
+          }}
         >
           <Text style={styles.checkoutText}>Proceed to Checkout</Text>
         </TouchableOpacity>

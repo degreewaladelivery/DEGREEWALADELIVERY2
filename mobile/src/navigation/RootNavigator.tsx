@@ -30,6 +30,7 @@ function CartStackNavigator() {
   return (
     <CartStack.Navigator screenOptions={{ headerShown: false }}>
       <CartStack.Screen name="CartMain" component={CartScreen} />
+      <CartStack.Screen name="Login" component={LoginScreen} />
       <CartStack.Screen name="Checkout" component={CheckoutScreen} />
       <CartStack.Screen name="OrderSuccess" component={OrderSuccessScreen} />
     </CartStack.Navigator>

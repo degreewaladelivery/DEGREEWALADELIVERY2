@@ -1,10 +1,11 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { View, Text, ScrollView, TextInput, TouchableOpacity, StyleSheet } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useNavigation } from '@react-navigation/native';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { useCartStore, selectCount, selectSubtotal } from '../store/cartStore';
 import { formatRupees } from '../lib/format';
+import { getCustomer } from '../lib/auth';
 import type { CartStackParamList } from '../navigation/types';
 import { colors, spacing, radius, fontSizes, fontWeights, shadows } from '../theme';
 
@@ -19,6 +20,12 @@ export function CheckoutScreen() {
   const clear = useCartStore((s) => s.clear);
 
   const [address, setAddress] = useState('');
+
+  useEffect(() => {
+    getCustomer().then((c) => {
+      if (!c) navigation.replace('Login', { onSuccessRoute: 'Checkout' });
+    });
+  }, [navigation]);
 
   const count = selectCount(items);
   const subtotal = selectSubtotal(items);

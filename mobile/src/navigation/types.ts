@@ -6,6 +6,7 @@ export type HomeStackParamList = {
 
 export type CartStackParamList = {
   CartMain: undefined;
+  Login: { onSuccessRoute: 'Checkout' } | undefined;
   Checkout: undefined;
   OrderSuccess: { orderId: string; total: number };
 };

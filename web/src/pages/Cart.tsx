@@ -1,6 +1,7 @@
 import { Link, useNavigate } from 'react-router-dom';
 import { useCartStore, selectCount, selectSubtotal } from '../store/cartStore';
 import { formatRupees } from '../lib/format';
+import { getCustomer } from '../lib/auth';
 import './Cart.css';
 
 const DELIVERY_FEE = 30;
@@ -72,7 +73,10 @@ export function Cart() {
             <span>To Pay</span>
             <span>{formatRupees(total)}</span>
           </div>
-          <button className="btn btn-primary btn-lg btn-block" onClick={() => navigate('/checkout')}>
+          <button
+            className="btn btn-primary btn-lg btn-block"
+            onClick={() => navigate(getCustomer() ? '/checkout' : '/login?next=/checkout')}
+          >
             Proceed to Checkout
           </button>
         </aside>

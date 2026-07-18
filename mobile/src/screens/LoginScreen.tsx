@@ -1,18 +1,101 @@
-import { useState } from 'react';
-import { View, Text, TextInput, TouchableOpacity, StyleSheet } from 'react-native';
+import { useEffect, useState } from 'react';
+import { View, Text, TextInput, TouchableOpacity, StyleSheet, ActivityIndicator } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { useNavigation } from '@react-navigation/native';
+import { useNavigation, useRoute } from '@react-navigation/native';
+import { sendOtp, verifyOtp, getCustomer, logoutCustomer, type Customer } from '../lib/auth';
 import { colors, spacing, radius, fontSizes, fontWeights, shadows } from '../theme';
 
 export function LoginScreen() {
-  const navigation = useNavigation();
+  const navigation = useNavigation<any>();
+  const route = useRoute<any>();
+  const onSuccessRoute = route.params?.onSuccessRoute as 'Checkout' | undefined;
+
+  const [checking, setChecking] = useState(true);
+  const [customer, setCustomerState] = useState<Customer | null>(null);
+  const [step, setStep] = useState<'phone' | 'otp'>('phone');
   const [phone, setPhone] = useState('');
+  const [otp, setOtp] = useState('');
+  const [sessionId, setSessionId] = useState('');
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
-  const valid = phone.replace(/\D/g, '').length === 10;
+  useEffect(() => {
+    let active = true;
+    getCustomer().then((c) => {
+      if (!active) return;
+      setCustomerState(c);
+      setChecking(false);
+      if (c && onSuccessRoute) navigation.replace(onSuccessRoute);
+    });
+    return () => {
+      active = false;
+    };
+  }, []);
 
-  const onSubmit = () => {
-    if (valid) navigation.getParent()?.navigate('Home' as never);
+  const phoneValid = phone.replace(/\D/g, '').length === 10;
+  const otpValid = otp.replace(/\D/g, '').length === 6;
+
+  const onSendOtp = async () => {
+    if (!phoneValid) return;
+    setLoading(true);
+    setError(null);
+    try {
+      const id = await sendOtp(phone);
+      setSessionId(id);
+      setStep('otp');
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Could not send OTP');
+    } finally {
+      setLoading(false);
+    }
   };
+
+  const onVerifyOtp = async () => {
+    if (!otpValid) return;
+    setLoading(true);
+    setError(null);
+    try {
+      const c = await verifyOtp(phone, sessionId, otp);
+      setCustomerState(c);
+      if (onSuccessRoute) navigation.replace(onSuccessRoute);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Incorrect OTP');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const onLogout = async () => {
+    await logoutCustomer();
+    setCustomerState(null);
+  };
+
+  if (checking) {
+    return (
+      <SafeAreaView style={styles.safe}>
+        <View style={styles.center}>
+          <ActivityIndicator color={colors.brand} />
+        </View>
+      </SafeAreaView>
+    );
+  }
+
+  if (customer && !onSuccessRoute) {
+    return (
+      <SafeAreaView style={styles.safe}>
+        <View style={styles.center}>
+          <View style={styles.card}>
+            <Text style={styles.mark}>🛵</Text>
+            <Text style={styles.title}>You're logged in</Text>
+            <Text style={styles.sub}>+91 {customer.phone}</Text>
+            <TouchableOpacity style={styles.logoutBtn} activeOpacity={0.9} onPress={onLogout}>
+              <Text style={styles.logoutText}>Log out</Text>
+            </TouchableOpacity>
+          </View>
+        </View>
+      </SafeAreaView>
+    );
+  }
 
   return (
     <SafeAreaView style={styles.safe}>
@@ -22,29 +105,67 @@ export function LoginScreen() {
           <Text style={styles.title}>
             Welcome to Degree<Text style={styles.titleAccent}>wala</Text>
           </Text>
-          <Text style={styles.sub}>Enter your phone number to continue</Text>
+          <Text style={styles.sub}>
+            {step === 'phone' ? 'Enter your phone number to continue' : `Enter the OTP sent to +91 ${phone}`}
+          </Text>
 
-          <View style={styles.field}>
-            <Text style={styles.cc}>+91</Text>
-            <TextInput
-              style={styles.input}
-              value={phone}
-              onChangeText={(t) => setPhone(t.replace(/\D/g, ''))}
-              placeholder="98765 43210"
-              placeholderTextColor={colors.textFaint}
-              keyboardType="number-pad"
-              maxLength={10}
-            />
-          </View>
-
-          <TouchableOpacity
-            style={[styles.submitBtn, !valid && styles.submitBtnDisabled]}
-            activeOpacity={0.9}
-            disabled={!valid}
-            onPress={onSubmit}
-          >
-            <Text style={styles.submitText}>Continue</Text>
-          </TouchableOpacity>
+          {step === 'phone' ? (
+            <>
+              <View style={styles.field}>
+                <Text style={styles.cc}>+91</Text>
+                <TextInput
+                  style={styles.input}
+                  value={phone}
+                  onChangeText={(t) => setPhone(t.replace(/\D/g, ''))}
+                  placeholder="98765 43210"
+                  placeholderTextColor={colors.textFaint}
+                  keyboardType="number-pad"
+                  maxLength={10}
+                />
+              </View>
+              {error && <Text style={styles.error}>{error}</Text>}
+              <TouchableOpacity
+                style={[styles.submitBtn, (!phoneValid || loading) && styles.submitBtnDisabled]}
+                activeOpacity={0.9}
+                disabled={!phoneValid || loading}
+                onPress={onSendOtp}
+              >
+                <Text style={styles.submitText}>{loading ? 'Sending…' : 'Send OTP'}</Text>
+              </TouchableOpacity>
+            </>
+          ) : (
+            <>
+              <View style={styles.field}>
+                <TextInput
+                  style={styles.input}
+                  value={otp}
+                  onChangeText={(t) => setOtp(t.replace(/\D/g, ''))}
+                  placeholder="6-digit OTP"
+                  placeholderTextColor={colors.textFaint}
+                  keyboardType="number-pad"
+                  maxLength={6}
+                />
+              </View>
+              {error && <Text style={styles.error}>{error}</Text>}
+              <TouchableOpacity
+                style={[styles.submitBtn, (!otpValid || loading) && styles.submitBtnDisabled]}
+                activeOpacity={0.9}
+                disabled={!otpValid || loading}
+                onPress={onVerifyOtp}
+              >
+                <Text style={styles.submitText}>{loading ? 'Verifying…' : 'Verify & Continue'}</Text>
+              </TouchableOpacity>
+              <TouchableOpacity
+                onPress={() => {
+                  setStep('phone');
+                  setOtp('');
+                  setError(null);
+                }}
+              >
+                <Text style={styles.back}>← Change number</Text>
+              </TouchableOpacity>
+            </>
+          )}
 
           <Text style={styles.terms}>By continuing you agree to our Terms & Privacy Policy.</Text>
         </View>
@@ -77,9 +198,16 @@ const styles = StyleSheet.create({
   cc: { fontSize: fontSizes.md, fontWeight: fontWeights.semibold, color: colors.text },
   input: { flex: 1, fontSize: fontSizes.md, color: colors.text, paddingVertical: spacing.md },
 
+  error: { width: '100%', fontSize: fontSizes.sm, color: colors.danger, backgroundColor: '#fdecea', borderRadius: radius.sm, padding: spacing.sm, marginTop: spacing.sm },
+
   submitBtn: { width: '100%', backgroundColor: colors.brand, borderRadius: radius.md, paddingVertical: spacing.md, alignItems: 'center', marginTop: spacing.lg },
   submitBtnDisabled: { opacity: 0.4 },
   submitText: { color: '#fff', fontWeight: fontWeights.heading, fontSize: fontSizes.md },
+
+  back: { fontSize: fontSizes.sm, fontWeight: fontWeights.semibold, color: colors.textMuted, marginTop: spacing.md },
+
+  logoutBtn: { width: '100%', backgroundColor: colors.surface, borderRadius: radius.md, paddingVertical: spacing.md, alignItems: 'center', marginTop: spacing.lg },
+  logoutText: { color: colors.text, fontWeight: fontWeights.heading, fontSize: fontSizes.md },
 
   terms: { fontSize: fontSizes.xs, color: colors.textFaint, textAlign: 'center', marginTop: spacing.md },
 });

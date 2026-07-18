@@ -67,3 +67,22 @@
   color: var(--text-faint, #9aa0ac);
   margin-top: 18px;
 }
+
+.login__error {
+  font-size: 13px;
+  color: var(--danger, #f44336);
+  background: #fdecea;
+  border-radius: var(--radius-sm, 8px);
+  padding: 8px 12px;
+  margin: 0;
+}
+
+.login__back {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--text-muted, #6b7280);
+  padding: 4px;
+}
+.login__back:hover {
+  color: var(--brand, #ff6b00);
+}
