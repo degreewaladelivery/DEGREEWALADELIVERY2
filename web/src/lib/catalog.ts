@@ -25,6 +25,7 @@ interface ProdRow {
   description: string | null;
   unit: string | null;
   serial_no: number;
+  mrp: number | null;
   retail_price: number;
   image_url: string | null;
   subcategory_id?: string | null;
@@ -82,6 +83,7 @@ function mapProduct(row: ProdRow, shopId: string, section?: string): Product {
     name: row.name,
     description: row.description ?? undefined,
     price: Number(row.retail_price),
+    mrp: row.mrp != null ? Number(row.mrp) : undefined,
     imageUrl: row.image_url ?? undefined,
     unit: row.unit ?? undefined,
     isAvailable: true,
@@ -138,7 +140,7 @@ export async function fetchCategoryPage(keyOrId: string): Promise<CategoryPage |
   const subName: Record<string, string> = {};
   for (const s of subs ?? []) subName[s.id] = s.name;
 
-  const cols = 'id,name,description,unit,serial_no,retail_price,image_url,subcategory_id';
+  const cols = 'id,name,description,unit,serial_no,mrp,retail_price,image_url,subcategory_id';
   const { data: prods, error } = await supabase
     .from('products_catalog')
     .select(cols)
@@ -209,7 +211,7 @@ export async function fetchShopPage(shopId: string): Promise<ShopPage | null> {
   const scName: Record<string, string> = {};
   for (const s of scats ?? []) scName[s.id] = s.name;
 
-  const shopCols = 'id,name,description,unit,serial_no,retail_price,image_url,shop_category_id';
+  const shopCols = 'id,name,description,unit,serial_no,mrp,retail_price,image_url,shop_category_id';
   const [own, linked] = await Promise.all([
     supabase.from('shop_products_catalog').select(shopCols).eq('shop_id', shopId),
     supabase.from('products_catalog').select(shopCols).eq('shop_id', shopId),
