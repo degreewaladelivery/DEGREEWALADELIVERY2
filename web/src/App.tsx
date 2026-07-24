@@ -17,6 +17,7 @@ import { CategoriesPage } from './admin/CategoriesPage';
 import { CategoryDetailPage } from './admin/CategoryDetailPage';
 import { ShopsPage } from './admin/ShopsPage';
 import { ShopDetailPage } from './admin/ShopDetailPage';
+import { SettingsPage } from './admin/SettingsPage';
 
 const router = createBrowserRouter([
   {
@@ -57,6 +58,7 @@ const router = createBrowserRouter([
           { path: 'categories/:categoryId', element: <CategoryDetailPage /> },
           { path: 'shops', element: <ShopsPage /> },
           { path: 'shops/:shopId', element: <ShopDetailPage /> },
+          { path: 'settings', element: <SettingsPage /> },
         ],
       },
     ],

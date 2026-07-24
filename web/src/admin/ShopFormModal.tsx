@@ -1,6 +1,7 @@
 import { useState, type FormEvent } from 'react';
 import { Modal } from './Modal';
 import { ImagePicker } from './ImagePicker';
+import { LocationPicker } from '../components/ui/LocationPicker';
 import { createShop, updateShop, uploadCatalogImage } from './api';
 import type { ShopRow } from './types';
 
@@ -23,6 +24,8 @@ export function ShopFormModal({
   const [isActive, setIsActive] = useState(shop?.is_active ?? true);
   const [imageFile, setImageFile] = useState<File | null>(null);
   const [imagePreview, setImagePreview] = useState(shop?.image_url ?? '');
+  const [latitude, setLatitude] = useState<number | null>(shop?.latitude ?? null);
+  const [longitude, setLongitude] = useState<number | null>(shop?.longitude ?? null);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -57,6 +60,8 @@ export function ShopFormModal({
         is_featured: isFeatured,
         sort_order: sortOrder,
         is_active: isActive,
+        latitude,
+        longitude,
       };
 
       if (shop) {
@@ -112,6 +117,18 @@ export function ShopFormModal({
         <label className="admin-field">
           <span>Sort order</span>
           <input type="number" value={sortOrder} onChange={(e) => setSortOrder(Number(e.target.value))} />
+        </label>
+
+        <label className="admin-field">
+          <span>Pickup location (for delivery fare)</span>
+          <LocationPicker
+            latitude={latitude}
+            longitude={longitude}
+            onChange={(lat, lng) => {
+              setLatitude(lat);
+              setLongitude(lng);
+            }}
+          />
         </label>
 
         <label className="admin-field admin-field--row">

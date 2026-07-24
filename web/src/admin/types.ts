@@ -57,7 +57,16 @@ export interface ShopRow {
   is_featured: boolean;
   sort_order: number;
   is_active: boolean;
+  latitude: number | null;
+  longitude: number | null;
   created_at: string;
+  updated_at: string;
+}
+
+export interface AppSettingsRow {
+  id: true;
+  pickup_latitude: number | null;
+  pickup_longitude: number | null;
   updated_at: string;
 }
 

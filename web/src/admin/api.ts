@@ -1,5 +1,13 @@
 import { supabase } from '../lib/supabase';
-import type { CategoryRow, SubcategoryRow, ProductRow, ShopRow, ShopCategoryRow, ShopProductRow } from './types';
+import type {
+  CategoryRow,
+  SubcategoryRow,
+  ProductRow,
+  ShopRow,
+  ShopCategoryRow,
+  ShopProductRow,
+  AppSettingsRow,
+} from './types';
 
 export async function listCategories(): Promise<CategoryRow[]> {
   const { data, error } = await supabase.from('categories').select('*').order('sort_order');
@@ -169,6 +177,8 @@ export interface ShopInput {
   is_featured: boolean;
   sort_order: number;
   is_active: boolean;
+  latitude: number | null;
+  longitude: number | null;
 }
 
 export async function createShop(input: ShopInput): Promise<ShopRow> {
@@ -264,6 +274,20 @@ export async function updateShopProduct(id: string, input: Partial<ShopProductIn
 export async function deleteShopProduct(id: string): Promise<void> {
   const { error } = await supabase.from('shop_products').delete().eq('id', id);
   if (error) throw error;
+}
+
+export async function getAppSettings(): Promise<AppSettingsRow> {
+  const { data, error } = await supabase.from('app_settings').select('*').single();
+  if (error) throw error;
+  return data;
+}
+
+export async function updateAppSettings(
+  input: Partial<Pick<AppSettingsRow, 'pickup_latitude' | 'pickup_longitude'>>
+): Promise<AppSettingsRow> {
+  const { data, error } = await supabase.from('app_settings').update(input).eq('id', true).select().single();
+  if (error) throw error;
+  return data;
 }
 
 export async function uploadCatalogImage(

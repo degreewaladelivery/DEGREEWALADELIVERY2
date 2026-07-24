@@ -6,10 +6,15 @@ import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { useCartStore, selectCount, selectSubtotal } from '../store/cartStore';
 import { formatRupees } from '../lib/format';
 import { getCustomer } from '../lib/auth';
+import { LocationPicker } from '../components/LocationPicker';
+import { MAPBOX_TOKEN, hasMapbox } from '../lib/mapbox';
+import { getPickupPoint } from '../lib/deliveryPickup';
+import { calculateDeliveryFare, haversineDistanceKm } from '@shared/deliveryFare';
+import { getRouteDistanceKm, type LatLng } from '@shared/mapbox';
 import type { CartStackParamList } from '../navigation/types';
 import { colors, spacing, radius, fontSizes, fontWeights, shadows } from '../theme';
 
-const DELIVERY_FEE = 30;
+const FLAT_DELIVERY_FEE = 30;
 const TAX_RATE = 0.05;
 
 type Nav = NativeStackNavigationProp<CartStackParamList, 'Checkout'>;
@@ -17,9 +22,17 @@ type Nav = NativeStackNavigationProp<CartStackParamList, 'Checkout'>;
 export function CheckoutScreen() {
   const navigation = useNavigation<Nav>();
   const items = useCartStore((s) => s.items);
+  const shopId = useCartStore((s) => s.shopId);
   const clear = useCartStore((s) => s.clear);
 
   const [address, setAddress] = useState('');
+
+  const [pickupPoint, setPickupPoint] = useState<LatLng | null>(null);
+  const [pickupError, setPickupError] = useState(false);
+  const [customerLat, setCustomerLat] = useState<number | null>(null);
+  const [customerLng, setCustomerLng] = useState<number | null>(null);
+  const [distanceKm, setDistanceKm] = useState<number | null>(null);
+  const [fareLoading, setFareLoading] = useState(false);
 
   useEffect(() => {
     getCustomer().then((c) => {
@@ -27,10 +40,36 @@ export function CheckoutScreen() {
     });
   }, [navigation]);
 
+  useEffect(() => {
+    if (!hasMapbox()) return;
+    getPickupPoint(shopId)
+      .then((point) => (point ? setPickupPoint(point) : setPickupError(true)))
+      .catch(() => setPickupError(true));
+  }, [shopId]);
+
+  useEffect(() => {
+    if (!hasMapbox() || !pickupPoint || customerLat == null || customerLng == null) return;
+    const customer: LatLng = { latitude: customerLat, longitude: customerLng };
+    setFareLoading(true);
+    const run = MAPBOX_TOKEN
+      ? getRouteDistanceKm(MAPBOX_TOKEN, pickupPoint, customer)
+      : Promise.resolve(
+          haversineDistanceKm(pickupPoint.latitude, pickupPoint.longitude, customer.latitude, customer.longitude)
+        );
+    run.then((km) => {
+      setDistanceKm(km);
+      setFareLoading(false);
+    });
+  }, [pickupPoint, customerLat, customerLng]);
+
   const count = selectCount(items);
   const subtotal = selectSubtotal(items);
   const taxes = Math.round(subtotal * TAX_RATE);
-  const total = subtotal + (count > 0 ? DELIVERY_FEE : 0) + taxes;
+  const liveFare = distanceKm != null ? calculateDeliveryFare(distanceKm).customerFare : null;
+  const deliveryFee = hasMapbox() ? liveFare : FLAT_DELIVERY_FEE;
+  const fareReady = !hasMapbox() || deliveryFee != null;
+  const total = subtotal + (count > 0 ? deliveryFee ?? 0 : 0) + taxes;
+  const canPlaceOrder = address.trim().length >= 6 && fareReady && !pickupError;
 
   const placeOrder = () => {
     const orderId = 'DW' + Date.now().toString().slice(-6);
@@ -45,6 +84,32 @@ export function CheckoutScreen() {
           <Text style={styles.back}>← Back to cart</Text>
         </TouchableOpacity>
         <Text style={styles.heading}>Checkout</Text>
+
+        {hasMapbox() && (
+          <View style={styles.card}>
+            <Text style={styles.cardTitle}>🗺️ Delivery Location</Text>
+            {pickupError && (
+              <Text style={styles.hint}>Delivery isn't set up for this shop yet — pickup point is missing.</Text>
+            )}
+            <LocationPicker
+              latitude={customerLat}
+              longitude={customerLng}
+              onChange={(lat, lng) => {
+                setCustomerLat(lat);
+                setCustomerLng(lng);
+              }}
+            />
+            {customerLat == null && (
+              <Text style={styles.hint}>Tap the map to drop a pin at your delivery location.</Text>
+            )}
+            {fareLoading && <Text style={styles.hint}>Calculating delivery fee…</Text>}
+            {!fareLoading && distanceKm != null && (
+              <Text style={styles.hint}>
+                {distanceKm.toFixed(1)} km from pickup · delivery fee {formatRupees(deliveryFee ?? 0)}
+              </Text>
+            )}
+          </View>
+        )}
 
         <View style={styles.card}>
           <Text style={styles.cardTitle}>📍 Delivery Address</Text>
@@ -82,15 +147,24 @@ export function CheckoutScreen() {
         <View style={styles.card}>
           <Text style={styles.cardTitle}>Order Summary</Text>
           <Row label={`Items (${count})`} value={formatRupees(subtotal)} />
-          <Row label="Delivery fee" value={formatRupees(DELIVERY_FEE)} />
+          <Row label="Delivery fee" value={deliveryFee != null ? formatRupees(deliveryFee) : '—'} />
           <Row label="Taxes & charges" value={formatRupees(taxes)} />
           <View style={styles.divider} />
           <Row label="To Pay" value={formatRupees(total)} bold />
         </View>
 
-        <TouchableOpacity style={styles.placeBtn} activeOpacity={0.9} onPress={placeOrder}>
+        <TouchableOpacity
+          style={[styles.placeBtn, !canPlaceOrder && styles.placeBtnDisabled]}
+          activeOpacity={0.9}
+          onPress={placeOrder}
+          disabled={!canPlaceOrder}
+        >
           <Text style={styles.placeBtnText}>Place Order</Text>
         </TouchableOpacity>
+        {address.trim().length < 6 && <Text style={styles.hint}>Add a delivery address to continue</Text>}
+        {address.trim().length >= 6 && !fareReady && !pickupError && (
+          <Text style={styles.hint}>Drop a pin on the map to calculate your delivery fee</Text>
+        )}
       </ScrollView>
     </SafeAreaView>
   );
@@ -113,6 +187,7 @@ const styles = StyleSheet.create({
 
   card: { backgroundColor: colors.surface, borderRadius: radius.lg, padding: spacing.lg, marginBottom: spacing.md },
   cardTitle: { fontSize: fontSizes.md, fontWeight: fontWeights.heading, color: colors.text, marginBottom: spacing.sm },
+  hint: { fontSize: fontSizes.xs, color: colors.textMuted, marginTop: spacing.sm },
 
   address: {
     borderWidth: 1,
@@ -143,5 +218,6 @@ const styles = StyleSheet.create({
   divider: { height: 1, backgroundColor: colors.borderStrong, marginVertical: spacing.sm },
 
   placeBtn: { marginTop: spacing.sm, backgroundColor: colors.brand, borderRadius: radius.lg, paddingVertical: spacing.md + 2, alignItems: 'center', ...shadows.brand },
+  placeBtnDisabled: { opacity: 0.5 },
   placeBtnText: { color: '#fff', fontWeight: fontWeights.heading, fontSize: fontSizes.md },
 });

@@ -3,27 +3,65 @@ import { Link, useNavigate } from 'react-router-dom';
 import { useCartStore, selectCount, selectSubtotal } from '../store/cartStore';
 import { formatRupees } from '../lib/format';
 import { getCustomer } from '../lib/auth';
+import { LocationPicker } from '../components/ui/LocationPicker';
+import { MAPBOX_TOKEN, hasMapbox } from '../lib/mapbox';
+import { getPickupPoint } from '../lib/deliveryPickup';
+import { calculateDeliveryFare, haversineDistanceKm } from '@shared/deliveryFare';
+import { getRouteDistanceKm, type LatLng } from '@shared/mapbox';
 import './Payment.css';
 
-const DELIVERY_FEE = 30;
+const FLAT_DELIVERY_FEE = 30;
 const TAX_RATE = 0.05;
 
 export function Payment() {
   const navigate = useNavigate();
   const items = useCartStore((s) => s.items);
+  const shopId = useCartStore((s) => s.shopId);
   const clear = useCartStore((s) => s.clear);
 
   const [address, setAddress] = useState('');
   const [method, setMethod] = useState<'cod' | 'razorpay'>('cod');
 
+  const [pickupPoint, setPickupPoint] = useState<LatLng | null>(null);
+  const [pickupError, setPickupError] = useState(false);
+  const [customerLat, setCustomerLat] = useState<number | null>(null);
+  const [customerLng, setCustomerLng] = useState<number | null>(null);
+  const [distanceKm, setDistanceKm] = useState<number | null>(null);
+  const [fareLoading, setFareLoading] = useState(false);
+
   useEffect(() => {
     if (!getCustomer()) navigate('/login?next=/checkout', { replace: true });
   }, [navigate]);
 
+  useEffect(() => {
+    if (!hasMapbox()) return;
+    getPickupPoint(shopId)
+      .then((point) => (point ? setPickupPoint(point) : setPickupError(true)))
+      .catch(() => setPickupError(true));
+  }, [shopId]);
+
+  useEffect(() => {
+    if (!hasMapbox() || !pickupPoint || customerLat == null || customerLng == null) return;
+    const customer: LatLng = { latitude: customerLat, longitude: customerLng };
+    setFareLoading(true);
+    const run = MAPBOX_TOKEN
+      ? getRouteDistanceKm(MAPBOX_TOKEN, pickupPoint, customer)
+      : Promise.resolve(
+          haversineDistanceKm(pickupPoint.latitude, pickupPoint.longitude, customer.latitude, customer.longitude)
+        );
+    run.then((km) => {
+      setDistanceKm(km);
+      setFareLoading(false);
+    });
+  }, [pickupPoint, customerLat, customerLng]);
+
   const count = selectCount(items);
   const subtotal = selectSubtotal(items);
   const taxes = Math.round(subtotal * TAX_RATE);
-  const total = subtotal + (count > 0 ? DELIVERY_FEE : 0) + taxes;
+  const liveFare = distanceKm != null ? calculateDeliveryFare(distanceKm).customerFare : null;
+  const deliveryFee = hasMapbox() ? liveFare : FLAT_DELIVERY_FEE;
+  const fareReady = !hasMapbox() || deliveryFee != null;
+  const total = subtotal + (count > 0 ? deliveryFee ?? 0 : 0) + taxes;
 
   if (count === 0) {
     return (
@@ -48,6 +86,34 @@ export function Payment() {
 
       <div className="payment__grid">
         <div className="payment__main">
+
+          {hasMapbox() && (
+            <section className="pay-card">
+              <h3>🗺️ Delivery Location</h3>
+              {pickupError && (
+                <p className="payment__hint">
+                  Delivery isn't set up for this shop yet — pickup point is missing.
+                </p>
+              )}
+              <LocationPicker
+                latitude={customerLat}
+                longitude={customerLng}
+                onChange={(lat, lng) => {
+                  setCustomerLat(lat);
+                  setCustomerLng(lng);
+                }}
+              />
+              {customerLat == null && (
+                <p className="payment__hint">Tap the map to drop a pin at your delivery location.</p>
+              )}
+              {fareLoading && <p className="payment__hint">Calculating delivery fee…</p>}
+              {!fareLoading && distanceKm != null && (
+                <p className="payment__hint">
+                  {distanceKm.toFixed(1)} km from pickup · delivery fee {formatRupees(deliveryFee ?? 0)}
+                </p>
+              )}
+            </section>
+          )}
 
           <section className="pay-card">
             <h3>📍 Delivery Address</h3>
@@ -89,18 +155,21 @@ export function Payment() {
         <aside className="payment__summary">
           <h3>Order Summary</h3>
           <div className="bill-row"><span>Items ({count})</span><span>{formatRupees(subtotal)}</span></div>
-          <div className="bill-row"><span>Delivery fee</span><span>{formatRupees(DELIVERY_FEE)}</span></div>
+          <div className="bill-row"><span>Delivery fee</span><span>{deliveryFee != null ? formatRupees(deliveryFee) : '—'}</span></div>
           <div className="bill-row"><span>Taxes & charges</span><span>{formatRupees(taxes)}</span></div>
           <div className="bill-row bill-row--total"><span>To Pay</span><span>{formatRupees(total)}</span></div>
           <button
             className="btn btn-primary btn-lg btn-block"
             onClick={placeOrder}
-            disabled={address.trim().length < 6}
+            disabled={address.trim().length < 6 || !fareReady || pickupError}
           >
             Place Order · {formatRupees(total)}
           </button>
           {address.trim().length < 6 && (
             <p className="payment__hint">Add a delivery address to continue</p>
+          )}
+          {address.trim().length >= 6 && !fareReady && !pickupError && (
+            <p className="payment__hint">Drop a pin on the map to calculate your delivery fee</p>
           )}
         </aside>
       </div>

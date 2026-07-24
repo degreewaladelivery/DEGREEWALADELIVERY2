@@ -24,6 +24,12 @@ export function AdminLayout() {
           >
             Shops
           </NavLink>
+          <NavLink
+            to="/admin/settings"
+            className={({ isActive }) => 'admin-header__link' + (isActive ? ' is-active' : '')}
+          >
+            Settings
+          </NavLink>
         </nav>
         <button className="admin-btn admin-btn--ghost" onClick={() => signOut()}>
           Sign out
