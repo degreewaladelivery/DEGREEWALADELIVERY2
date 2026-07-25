@@ -70,6 +70,14 @@ export interface AppSettingsRow {
   updated_at: string;
 }
 
+export interface DeliveryAgentRow {
+  user_id: string;
+  name: string;
+  phone: string;
+  is_active: boolean;
+  created_at: string;
+}
+
 export interface ShopCategoryRow {
   id: string;
   shop_id: string;

@@ -3,14 +3,14 @@ import { Link, useNavigate } from 'react-router-dom';
 import { useCartStore, selectCount, selectSubtotal } from '../store/cartStore';
 import { formatRupees } from '../lib/format';
 import { getCustomer } from '../lib/auth';
+import { supabase } from '../lib/supabase';
 import { LocationPicker } from '../components/ui/LocationPicker';
 import { MAPBOX_TOKEN, hasMapbox } from '../lib/mapbox';
-import { getPickupPoint } from '../lib/deliveryPickup';
+import { getPickupPoint, type PickupPoint } from '../lib/deliveryPickup';
 import { calculateDeliveryFare, haversineDistanceKm } from '@shared/deliveryFare';
 import { getRouteDistanceKm, type LatLng } from '@shared/mapbox';
 import './Payment.css';
 
-const FLAT_DELIVERY_FEE = 30;
 const TAX_RATE = 0.05;
 
 export function Payment() {
@@ -21,8 +21,10 @@ export function Payment() {
 
   const [address, setAddress] = useState('');
   const [method, setMethod] = useState<'cod' | 'razorpay'>('cod');
+  const [placing, setPlacing] = useState(false);
+  const [placeError, setPlaceError] = useState<string | null>(null);
 
-  const [pickupPoint, setPickupPoint] = useState<LatLng | null>(null);
+  const [pickupPoint, setPickupPoint] = useState<PickupPoint | null>(null);
   const [pickupError, setPickupError] = useState(false);
   const [customerLat, setCustomerLat] = useState<number | null>(null);
   const [customerLng, setCustomerLng] = useState<number | null>(null);
@@ -58,9 +60,9 @@ export function Payment() {
   const count = selectCount(items);
   const subtotal = selectSubtotal(items);
   const taxes = Math.round(subtotal * TAX_RATE);
-  const liveFare = distanceKm != null ? calculateDeliveryFare(distanceKm).customerFare : null;
-  const deliveryFee = hasMapbox() ? liveFare : FLAT_DELIVERY_FEE;
-  const fareReady = !hasMapbox() || deliveryFee != null;
+  const fare = hasMapbox() ? (distanceKm != null ? calculateDeliveryFare(distanceKm) : null) : calculateDeliveryFare(0);
+  const deliveryFee = fare?.customerFare ?? null;
+  const fareReady = !hasMapbox() || fare != null;
   const total = subtotal + (count > 0 ? deliveryFee ?? 0 : 0) + taxes;
 
   if (count === 0) {
@@ -73,10 +75,53 @@ export function Payment() {
     );
   }
 
-  const placeOrder = () => {
-    const orderId = 'DW' + Date.now().toString().slice(-6);
-    clear();
-    navigate('/order-success', { state: { orderId, total } });
+  const placeOrder = async () => {
+    if (!fare) return;
+    const customer = getCustomer();
+    if (!customer) return;
+
+    setPlacing(true);
+    setPlaceError(null);
+    try {
+      const orderItems = Object.values(items).map((line) => ({
+        id: line.product.id,
+        name: line.product.name,
+        price: line.product.price,
+        quantity: line.quantity,
+        unit: line.product.unit ?? null,
+      }));
+
+      const { data, error } = await supabase
+        .from('orders')
+        .insert({
+          customer_id: customer.id,
+          customer_phone: customer.phone,
+          pickup_label: pickupPoint?.label ?? 'DegreeWala pickup point',
+          pickup_latitude: pickupPoint?.latitude ?? null,
+          pickup_longitude: pickupPoint?.longitude ?? null,
+          delivery_address: address.trim(),
+          delivery_latitude: customerLat,
+          delivery_longitude: customerLng,
+          distance_km: distanceKm,
+          items: orderItems,
+          subtotal,
+          delivery_fee: fare.customerFare,
+          taxes,
+          total,
+          agent_payout: fare.agentPayout,
+          payment_method: method,
+        })
+        .select('id')
+        .single();
+      if (error) throw error;
+
+      clear();
+      navigate('/order-success', { state: { orderId: data.id, total } });
+    } catch (err) {
+      setPlaceError(err instanceof Error ? err.message : 'Could not place order');
+    } finally {
+      setPlacing(false);
+    }
   };
 
   return (
@@ -161,9 +206,9 @@ export function Payment() {
           <button
             className="btn btn-primary btn-lg btn-block"
             onClick={placeOrder}
-            disabled={address.trim().length < 6 || !fareReady || pickupError}
+            disabled={address.trim().length < 6 || !fareReady || pickupError || placing}
           >
-            Place Order · {formatRupees(total)}
+            {placing ? 'Placing order…' : `Place Order · ${formatRupees(total)}`}
           </button>
           {address.trim().length < 6 && (
             <p className="payment__hint">Add a delivery address to continue</p>
@@ -171,6 +216,7 @@ export function Payment() {
           {address.trim().length >= 6 && !fareReady && !pickupError && (
             <p className="payment__hint">Drop a pin on the map to calculate your delivery fee</p>
           )}
+          {placeError && <p className="payment__hint">{placeError}</p>}
         </aside>
       </div>
     </div>

@@ -7,6 +7,7 @@ import type {
   ShopCategoryRow,
   ShopProductRow,
   AppSettingsRow,
+  DeliveryAgentRow,
 } from './types';
 
 export async function listCategories(): Promise<CategoryRow[]> {
@@ -288,6 +289,45 @@ export async function updateAppSettings(
   const { data, error } = await supabase.from('app_settings').update(input).eq('id', true).select().single();
   if (error) throw error;
   return data;
+}
+
+export async function listAgents(): Promise<DeliveryAgentRow[]> {
+  const { data, error } = await supabase.from('delivery_agents').select('*').order('created_at', { ascending: false });
+  if (error) throw error;
+  return data;
+}
+
+export interface CreateAgentInput {
+  email: string;
+  password: string;
+  name: string;
+  phone: string;
+}
+
+export async function createAgent(input: CreateAgentInput): Promise<void> {
+  const { data, error } = await supabase.functions.invoke('create-agent', { body: input });
+  if (error || !data?.ok) {
+    throw new Error(data?.error ?? error?.message ?? 'Could not create agent');
+  }
+}
+
+export async function updateAgent(
+  userId: string,
+  input: Partial<Pick<DeliveryAgentRow, 'name' | 'phone' | 'is_active'>>
+): Promise<DeliveryAgentRow> {
+  const { data, error } = await supabase
+    .from('delivery_agents')
+    .update(input)
+    .eq('user_id', userId)
+    .select()
+    .single();
+  if (error) throw error;
+  return data;
+}
+
+export async function deleteAgent(userId: string): Promise<void> {
+  const { error } = await supabase.from('delivery_agents').delete().eq('user_id', userId);
+  if (error) throw error;
 }
 
 export async function uploadCatalogImage(

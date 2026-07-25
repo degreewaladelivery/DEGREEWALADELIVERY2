@@ -18,6 +18,12 @@ import { CategoryDetailPage } from './admin/CategoryDetailPage';
 import { ShopsPage } from './admin/ShopsPage';
 import { ShopDetailPage } from './admin/ShopDetailPage';
 import { SettingsPage } from './admin/SettingsPage';
+import { AgentsPage } from './admin/AgentsPage';
+import { AgentAuthProvider } from './agent/AgentAuthContext';
+import { AgentLogin } from './agent/AgentLogin';
+import { AgentLayout } from './agent/AgentLayout';
+import { RequireAgent } from './agent/RequireAgent';
+import { AgentOrdersPage } from './agent/AgentOrdersPage';
 
 const router = createBrowserRouter([
   {
@@ -59,7 +65,28 @@ const router = createBrowserRouter([
           { path: 'shops', element: <ShopsPage /> },
           { path: 'shops/:shopId', element: <ShopDetailPage /> },
           { path: 'settings', element: <SettingsPage /> },
+          { path: 'agents', element: <AgentsPage /> },
         ],
+      },
+    ],
+  },
+  {
+    path: '/agent',
+    element: (
+      <AgentAuthProvider>
+        <Outlet />
+      </AgentAuthProvider>
+    ),
+    errorElement: <RouteError />,
+    children: [
+      { path: 'login', element: <AgentLogin /> },
+      {
+        element: (
+          <RequireAgent>
+            <AgentLayout />
+          </RequireAgent>
+        ),
+        children: [{ path: 'orders', element: <AgentOrdersPage /> }],
       },
     ],
   },

@@ -6,15 +6,15 @@ import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { useCartStore, selectCount, selectSubtotal } from '../store/cartStore';
 import { formatRupees } from '../lib/format';
 import { getCustomer } from '../lib/auth';
+import { supabase } from '../lib/supabase';
 import { LocationPicker } from '../components/LocationPicker';
 import { MAPBOX_TOKEN, hasMapbox } from '../lib/mapbox';
-import { getPickupPoint } from '../lib/deliveryPickup';
+import { getPickupPoint, type PickupPoint } from '../lib/deliveryPickup';
 import { calculateDeliveryFare, haversineDistanceKm } from '@shared/deliveryFare';
 import { getRouteDistanceKm, type LatLng } from '@shared/mapbox';
 import type { CartStackParamList } from '../navigation/types';
 import { colors, spacing, radius, fontSizes, fontWeights, shadows } from '../theme';
 
-const FLAT_DELIVERY_FEE = 30;
 const TAX_RATE = 0.05;
 
 type Nav = NativeStackNavigationProp<CartStackParamList, 'Checkout'>;
@@ -26,8 +26,10 @@ export function CheckoutScreen() {
   const clear = useCartStore((s) => s.clear);
 
   const [address, setAddress] = useState('');
+  const [placing, setPlacing] = useState(false);
+  const [placeError, setPlaceError] = useState<string | null>(null);
 
-  const [pickupPoint, setPickupPoint] = useState<LatLng | null>(null);
+  const [pickupPoint, setPickupPoint] = useState<PickupPoint | null>(null);
   const [pickupError, setPickupError] = useState(false);
   const [customerLat, setCustomerLat] = useState<number | null>(null);
   const [customerLng, setCustomerLng] = useState<number | null>(null);
@@ -65,16 +67,59 @@ export function CheckoutScreen() {
   const count = selectCount(items);
   const subtotal = selectSubtotal(items);
   const taxes = Math.round(subtotal * TAX_RATE);
-  const liveFare = distanceKm != null ? calculateDeliveryFare(distanceKm).customerFare : null;
-  const deliveryFee = hasMapbox() ? liveFare : FLAT_DELIVERY_FEE;
-  const fareReady = !hasMapbox() || deliveryFee != null;
+  const fare = hasMapbox() ? (distanceKm != null ? calculateDeliveryFare(distanceKm) : null) : calculateDeliveryFare(0);
+  const deliveryFee = fare?.customerFare ?? null;
+  const fareReady = !hasMapbox() || fare != null;
   const total = subtotal + (count > 0 ? deliveryFee ?? 0 : 0) + taxes;
-  const canPlaceOrder = address.trim().length >= 6 && fareReady && !pickupError;
+  const canPlaceOrder = address.trim().length >= 6 && fareReady && !pickupError && !placing;
 
-  const placeOrder = () => {
-    const orderId = 'DW' + Date.now().toString().slice(-6);
-    clear();
-    navigation.replace('OrderSuccess', { orderId, total });
+  const placeOrder = async () => {
+    if (!fare) return;
+    const customer = await getCustomer();
+    if (!customer) return;
+
+    setPlacing(true);
+    setPlaceError(null);
+    try {
+      const orderItems = Object.values(items).map((line) => ({
+        id: line.product.id,
+        name: line.product.name,
+        price: line.product.price,
+        quantity: line.quantity,
+        unit: line.product.unit ?? null,
+      }));
+
+      const { data, error } = await supabase
+        .from('orders')
+        .insert({
+          customer_id: customer.id,
+          customer_phone: customer.phone,
+          pickup_label: pickupPoint?.label ?? 'DegreeWala pickup point',
+          pickup_latitude: pickupPoint?.latitude ?? null,
+          pickup_longitude: pickupPoint?.longitude ?? null,
+          delivery_address: address.trim(),
+          delivery_latitude: customerLat,
+          delivery_longitude: customerLng,
+          distance_km: distanceKm,
+          items: orderItems,
+          subtotal,
+          delivery_fee: fare.customerFare,
+          taxes,
+          total,
+          agent_payout: fare.agentPayout,
+          payment_method: 'cod',
+        })
+        .select('id')
+        .single();
+      if (error) throw error;
+
+      clear();
+      navigation.replace('OrderSuccess', { orderId: data.id, total });
+    } catch (err) {
+      setPlaceError(err instanceof Error ? err.message : 'Could not place order');
+    } finally {
+      setPlacing(false);
+    }
   };
 
   return (
@@ -159,12 +204,13 @@ export function CheckoutScreen() {
           onPress={placeOrder}
           disabled={!canPlaceOrder}
         >
-          <Text style={styles.placeBtnText}>Place Order</Text>
+          <Text style={styles.placeBtnText}>{placing ? 'Placing order…' : 'Place Order'}</Text>
         </TouchableOpacity>
         {address.trim().length < 6 && <Text style={styles.hint}>Add a delivery address to continue</Text>}
         {address.trim().length >= 6 && !fareReady && !pickupError && (
           <Text style={styles.hint}>Drop a pin on the map to calculate your delivery fee</Text>
         )}
+        {placeError && <Text style={styles.hint}>{placeError}</Text>}
       </ScrollView>
     </SafeAreaView>
   );
