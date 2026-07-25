@@ -1,5 +1,5 @@
-const TWO_FACTOR_API_KEY = Deno.env.get('TWO_FACTOR_API_KEY') ?? '';
-const TWO_FACTOR_BASE = 'https://2factor.in/API/V1';
+const MSG91_AUTH_KEY = Deno.env.get('MSG91_AUTH_KEY') ?? '';
+const MSG91_BASE = 'https://api.msg91.com/api';
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -24,14 +24,15 @@ Deno.serve(async (req) => {
       return json({ ok: false, error: 'Enter a valid 10-digit phone number' });
     }
 
-    const res = await fetch(`${TWO_FACTOR_BASE}/${TWO_FACTOR_API_KEY}/SMS/${digits}/AUTOGEN2`);
+    const url = `${MSG91_BASE}/sendotp.php?authkey=${MSG91_AUTH_KEY}&mobile=91${digits}&otp_length=6`;
+    const res = await fetch(url);
     const data = await res.json();
 
-    if (data.Status !== 'Success') {
+    if (data.type !== 'success') {
       return json({ ok: false, error: 'Could not send OTP. Please try again.' });
     }
 
-    return json({ ok: true, sessionId: data.Details });
+    return json({ ok: true });
   } catch {
     return json({ ok: false, error: 'Something went wrong' });
   }
