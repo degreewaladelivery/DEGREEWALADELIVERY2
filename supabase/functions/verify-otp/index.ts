@@ -1,7 +1,7 @@
 import { createClient } from 'jsr:@supabase/supabase-js@2';
 
-const MSG91_AUTH_KEY = Deno.env.get('MSG91_AUTH_KEY') ?? '';
-const MSG91_BASE = 'https://api.msg91.com/api';
+const TWO_FACTOR_API_KEY = Deno.env.get('TWO_FACTOR_API_KEY') ?? '';
+const TWO_FACTOR_BASE = 'https://2factor.in/API/V1';
 const SUPABASE_URL = Deno.env.get('SUPABASE_URL') ?? '';
 const SERVICE_ROLE_KEY = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? '';
 
@@ -22,17 +22,16 @@ Deno.serve(async (req) => {
   }
 
   try {
-    const { phone, otp } = await req.json();
+    const { phone, sessionId, otp } = await req.json();
     const digits = String(phone ?? '').replace(/\D/g, '');
-    if (digits.length !== 10 || !otp) {
-      return json({ ok: false, error: 'Missing phone or OTP' });
+    if (digits.length !== 10 || !sessionId || !otp) {
+      return json({ ok: false, error: 'Missing phone, session, or OTP' });
     }
 
-    const url = `${MSG91_BASE}/verifyRequestOTP.php?authkey=${MSG91_AUTH_KEY}&mobile=91${digits}&otp=${otp}`;
-    const res = await fetch(url);
+    const res = await fetch(`${TWO_FACTOR_BASE}/${TWO_FACTOR_API_KEY}/SMS/VERIFY/${sessionId}/${otp}`);
     const data = await res.json();
 
-    if (data.type !== 'success') {
+    if (data.Status !== 'Success') {
       return json({ ok: false, error: 'Incorrect or expired OTP' });
     }
 

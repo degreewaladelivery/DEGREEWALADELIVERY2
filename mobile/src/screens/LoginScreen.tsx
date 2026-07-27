@@ -15,6 +15,7 @@ export function LoginScreen() {
   const [step, setStep] = useState<'phone' | 'otp'>('phone');
   const [phone, setPhone] = useState('');
   const [otp, setOtp] = useState('');
+  const [sessionId, setSessionId] = useState('');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -39,7 +40,8 @@ export function LoginScreen() {
     setLoading(true);
     setError(null);
     try {
-      await sendOtp(phone);
+      const id = await sendOtp(phone);
+      setSessionId(id);
       setStep('otp');
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Could not send OTP');
@@ -53,7 +55,7 @@ export function LoginScreen() {
     setLoading(true);
     setError(null);
     try {
-      const c = await verifyOtp(phone, otp);
+      const c = await verifyOtp(phone, sessionId, otp);
       setCustomerState(c);
       if (onSuccessRoute) navigation.replace(onSuccessRoute);
     } catch (err) {

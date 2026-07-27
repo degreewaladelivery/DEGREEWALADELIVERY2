@@ -24,16 +24,17 @@ export function logoutCustomer() {
   localStorage.removeItem(STORAGE_KEY);
 }
 
-export async function sendOtp(phone: string): Promise<void> {
+export async function sendOtp(phone: string): Promise<string> {
   const { data, error } = await supabase.functions.invoke('send-otp', { body: { phone } });
   if (error || !data?.ok) {
     throw new Error(data?.error ?? error?.message ?? 'Could not send OTP');
   }
+  return data.sessionId as string;
 }
 
-export async function verifyOtp(phone: string, otp: string): Promise<Customer> {
+export async function verifyOtp(phone: string, sessionId: string, otp: string): Promise<Customer> {
   const { data, error } = await supabase.functions.invoke('verify-otp', {
-    body: { phone, otp },
+    body: { phone, sessionId, otp },
   });
   if (error || !data?.ok) {
     throw new Error(data?.error ?? error?.message ?? 'Incorrect or expired OTP');
