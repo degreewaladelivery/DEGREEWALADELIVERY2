@@ -24,7 +24,7 @@ Deno.serve(async (req) => {
       return json({ ok: false, error: 'Enter a valid 10-digit phone number' });
     }
 
-    const res = await fetch(`${TWO_FACTOR_BASE}/${TWO_FACTOR_API_KEY}/SMS/${digits}/AUTOGEN2`);
+    const res = await fetch(`${TWO_FACTOR_BASE}/${TWO_FACTOR_API_KEY}/SMS/${digits}/AUTOGEN`);
     const data = await res.json();
 
     if (data.Status !== 'Success') {
