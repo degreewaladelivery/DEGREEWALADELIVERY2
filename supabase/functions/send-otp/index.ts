@@ -1,4 +1,5 @@
 const TWO_FACTOR_API_KEY = Deno.env.get('TWO_FACTOR_API_KEY') ?? '';
+const TWO_FACTOR_TEMPLATE = Deno.env.get('TWO_FACTOR_TEMPLATE') ?? '';
 const TWO_FACTOR_BASE = 'https://2factor.in/API/V1';
 
 const corsHeaders = {
@@ -24,7 +25,8 @@ Deno.serve(async (req) => {
       return json({ ok: false, error: 'Enter a valid 10-digit phone number' });
     }
 
-    const res = await fetch(`${TWO_FACTOR_BASE}/${TWO_FACTOR_API_KEY}/SMS/${digits}/AUTOGEN`);
+    const template = TWO_FACTOR_TEMPLATE ? `/${TWO_FACTOR_TEMPLATE}` : '';
+    const res = await fetch(`${TWO_FACTOR_BASE}/${TWO_FACTOR_API_KEY}/SMS/${digits}/AUTOGEN2${template}`);
     const data = await res.json();
 
     if (data.Status !== 'Success') {
