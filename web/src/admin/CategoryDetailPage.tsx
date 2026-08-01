@@ -234,7 +234,25 @@ export function CategoryDetailPage() {
         <BulkUploadModal
           groupLabel="Subcategory"
           templateFileName={`${category?.name ?? 'items'}-template.csv`}
-          onImport={(rows) => bulkUpsertProducts(categoryId, rows, subcategories)}
+          includeCrossListing
+          extraValidation={(row) => {
+            const problems: string[] = [];
+            const has = (list: { name: string }[], value: string) =>
+              list.some((entry) => entry.name.trim().toLowerCase() === value.trim().toLowerCase());
+            if (row.groupName && !has(subcategories, row.groupName)) {
+              problems.push(`Unknown subcategory "${row.groupName}"`);
+            }
+            if (row.shopName && !has(shops, row.shopName)) {
+              problems.push(`Unknown shop "${row.shopName}"`);
+            }
+            for (const name of row.extraCategoryNames) {
+              if (!has(categories, name)) problems.push(`Unknown category "${name}"`);
+            }
+            return problems;
+          }}
+          onImport={(rows, columns) =>
+            bulkUpsertProducts(categoryId, rows, columns, { subcategories, shops, categories })
+          }
           onClose={() => setBulkOpen(false)}
           onImported={load}
         />

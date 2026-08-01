@@ -326,26 +326,45 @@ function groupIdByName(groups: { id: string; name: string }[]) {
   return map;
 }
 
+export interface ProductBulkLookups {
+  subcategories: SubcategoryRow[];
+  shops: ShopRow[];
+  categories: CategoryRow[];
+}
+
 export async function bulkUpsertProducts(
   categoryId: string,
   rows: ParsedItemRow[],
-  subcategories: SubcategoryRow[]
+  columns: string[],
+  lookups: ProductBulkLookups
 ): Promise<BulkImportResult> {
   const existing = await listProducts(categoryId);
   const { byBarcode, byName } = indexExisting(existing);
-  const subIds = groupIdByName(subcategories);
+  const subIds = groupIdByName(lookups.subcategories);
+  const shopIds = groupIdByName(lookups.shops);
+  const categoryIds = groupIdByName(lookups.categories);
+
+  const syncShop = columns.includes('shopName');
+  const syncExtraCategories = columns.includes('extraCategories');
 
   let nextSerial = existing.length ? Math.max(...existing.map((p) => p.serial_no)) + 1 : 1;
 
-  const toInsert: ProductInput[] = [];
+  const toInsert: (ProductInput & { id: string })[] = [];
   const toUpdate: (ProductInput & { id: string })[] = [];
+  const linkPlan: { productId: string; categoryIds: string[] }[] = [];
 
   for (const row of rows) {
     const match = matchExisting(row, byBarcode, byName);
+    const id = match?.id ?? crypto.randomUUID();
+
     const input: ProductInput = {
       category_id: categoryId,
       subcategory_id: row.groupName ? subIds.get(row.groupName.trim().toLowerCase()) ?? null : null,
-      shop_id: match?.shop_id ?? null,
+      shop_id: syncShop
+        ? row.shopName
+          ? shopIds.get(row.shopName.trim().toLowerCase()) ?? null
+          : null
+        : match?.shop_id ?? null,
       shop_category_id: match?.shop_category_id ?? null,
       name: row.name,
       description: row.description || null,
@@ -358,8 +377,18 @@ export async function bulkUpsertProducts(
       image_url: match?.image_url ?? null,
       is_active: row.isActive,
     };
-    if (match) toUpdate.push({ ...input, id: match.id });
-    else toInsert.push(input);
+
+    if (match) toUpdate.push({ ...input, id });
+    else toInsert.push({ ...input, id });
+
+    if (syncExtraCategories) {
+      linkPlan.push({
+        productId: id,
+        categoryIds: row.extraCategoryNames
+          .map((name) => categoryIds.get(name.trim().toLowerCase()))
+          .filter((value): value is string => Boolean(value) && value !== categoryId),
+      });
+    }
   }
 
   if (toInsert.length > 0) {
@@ -369,6 +398,20 @@ export async function bulkUpsertProducts(
   if (toUpdate.length > 0) {
     const { error } = await supabase.from('products').upsert(toUpdate);
     if (error) throw error;
+  }
+
+  if (linkPlan.length > 0) {
+    const productIds = linkPlan.map((plan) => plan.productId);
+    const cleared = await supabase.from('product_categories').delete().in('product_id', productIds);
+    if (cleared.error) throw cleared.error;
+
+    const linkRows = linkPlan.flatMap((plan) =>
+      plan.categoryIds.map((category_id) => ({ product_id: plan.productId, category_id }))
+    );
+    if (linkRows.length > 0) {
+      const { error } = await supabase.from('product_categories').insert(linkRows);
+      if (error) throw error;
+    }
   }
 
   return { created: toInsert.length, updated: toUpdate.length };

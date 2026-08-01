@@ -7,17 +7,22 @@ import type { BulkImportResult } from './api';
 export function BulkUploadModal({
   groupLabel,
   templateFileName,
+  includeCrossListing = false,
+  extraValidation,
   onImport,
   onClose,
   onImported,
 }: {
   groupLabel: string;
   templateFileName: string;
-  onImport: (rows: ParsedItemRow[]) => Promise<BulkImportResult>;
+  includeCrossListing?: boolean;
+  extraValidation?: (row: ParsedItemRow) => string[];
+  onImport: (rows: ParsedItemRow[], columns: string[]) => Promise<BulkImportResult>;
   onClose: () => void;
   onImported: () => void;
 }) {
   const [rows, setRows] = useState<ParsedItemRow[] | null>(null);
+  const [columns, setColumns] = useState<string[]>([]);
   const [missingColumns, setMissingColumns] = useState<string[]>([]);
   const [fileName, setFileName] = useState('');
   const [importing, setImporting] = useState(false);
@@ -31,7 +36,12 @@ export function BulkUploadModal({
     try {
       const parsed = parseItemsCsv(await file.text());
       setMissingColumns(parsed.missingColumns);
-      setRows(parsed.rows);
+      setColumns(parsed.columns);
+      setRows(
+        extraValidation
+          ? parsed.rows.map((row) => ({ ...row, errors: [...row.errors, ...extraValidation(row)] }))
+          : parsed.rows
+      );
     } catch {
       setError('Could not read that file');
       setRows(null);
@@ -45,7 +55,7 @@ export function BulkUploadModal({
     setImporting(true);
     setError(null);
     try {
-      setResult(await onImport(validRows));
+      setResult(await onImport(validRows, columns));
       onImported();
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Import failed');
@@ -80,7 +90,9 @@ export function BulkUploadModal({
             <button
               type="button"
               className="admin-btn admin-btn--sm"
-              onClick={() => downloadCsv(templateFileName, templateRows(groupLabel))}
+              onClick={() =>
+                downloadCsv(templateFileName, templateRows({ groupLabel, includeCrossListing }))
+              }
             >
               ↓ Download template
             </button>

@@ -215,6 +215,14 @@ export function ShopDetailPage() {
         <BulkUploadModal
           groupLabel="Shop category"
           templateFileName={`${shop?.name ?? 'items'}-template.csv`}
+          extraValidation={(row) =>
+            row.groupName &&
+            !shopCategories.some(
+              (entry) => entry.name.trim().toLowerCase() === row.groupName.trim().toLowerCase()
+            )
+              ? [`Unknown shop category "${row.groupName}"`]
+              : []
+          }
           onImport={(rows) => bulkUpsertShopProducts(shopId, rows, shopCategories)}
           onClose={() => setBulkOpen(false)}
           onImported={load}

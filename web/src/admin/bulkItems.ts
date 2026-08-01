@@ -5,6 +5,8 @@ export interface ParsedItemRow {
   name: string;
   serialNo: number | null;
   groupName: string;
+  shopName: string;
+  extraCategoryNames: string[];
   description: string;
   unit: string;
   barcode: string;
@@ -18,6 +20,12 @@ export interface ParsedItemRow {
 export interface ParsedItemsFile {
   rows: ParsedItemRow[];
   missingColumns: string[];
+  columns: string[];
+}
+
+export interface TemplateOptions {
+  groupLabel: string;
+  includeCrossListing: boolean;
 }
 
 const HEADER_ALIASES: Record<string, string> = {
@@ -37,6 +45,15 @@ const HEADER_ALIASES: Record<string, string> = {
   shopcategory: 'groupName',
   group: 'groupName',
   section: 'groupName',
+
+  shop: 'shopName',
+  shopname: 'shopName',
+  alsoshowinshop: 'shopName',
+
+  othercategories: 'extraCategories',
+  extracategories: 'extraCategories',
+  alsoshowinothercategories: 'extraCategories',
+  alsoshowincategories: 'extraCategories',
 
   description: 'description',
   desc: 'description',
@@ -83,37 +100,42 @@ function parseBoolean(raw: string, fallback: boolean): boolean {
   return ['yes', 'y', 'true', '1', 'active'].includes(value);
 }
 
-export function templateRows(groupLabel: string): string[][] {
-  return [
-    [
-      'Name',
-      'Serial No',
-      groupLabel,
-      'Description',
-      'Pack size / unit',
-      'Barcode',
-      'GST %',
-      'MRP',
-      'Retail price',
-      'Active',
-    ],
-    ['Example Item', '1', '', '', '1 kg', '', '5', '120', '99', 'Yes'],
-  ];
+function parseList(raw: string): string[] {
+  return raw
+    .split(/[;|,]/)
+    .map((part) => part.trim())
+    .filter((part) => part !== '');
+}
+
+export function templateRows({ groupLabel, includeCrossListing }: TemplateOptions): string[][] {
+  const headers = ['Name', 'Serial No', groupLabel];
+  const example = ['Example Item', '1', ''];
+
+  if (includeCrossListing) {
+    headers.push('Also show in shop', 'Also show in other categories');
+    example.push('', '');
+  }
+
+  headers.push('Description', 'Pack size / unit', 'Barcode', 'GST %', 'MRP', 'Retail price', 'Active');
+  example.push('', '1 kg', '', '5', '120', '99', 'Yes');
+
+  return [headers, example];
 }
 
 export function parseItemsCsv(text: string): ParsedItemsFile {
   const grid = parseCsv(text);
   if (grid.length === 0) {
-    return { rows: [], missingColumns: ['Name', 'MRP', 'Retail price'] };
+    return { rows: [], missingColumns: ['Name', 'MRP', 'Retail price'], columns: [] };
   }
 
   const headers = grid[0].map((header) => HEADER_ALIASES[normalizeHeader(header)] ?? '');
+  const columns = headers.filter((header) => header !== '');
 
   const missingColumns: string[] = [];
   if (!headers.includes('name')) missingColumns.push('Name');
   if (!headers.includes('mrp')) missingColumns.push('MRP');
   if (!headers.includes('retailPrice')) missingColumns.push('Retail price');
-  if (missingColumns.length > 0) return { rows: [], missingColumns };
+  if (missingColumns.length > 0) return { rows: [], missingColumns, columns };
 
   const rows = grid.slice(1).map((cells, index) => {
     const valueOf = (key: string) => {
@@ -151,6 +173,8 @@ export function parseItemsCsv(text: string): ParsedItemsFile {
       name,
       serialNo,
       groupName: valueOf('groupName'),
+      shopName: valueOf('shopName'),
+      extraCategoryNames: parseList(valueOf('extraCategories')),
       description: valueOf('description'),
       unit: valueOf('unit'),
       barcode: valueOf('barcode'),
@@ -162,5 +186,5 @@ export function parseItemsCsv(text: string): ParsedItemsFile {
     };
   });
 
-  return { rows, missingColumns: [] };
+  return { rows, missingColumns: [], columns };
 }
