@@ -9,6 +9,7 @@ import type {
   AppSettingsRow,
   DeliveryAgentRow,
 } from './types';
+import type { ParsedItemRow } from './bulkItems';
 
 export async function listCategories(): Promise<CategoryRow[]> {
   const { data, error } = await supabase.from('categories').select('*').order('sort_order');
@@ -289,6 +290,136 @@ export async function updateAppSettings(
   const { data, error } = await supabase.from('app_settings').update(input).eq('id', true).select().single();
   if (error) throw error;
   return data;
+}
+
+export interface BulkImportResult {
+  created: number;
+  updated: number;
+}
+
+function matchExisting<T extends { name: string; barcode: string | null }>(
+  row: ParsedItemRow,
+  byBarcode: Map<string, T>,
+  byName: Map<string, T>
+): T | undefined {
+  const barcode = row.barcode.trim().toLowerCase();
+  if (barcode) {
+    const hit = byBarcode.get(barcode);
+    if (hit) return hit;
+  }
+  return byName.get(row.name.trim().toLowerCase());
+}
+
+function indexExisting<T extends { name: string; barcode: string | null }>(items: T[]) {
+  const byBarcode = new Map<string, T>();
+  const byName = new Map<string, T>();
+  for (const item of items) {
+    if (item.barcode) byBarcode.set(item.barcode.trim().toLowerCase(), item);
+    byName.set(item.name.trim().toLowerCase(), item);
+  }
+  return { byBarcode, byName };
+}
+
+function groupIdByName(groups: { id: string; name: string }[]) {
+  const map = new Map<string, string>();
+  for (const group of groups) map.set(group.name.trim().toLowerCase(), group.id);
+  return map;
+}
+
+export async function bulkUpsertProducts(
+  categoryId: string,
+  rows: ParsedItemRow[],
+  subcategories: SubcategoryRow[]
+): Promise<BulkImportResult> {
+  const existing = await listProducts(categoryId);
+  const { byBarcode, byName } = indexExisting(existing);
+  const subIds = groupIdByName(subcategories);
+
+  let nextSerial = existing.length ? Math.max(...existing.map((p) => p.serial_no)) + 1 : 1;
+
+  const toInsert: ProductInput[] = [];
+  const toUpdate: (ProductInput & { id: string })[] = [];
+
+  for (const row of rows) {
+    const match = matchExisting(row, byBarcode, byName);
+    const input: ProductInput = {
+      category_id: categoryId,
+      subcategory_id: row.groupName ? subIds.get(row.groupName.trim().toLowerCase()) ?? null : null,
+      shop_id: match?.shop_id ?? null,
+      shop_category_id: match?.shop_category_id ?? null,
+      name: row.name,
+      description: row.description || null,
+      unit: row.unit || null,
+      serial_no: row.serialNo ?? match?.serial_no ?? nextSerial++,
+      barcode: row.barcode || null,
+      gst_percent: row.gstPercent,
+      mrp: row.mrp,
+      retail_price: row.retailPrice,
+      image_url: match?.image_url ?? null,
+      is_active: row.isActive,
+    };
+    if (match) toUpdate.push({ ...input, id: match.id });
+    else toInsert.push(input);
+  }
+
+  if (toInsert.length > 0) {
+    const { error } = await supabase.from('products').insert(toInsert);
+    if (error) throw error;
+  }
+  if (toUpdate.length > 0) {
+    const { error } = await supabase.from('products').upsert(toUpdate);
+    if (error) throw error;
+  }
+
+  return { created: toInsert.length, updated: toUpdate.length };
+}
+
+export async function bulkUpsertShopProducts(
+  shopId: string,
+  rows: ParsedItemRow[],
+  shopCategories: ShopCategoryRow[]
+): Promise<BulkImportResult> {
+  const existing = await listShopProducts(shopId);
+  const { byBarcode, byName } = indexExisting(existing);
+  const groupIds = groupIdByName(shopCategories);
+
+  let nextSerial = existing.length ? Math.max(...existing.map((p) => p.serial_no)) + 1 : 1;
+
+  const toInsert: ShopProductInput[] = [];
+  const toUpdate: (ShopProductInput & { id: string })[] = [];
+
+  for (const row of rows) {
+    const match = matchExisting(row, byBarcode, byName);
+    const input: ShopProductInput = {
+      shop_id: shopId,
+      shop_category_id: row.groupName
+        ? groupIds.get(row.groupName.trim().toLowerCase()) ?? null
+        : null,
+      name: row.name,
+      description: row.description || null,
+      unit: row.unit || null,
+      serial_no: row.serialNo ?? match?.serial_no ?? nextSerial++,
+      barcode: row.barcode || null,
+      gst_percent: row.gstPercent,
+      mrp: row.mrp,
+      retail_price: row.retailPrice,
+      image_url: match?.image_url ?? null,
+      is_active: row.isActive,
+    };
+    if (match) toUpdate.push({ ...input, id: match.id });
+    else toInsert.push(input);
+  }
+
+  if (toInsert.length > 0) {
+    const { error } = await supabase.from('shop_products').insert(toInsert);
+    if (error) throw error;
+  }
+  if (toUpdate.length > 0) {
+    const { error } = await supabase.from('shop_products').upsert(toUpdate);
+    if (error) throw error;
+  }
+
+  return { created: toInsert.length, updated: toUpdate.length };
 }
 
 export async function listAgents(): Promise<DeliveryAgentRow[]> {

@@ -8,10 +8,12 @@ import {
   listProductsCrossListedTo,
   deleteSubcategory,
   deleteProduct,
+  bulkUpsertProducts,
 } from './api';
 import type { CategoryRow, SubcategoryRow, ProductRow, ShopRow } from './types';
 import { SubcategoryFormModal } from './SubcategoryFormModal';
 import { ProductFormModal } from './ProductFormModal';
+import { BulkUploadModal } from './BulkUploadModal';
 
 export function CategoryDetailPage() {
   const { categoryId } = useParams<{ categoryId: string }>();
@@ -25,6 +27,7 @@ export function CategoryDetailPage() {
 
   const [editingSub, setEditingSub] = useState<SubcategoryRow | null | 'new'>(null);
   const [editingProduct, setEditingProduct] = useState<ProductRow | null | 'new'>(null);
+  const [bulkOpen, setBulkOpen] = useState(false);
 
   const load = useCallback(() => {
     if (!categoryId) return;
@@ -110,9 +113,14 @@ export function CategoryDetailPage() {
       <section className="admin-section">
         <div className="admin-section__head">
           <h2>Items</h2>
-          <button className="admin-btn admin-btn--primary admin-btn--sm" onClick={() => setEditingProduct('new')}>
-            + Add Item
-          </button>
+          <div className="admin-table__actions">
+            <button className="admin-btn admin-btn--sm" onClick={() => setBulkOpen(true)}>
+              ↑ Bulk Upload
+            </button>
+            <button className="admin-btn admin-btn--primary admin-btn--sm" onClick={() => setEditingProduct('new')}>
+              + Add Item
+            </button>
+          </div>
         </div>
 
         {products.length === 0 ? (
@@ -219,6 +227,16 @@ export function CategoryDetailPage() {
             setEditingSub(null);
             load();
           }}
+        />
+      )}
+
+      {bulkOpen && (
+        <BulkUploadModal
+          groupLabel="Subcategory"
+          templateFileName={`${category?.name ?? 'items'}-template.csv`}
+          onImport={(rows) => bulkUpsertProducts(categoryId, rows, subcategories)}
+          onClose={() => setBulkOpen(false)}
+          onImported={load}
         />
       )}
 

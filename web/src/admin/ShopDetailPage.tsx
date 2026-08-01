@@ -8,10 +8,12 @@ import {
   listCategories,
   deleteShopCategory,
   deleteShopProduct,
+  bulkUpsertShopProducts,
 } from './api';
 import type { ShopRow, ShopCategoryRow, ShopProductRow, ProductRow, CategoryRow } from './types';
 import { ShopCategoryFormModal } from './ShopCategoryFormModal';
 import { ShopProductFormModal } from './ShopProductFormModal';
+import { BulkUploadModal } from './BulkUploadModal';
 
 export function ShopDetailPage() {
   const { shopId } = useParams<{ shopId: string }>();
@@ -24,6 +26,7 @@ export function ShopDetailPage() {
 
   const [editingCat, setEditingCat] = useState<ShopCategoryRow | null | 'new'>(null);
   const [editingProduct, setEditingProduct] = useState<ShopProductRow | null | 'new'>(null);
+  const [bulkOpen, setBulkOpen] = useState(false);
 
   const load = useCallback(() => {
     if (!shopId) return;
@@ -106,9 +109,14 @@ export function ShopDetailPage() {
       <section className="admin-section">
         <div className="admin-section__head">
           <h2>Items</h2>
-          <button className="admin-btn admin-btn--primary admin-btn--sm" onClick={() => setEditingProduct('new')}>
-            + Add Item
-          </button>
+          <div className="admin-table__actions">
+            <button className="admin-btn admin-btn--sm" onClick={() => setBulkOpen(true)}>
+              ↑ Bulk Upload
+            </button>
+            <button className="admin-btn admin-btn--primary admin-btn--sm" onClick={() => setEditingProduct('new')}>
+              + Add Item
+            </button>
+          </div>
         </div>
 
         {products.length === 0 ? (
@@ -201,6 +209,16 @@ export function ShopDetailPage() {
             </tbody>
           </table>
         </section>
+      )}
+
+      {bulkOpen && (
+        <BulkUploadModal
+          groupLabel="Shop category"
+          templateFileName={`${shop?.name ?? 'items'}-template.csv`}
+          onImport={(rows) => bulkUpsertShopProducts(shopId, rows, shopCategories)}
+          onClose={() => setBulkOpen(false)}
+          onImported={load}
+        />
       )}
 
       {editingCat && (
