@@ -7,7 +7,11 @@ import { supabase } from '../lib/supabase';
 import { LocationPicker } from '../components/ui/LocationPicker';
 import { MAPBOX_TOKEN, hasMapbox } from '../lib/mapbox';
 import { getPickupPoint, type PickupPoint } from '../lib/deliveryPickup';
-import { calculateDeliveryFare, haversineDistanceKm } from '@shared/deliveryFare';
+import {
+  calculateDeliveryFare,
+  haversineDistanceKm,
+  MAX_DELIVERY_RADIUS_KM,
+} from '@shared/deliveryFare';
 import { getRouteDistanceKm, type LatLng } from '@shared/mapbox';
 import './Payment.css';
 
@@ -63,6 +67,7 @@ export function Payment() {
   const fare = hasMapbox() ? (distanceKm != null ? calculateDeliveryFare(distanceKm) : null) : calculateDeliveryFare(0);
   const deliveryFee = fare?.customerFare ?? null;
   const fareReady = !hasMapbox() || fare != null;
+  const outOfRange = distanceKm != null && distanceKm > MAX_DELIVERY_RADIUS_KM;
   const total = subtotal + (count > 0 ? deliveryFee ?? 0 : 0) + taxes;
 
   if (count === 0) {
@@ -206,7 +211,7 @@ export function Payment() {
           <button
             className="btn btn-primary btn-lg btn-block"
             onClick={placeOrder}
-            disabled={address.trim().length < 6 || !fareReady || pickupError || placing}
+            disabled={address.trim().length < 6 || !fareReady || pickupError || outOfRange || placing}
           >
             {placing ? 'Placing order…' : `Place Order · ${formatRupees(total)}`}
           </button>
@@ -215,6 +220,12 @@ export function Payment() {
           )}
           {address.trim().length >= 6 && !fareReady && !pickupError && (
             <p className="payment__hint">Drop a pin on the map to calculate your delivery fee</p>
+          )}
+          {outOfRange && (
+            <p className="payment__hint">
+              That location is {distanceKm?.toFixed(1)} km away — we deliver within{' '}
+              {MAX_DELIVERY_RADIUS_KM} km. Please pick a closer address.
+            </p>
           )}
           {placeError && <p className="payment__hint">{placeError}</p>}
         </aside>

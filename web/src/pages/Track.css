@@ -1,0 +1,140 @@
+.otrack {
+  padding-top: 24px;
+  padding-bottom: 60px;
+}
+
+.otrack__heading {
+  font-size: 26px;
+  font-weight: 800;
+  color: var(--text, #15172b);
+  margin-bottom: 18px;
+}
+
+.otrack__subheading {
+  font-size: 18px;
+  font-weight: 700;
+  color: var(--text, #15172b);
+  margin: 28px 0 12px;
+}
+
+.otrack__muted {
+  font-size: 13px;
+  color: var(--text-muted, #6b7280);
+  margin: 4px 0;
+}
+
+.otrack__error {
+  font-size: 14px;
+  color: var(--danger, #f44336);
+  background: #fdecea;
+  border-radius: var(--radius-sm, 8px);
+  padding: 10px 14px;
+}
+
+.otrack__card {
+  background: #fff;
+  border: 1px solid var(--border, #eceef2);
+  border-radius: var(--radius-lg, 16px);
+  padding: 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  box-shadow: var(--shadow-sm, 0 1px 2px rgba(16, 24, 40, 0.06));
+}
+
+.otrack__row {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.otrack__pickup {
+  font-size: 16px;
+  color: var(--text, #15172b);
+}
+
+.otrack__steps {
+  display: flex;
+  justify-content: space-between;
+  gap: 8px;
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.otrack__step {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+  font-size: 11px;
+  text-align: center;
+  color: var(--text-faint, #9aa0ac);
+  position: relative;
+}
+
+.otrack__step.is-done {
+  color: var(--text, #15172b);
+  font-weight: 600;
+}
+
+.otrack__dot {
+  width: 14px;
+  height: 14px;
+  border-radius: 50%;
+  background: var(--border-strong, #dfe3ea);
+}
+
+.otrack__step.is-done .otrack__dot {
+  background: var(--brand, #ff6b00);
+}
+
+.otrack__agent {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  background: var(--surface, #f4f6f9);
+  border-radius: var(--radius-md, 12px);
+  padding: 12px 14px;
+}
+
+.otrack__list {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.otrack__past {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  background: #fff;
+  border: 1px solid var(--border, #eceef2);
+  border-radius: var(--radius-md, 12px);
+  padding: 12px 14px;
+}
+
+.otrack__pastright {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 4px;
+}
+
+.otrack__tag {
+  font-size: 11px;
+  font-weight: 700;
+  color: #2e7d32;
+  background: #e8f5e9;
+  border-radius: var(--radius-pill, 999px);
+  padding: 2px 10px;
+}
+
+.otrack__tag.is-bad {
+  color: var(--danger, #f44336);
+  background: #fdecea;
+}

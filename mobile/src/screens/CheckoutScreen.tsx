@@ -10,7 +10,11 @@ import { supabase } from '../lib/supabase';
 import { LocationPicker } from '../components/LocationPicker';
 import { MAPBOX_TOKEN, hasMapbox } from '../lib/mapbox';
 import { getPickupPoint, type PickupPoint } from '../lib/deliveryPickup';
-import { calculateDeliveryFare, haversineDistanceKm } from '@shared/deliveryFare';
+import {
+  calculateDeliveryFare,
+  haversineDistanceKm,
+  MAX_DELIVERY_RADIUS_KM,
+} from '@shared/deliveryFare';
 import { getRouteDistanceKm, type LatLng } from '@shared/mapbox';
 import type { CartStackParamList } from '../navigation/types';
 import { colors, spacing, radius, fontSizes, fontWeights, shadows } from '../theme';
@@ -71,7 +75,9 @@ export function CheckoutScreen() {
   const deliveryFee = fare?.customerFare ?? null;
   const fareReady = !hasMapbox() || fare != null;
   const total = subtotal + (count > 0 ? deliveryFee ?? 0 : 0) + taxes;
-  const canPlaceOrder = address.trim().length >= 6 && fareReady && !pickupError && !placing;
+  const outOfRange = distanceKm != null && distanceKm > MAX_DELIVERY_RADIUS_KM;
+  const canPlaceOrder =
+    address.trim().length >= 6 && fareReady && !pickupError && !outOfRange && !placing;
 
   const placeOrder = async () => {
     if (!fare) return;
@@ -209,6 +215,12 @@ export function CheckoutScreen() {
         {address.trim().length < 6 && <Text style={styles.hint}>Add a delivery address to continue</Text>}
         {address.trim().length >= 6 && !fareReady && !pickupError && (
           <Text style={styles.hint}>Drop a pin on the map to calculate your delivery fee</Text>
+        )}
+        {outOfRange && (
+          <Text style={styles.hint}>
+            That location is {distanceKm?.toFixed(1)} km away — we deliver within{' '}
+            {MAX_DELIVERY_RADIUS_KM} km. Please pick a closer address.
+          </Text>
         )}
         {placeError && <Text style={styles.hint}>{placeError}</Text>}
       </ScrollView>

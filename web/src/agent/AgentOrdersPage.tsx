@@ -1,6 +1,14 @@
-import { useCallback, useEffect, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import { useAgentAuth } from './AgentAuthContext';
-import { claimOrder, getMyProfile, listMyDeliveries, listOpenOrders, markDelivered, markPickedUp } from './api';
+import {
+  claimOrder,
+  getMyProfile,
+  listMyDeliveries,
+  listOpenOrders,
+  markDelivered,
+  markPickedUp,
+  updateAgentLocation,
+} from './api';
 import type { AgentProfile, OrderRow } from './types';
 import { formatRupees } from '../lib/format';
 import './agent.css';
@@ -14,6 +22,39 @@ export function AgentOrdersPage() {
   const [myOrders, setMyOrders] = useState<OrderRow[] | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [busyId, setBusyId] = useState<string | null>(null);
+  const [sharing, setSharing] = useState(true);
+  const [locationDenied, setLocationDenied] = useState(false);
+
+  const activeIdsRef = useRef<string[]>([]);
+  const lastSentRef = useRef(0);
+  const activeCount = myOrders?.length ?? 0;
+
+  const canShare = typeof navigator !== 'undefined' && 'geolocation' in navigator;
+
+  useEffect(() => {
+    activeIdsRef.current = (myOrders ?? []).map((order) => order.id);
+  }, [myOrders]);
+
+  useEffect(() => {
+    if (!sharing || !canShare || activeCount === 0) return;
+
+    const watchId = navigator.geolocation.watchPosition(
+      (position) => {
+        const now = Date.now();
+        if (now - lastSentRef.current < 15000) return;
+        lastSentRef.current = now;
+        updateAgentLocation(
+          activeIdsRef.current,
+          position.coords.latitude,
+          position.coords.longitude
+        ).catch(() => {});
+      },
+      () => setLocationDenied(true),
+      { enableHighAccuracy: true, maximumAge: 10000, timeout: 20000 }
+    );
+
+    return () => navigator.geolocation.clearWatch(watchId);
+  }, [sharing, canShare, activeCount]);
 
   const load = useCallback(() => {
     if (!agentId) return;
@@ -85,7 +126,24 @@ export function AgentOrdersPage() {
       <section className="admin-section">
         <div className="admin-section__head">
           <h2>My Deliveries{myOrders && myOrders.length > 0 ? ` (${myOrders.length})` : ''}</h2>
+          {activeCount > 0 && canShare && (
+            <button className="admin-btn admin-btn--sm" onClick={() => setSharing((on) => !on)}>
+              {sharing ? '📍 Sharing live location' : 'Location sharing off'}
+            </button>
+          )}
         </div>
+
+        {activeCount > 0 && sharing && locationDenied && (
+          <p className="admin-login__error">
+            Location access is blocked, so customers can't see where you are. Allow location for
+            this site in your browser settings.
+          </p>
+        )}
+        {activeCount > 0 && !canShare && (
+          <p className="admin-empty">
+            This browser can't share location, so customers won't see live tracking.
+          </p>
+        )}
         {myOrders && myOrders.length === 0 && (
           <p className="admin-empty">No active deliveries — claim one below.</p>
         )}

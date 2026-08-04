@@ -40,6 +40,23 @@ export async function claimOrder(orderId: string, agentId: string): Promise<bool
   return (data?.length ?? 0) > 0;
 }
 
+export async function updateAgentLocation(
+  orderIds: string[],
+  latitude: number,
+  longitude: number
+): Promise<void> {
+  if (orderIds.length === 0) return;
+  const { error } = await supabase
+    .from('orders')
+    .update({
+      agent_latitude: latitude,
+      agent_longitude: longitude,
+      agent_location_at: new Date().toISOString(),
+    })
+    .in('id', orderIds);
+  if (error) throw error;
+}
+
 export async function markPickedUp(orderId: string): Promise<void> {
   const { error } = await supabase
     .from('orders')
