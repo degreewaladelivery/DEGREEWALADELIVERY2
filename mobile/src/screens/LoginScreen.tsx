@@ -86,6 +86,13 @@ export function LoginScreen() {
             <Text style={styles.mark}>🛵</Text>
             <Text style={styles.title}>You're logged in</Text>
             <Text style={styles.sub}>+91 {customer.phone}</Text>
+            <TouchableOpacity
+              style={styles.submitBtn}
+              activeOpacity={0.9}
+              onPress={() => navigation.navigate('Cart', { screen: 'Track' })}
+            >
+              <Text style={styles.submitText}>My Orders</Text>
+            </TouchableOpacity>
             <TouchableOpacity style={styles.logoutBtn} activeOpacity={0.9} onPress={onLogout}>
               <Text style={styles.logoutText}>Log out</Text>
             </TouchableOpacity>

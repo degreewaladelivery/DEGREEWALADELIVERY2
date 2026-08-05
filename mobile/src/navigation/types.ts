@@ -9,4 +9,5 @@ export type CartStackParamList = {
   Login: { onSuccessRoute: 'Checkout' } | undefined;
   Checkout: undefined;
   OrderSuccess: { orderId: string; total: number };
+  Track: undefined;
 };

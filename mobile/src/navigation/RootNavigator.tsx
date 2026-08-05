@@ -7,6 +7,7 @@ import { ShopScreen } from '../screens/ShopScreen';
 import { CartScreen } from '../screens/CartScreen';
 import { CheckoutScreen } from '../screens/CheckoutScreen';
 import { OrderSuccessScreen } from '../screens/OrderSuccessScreen';
+import { TrackScreen } from '../screens/TrackScreen';
 import { LoginScreen } from '../screens/LoginScreen';
 import { HomeIcon, TagIcon, CartIcon, UserIcon } from '../components/icons';
 import { colors, fontWeights, shadows } from '../theme';
@@ -33,6 +34,7 @@ function CartStackNavigator() {
       <CartStack.Screen name="Login" component={LoginScreen} />
       <CartStack.Screen name="Checkout" component={CheckoutScreen} />
       <CartStack.Screen name="OrderSuccess" component={OrderSuccessScreen} />
+      <CartStack.Screen name="Track" component={TrackScreen} />
     </CartStack.Navigator>
   );
 }

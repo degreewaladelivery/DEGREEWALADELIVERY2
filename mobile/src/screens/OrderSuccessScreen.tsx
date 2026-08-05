@@ -1,4 +1,4 @@
-import { View, Text, ScrollView, TouchableOpacity, StyleSheet, Alert } from 'react-native';
+import { View, Text, ScrollView, TouchableOpacity, StyleSheet } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useNavigation, useRoute, type RouteProp } from '@react-navigation/native';
 import type { CartStackParamList } from '../navigation/types';
@@ -45,7 +45,7 @@ export function OrderSuccessScreen() {
             <TouchableOpacity
               style={styles.primaryBtn}
               activeOpacity={0.9}
-              onPress={() => Alert.alert('Track Order', 'Coming soon')}
+              onPress={() => navigation.navigate('Track' as never)}
             >
               <Text style={styles.primaryBtnText}>Track Order</Text>
             </TouchableOpacity>
