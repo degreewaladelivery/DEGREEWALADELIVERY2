@@ -48,8 +48,8 @@ export function Login() {
     }
   };
 
-  const onLogout = () => {
-    logoutCustomer();
+  const onLogout = async () => {
+    await logoutCustomer();
     setCustomerState(null);
   };
 

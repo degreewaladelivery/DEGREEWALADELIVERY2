@@ -3,6 +3,7 @@ import { supabase } from './supabase';
 export interface Customer {
   id: string;
   phone: string;
+  token: string;
 }
 
 const STORAGE_KEY = 'dw_customer';
@@ -10,7 +11,10 @@ const STORAGE_KEY = 'dw_customer';
 export function getCustomer(): Customer | null {
   try {
     const raw = localStorage.getItem(STORAGE_KEY);
-    return raw ? (JSON.parse(raw) as Customer) : null;
+    if (!raw) return null;
+    const parsed = JSON.parse(raw) as Partial<Customer>;
+    if (!parsed.id || !parsed.phone || !parsed.token) return null;
+    return parsed as Customer;
   } catch {
     return null;
   }
@@ -20,8 +24,13 @@ function setCustomer(customer: Customer) {
   localStorage.setItem(STORAGE_KEY, JSON.stringify(customer));
 }
 
-export function logoutCustomer() {
+export async function logoutCustomer(): Promise<void> {
+  const customer = getCustomer();
   localStorage.removeItem(STORAGE_KEY);
+  if (!customer) return;
+  await supabase.functions
+    .invoke('logout', { body: { token: customer.token } })
+    .catch(() => undefined);
 }
 
 export async function sendOtp(phone: string): Promise<void> {
@@ -38,7 +47,7 @@ export async function verifyOtp(phone: string, otp: string): Promise<Customer> {
   if (error || !data?.ok) {
     throw new Error(data?.error ?? error?.message ?? 'Incorrect or expired OTP');
   }
-  const customer: Customer = { id: data.customerId, phone: data.phone };
+  const customer: Customer = { id: data.customerId, phone: data.phone, token: data.token };
   setCustomer(customer);
   return customer;
 }

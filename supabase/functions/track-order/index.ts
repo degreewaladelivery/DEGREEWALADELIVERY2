@@ -1,4 +1,5 @@
 import { createClient } from 'jsr:@supabase/supabase-js@2';
+import { corsHeaders, json, resolveSession } from '../_shared/session.ts';
 
 const SUPABASE_URL = Deno.env.get('SUPABASE_URL') ?? '';
 const SERVICE_ROLE_KEY = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? '';
@@ -29,36 +30,24 @@ const ORDER_FIELDS = [
   'delivered_at',
 ].join(',');
 
-const corsHeaders = {
-  'Access-Control-Allow-Origin': '*',
-  'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
-};
-
-function json(body: unknown) {
-  return new Response(JSON.stringify(body), {
-    headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-  });
-}
-
 Deno.serve(async (req) => {
   if (req.method === 'OPTIONS') {
     return new Response('ok', { headers: corsHeaders });
   }
 
   try {
-    const { customerId, phone } = await req.json();
-    const digits = String(phone ?? '').replace(/\D/g, '');
-    if (!customerId || digits.length !== 10) {
-      return json({ ok: false, error: 'Missing customer details' });
-    }
-
+    const { token } = await req.json();
     const admin = createClient(SUPABASE_URL, SERVICE_ROLE_KEY);
+
+    const customerId = await resolveSession(admin, token);
+    if (!customerId) {
+      return json({ ok: false, error: 'Please sign in again', signedOut: true });
+    }
 
     const { data: orders, error } = await admin
       .from('orders')
       .select(ORDER_FIELDS)
       .eq('customer_id', customerId)
-      .eq('customer_phone', digits)
       .order('created_at', { ascending: false })
       .limit(10);
 

@@ -5,7 +5,7 @@ import { useNavigation } from '@react-navigation/native';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { useCartStore, selectCount, selectSubtotal } from '../store/cartStore';
 import { formatRupees } from '../lib/format';
-import { getCustomer } from '../lib/auth';
+import { getCustomer, logoutCustomer } from '../lib/auth';
 import { supabase } from '../lib/supabase';
 import { LocationPicker } from '../components/LocationPicker';
 import { MAPBOX_TOKEN, hasMapbox } from '../lib/mapbox';
@@ -80,47 +80,37 @@ export function CheckoutScreen() {
     address.trim().length >= 6 && fareReady && !pickupError && !outOfRange && !placing;
 
   const placeOrder = async () => {
-    if (!fare) return;
     const customer = await getCustomer();
     if (!customer) return;
 
     setPlacing(true);
     setPlaceError(null);
     try {
-      const orderItems = Object.values(items).map((line) => ({
-        id: line.product.id,
-        name: line.product.name,
-        price: line.product.price,
-        quantity: line.quantity,
-        unit: line.product.unit ?? null,
-      }));
+      const { data, error } = await supabase.functions.invoke('place-order', {
+        body: {
+          token: customer.token,
+          items: Object.values(items).map((line) => ({
+            id: line.product.id,
+            quantity: line.quantity,
+          })),
+          shopId,
+          address: address.trim(),
+          latitude: customerLat,
+          longitude: customerLng,
+        },
+      });
 
-      const { data, error } = await supabase
-        .from('orders')
-        .insert({
-          customer_id: customer.id,
-          customer_phone: customer.phone,
-          pickup_label: pickupPoint?.label ?? 'DegreeWala pickup point',
-          pickup_latitude: pickupPoint?.latitude ?? null,
-          pickup_longitude: pickupPoint?.longitude ?? null,
-          delivery_address: address.trim(),
-          delivery_latitude: customerLat,
-          delivery_longitude: customerLng,
-          distance_km: distanceKm,
-          items: orderItems,
-          subtotal,
-          delivery_fee: fare.customerFare,
-          taxes,
-          total,
-          agent_payout: fare.agentPayout,
-          payment_method: 'cod',
-        })
-        .select('id')
-        .single();
-      if (error) throw error;
+      if (data?.signedOut) {
+        await logoutCustomer();
+        navigation.replace('Login', { onSuccessRoute: 'Checkout' });
+        return;
+      }
+      if (error || !data?.ok) {
+        throw new Error(data?.error ?? error?.message ?? 'Could not place order');
+      }
 
       clear();
-      navigation.replace('OrderSuccess', { orderId: data.id, total });
+      navigation.replace('OrderSuccess', { orderId: data.orderId, total: data.total });
     } catch (err) {
       setPlaceError(err instanceof Error ? err.message : 'Could not place order');
     } finally {

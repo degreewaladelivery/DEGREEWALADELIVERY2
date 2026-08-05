@@ -34,10 +34,15 @@ export interface TrackedOrder {
   agent: { name: string; phone: string } | null;
 }
 
-export async function fetchMyOrders(customerId: string, phone: string): Promise<TrackedOrder[]> {
-  const { data, error } = await supabase.functions.invoke('track-order', {
-    body: { customerId, phone },
-  });
+export class SignedOutError extends Error {
+  constructor() {
+    super('Please sign in again');
+  }
+}
+
+export async function fetchMyOrders(token: string): Promise<TrackedOrder[]> {
+  const { data, error } = await supabase.functions.invoke('track-order', { body: { token } });
+  if (data?.signedOut) throw new SignedOutError();
   if (error || !data?.ok) {
     throw new Error(data?.error ?? error?.message ?? 'Could not load your orders');
   }

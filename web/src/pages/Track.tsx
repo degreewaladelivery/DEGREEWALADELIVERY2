@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { getCustomer } from '../lib/auth';
-import { fetchMyOrders, type TrackedOrder } from '../lib/tracking';
+import { getCustomer, logoutCustomer } from '../lib/auth';
+import { fetchMyOrders, SignedOutError, type TrackedOrder } from '../lib/tracking';
 import { formatRupees } from '../lib/format';
 import { TrackingMap } from '../components/ui/TrackingMap';
 import { haversineDistanceKm } from '@shared/deliveryFare';
@@ -46,7 +46,7 @@ export function Track() {
     let cancelled = false;
 
     const load = () => {
-      fetchMyOrders(customer.id, customer.phone)
+      fetchMyOrders(customer.token)
         .then((rows) => {
           if (!cancelled) {
             setOrders(rows);
@@ -54,7 +54,12 @@ export function Track() {
           }
         })
         .catch((err) => {
-          if (!cancelled) setError(err instanceof Error ? err.message : 'Could not load orders');
+          if (cancelled) return;
+          if (err instanceof SignedOutError) {
+            logoutCustomer().finally(() => navigate('/login?next=/track', { replace: true }));
+            return;
+          }
+          setError(err instanceof Error ? err.message : 'Could not load orders');
         });
     };
 
@@ -64,7 +69,7 @@ export function Track() {
       cancelled = true;
       window.clearInterval(timer);
     };
-  }, [customer]);
+  }, [customer, navigate]);
 
   const active = orders?.find((o) => o.status !== 'delivered' && o.status !== 'cancelled') ?? null;
   const past = (orders ?? []).filter((o) => o.id !== active?.id);

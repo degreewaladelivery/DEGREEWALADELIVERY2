@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useCartStore, selectCount, selectSubtotal } from '../store/cartStore';
 import { formatRupees } from '../lib/format';
-import { getCustomer } from '../lib/auth';
+import { getCustomer, logoutCustomer } from '../lib/auth';
 import { supabase } from '../lib/supabase';
 import { LocationPicker } from '../components/ui/LocationPicker';
 import { MAPBOX_TOKEN, hasMapbox } from '../lib/mapbox';
@@ -32,8 +32,11 @@ export function Payment() {
   const [pickupError, setPickupError] = useState(false);
   const [customerLat, setCustomerLat] = useState<number | null>(null);
   const [customerLng, setCustomerLng] = useState<number | null>(null);
-  const [distanceKm, setDistanceKm] = useState<number | null>(null);
-  const [fareLoading, setFareLoading] = useState(false);
+  const [distance, setDistance] = useState<{
+    latitude: number;
+    longitude: number;
+    km: number;
+  } | null>(null);
 
   useEffect(() => {
     if (!getCustomer()) navigate('/login?next=/checkout', { replace: true });
@@ -48,18 +51,31 @@ export function Payment() {
 
   useEffect(() => {
     if (!hasMapbox() || !pickupPoint || customerLat == null || customerLng == null) return;
-    const customer: LatLng = { latitude: customerLat, longitude: customerLng };
-    setFareLoading(true);
+    let cancelled = false;
+    const target: LatLng = { latitude: customerLat, longitude: customerLng };
     const run = MAPBOX_TOKEN
-      ? getRouteDistanceKm(MAPBOX_TOKEN, pickupPoint, customer)
+      ? getRouteDistanceKm(MAPBOX_TOKEN, pickupPoint, target)
       : Promise.resolve(
-          haversineDistanceKm(pickupPoint.latitude, pickupPoint.longitude, customer.latitude, customer.longitude)
+          haversineDistanceKm(pickupPoint.latitude, pickupPoint.longitude, target.latitude, target.longitude)
         );
     run.then((km) => {
-      setDistanceKm(km);
-      setFareLoading(false);
+      if (!cancelled) setDistance({ latitude: target.latitude, longitude: target.longitude, km });
     });
+    return () => {
+      cancelled = true;
+    };
   }, [pickupPoint, customerLat, customerLng]);
+
+  const distanceKm =
+    distance && distance.latitude === customerLat && distance.longitude === customerLng
+      ? distance.km
+      : null;
+  const fareLoading =
+    hasMapbox() &&
+    pickupPoint != null &&
+    customerLat != null &&
+    customerLng != null &&
+    distanceKm == null;
 
   const count = selectCount(items);
   const subtotal = selectSubtotal(items);
@@ -81,47 +97,37 @@ export function Payment() {
   }
 
   const placeOrder = async () => {
-    if (!fare) return;
     const customer = getCustomer();
     if (!customer) return;
 
     setPlacing(true);
     setPlaceError(null);
     try {
-      const orderItems = Object.values(items).map((line) => ({
-        id: line.product.id,
-        name: line.product.name,
-        price: line.product.price,
-        quantity: line.quantity,
-        unit: line.product.unit ?? null,
-      }));
+      const { data, error } = await supabase.functions.invoke('place-order', {
+        body: {
+          token: customer.token,
+          items: Object.values(items).map((line) => ({
+            id: line.product.id,
+            quantity: line.quantity,
+          })),
+          shopId,
+          address: address.trim(),
+          latitude: customerLat,
+          longitude: customerLng,
+        },
+      });
 
-      const { data, error } = await supabase
-        .from('orders')
-        .insert({
-          customer_id: customer.id,
-          customer_phone: customer.phone,
-          pickup_label: pickupPoint?.label ?? 'DegreeWala pickup point',
-          pickup_latitude: pickupPoint?.latitude ?? null,
-          pickup_longitude: pickupPoint?.longitude ?? null,
-          delivery_address: address.trim(),
-          delivery_latitude: customerLat,
-          delivery_longitude: customerLng,
-          distance_km: distanceKm,
-          items: orderItems,
-          subtotal,
-          delivery_fee: fare.customerFare,
-          taxes,
-          total,
-          agent_payout: fare.agentPayout,
-          payment_method: method,
-        })
-        .select('id')
-        .single();
-      if (error) throw error;
+      if (data?.signedOut) {
+        await logoutCustomer();
+        navigate('/login?next=/checkout', { replace: true });
+        return;
+      }
+      if (error || !data?.ok) {
+        throw new Error(data?.error ?? error?.message ?? 'Could not place order');
+      }
 
       clear();
-      navigate('/order-success', { state: { orderId: data.id, total } });
+      navigate('/order-success', { state: { orderId: data.orderId, total: data.total } });
     } catch (err) {
       setPlaceError(err instanceof Error ? err.message : 'Could not place order');
     } finally {

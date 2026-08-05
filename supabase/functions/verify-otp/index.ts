@@ -1,4 +1,5 @@
 import { createClient } from 'jsr:@supabase/supabase-js@2';
+import { corsHeaders, json, issueSession } from '../_shared/session.ts';
 
 const TWO_FACTOR_API_KEY = Deno.env.get('TWO_FACTOR_API_KEY') ?? '';
 const TWO_FACTOR_BASE = 'https://2factor.in/API/V1';
@@ -7,21 +8,10 @@ const SERVICE_ROLE_KEY = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? '';
 
 const MAX_ATTEMPTS = 5;
 
-const corsHeaders = {
-  'Access-Control-Allow-Origin': '*',
-  'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
-};
-
-function json(body: unknown) {
-  return new Response(JSON.stringify(body), {
-    headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-  });
-}
-
 async function hashCode(code: string): Promise<string> {
   const digest = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(code));
   return Array.from(new Uint8Array(digest))
-    .map((b) => b.toString(16).padStart(2, '0'))
+    .map((byte) => byte.toString(16).padStart(2, '0'))
     .join('');
 }
 
@@ -85,7 +75,12 @@ Deno.serve(async (req) => {
       return json({ ok: false, error: 'Could not create your account' });
     }
 
-    return json({ ok: true, customerId: customer.id, phone: customer.phone });
+    const token = await issueSession(admin, customer.id);
+    if (!token) {
+      return json({ ok: false, error: 'Could not start your session' });
+    }
+
+    return json({ ok: true, customerId: customer.id, phone: customer.phone, token });
   } catch {
     return json({ ok: false, error: 'Something went wrong' });
   }
