@@ -8,6 +8,7 @@ import { Cart } from './pages/Cart';
 import { Payment } from './pages/Payment';
 import { OrderSuccess } from './pages/OrderSuccess';
 import { Track } from './pages/Track';
+import { Search } from './pages/Search';
 import { Login } from './pages/Login';
 import { ComingSoon, RouteError } from './pages/ComingSoon';
 import { AdminAuthProvider } from './admin/AdminAuthContext';
@@ -39,6 +40,7 @@ const router = createBrowserRouter([
       { path: '/cart', element: <Cart /> },
       { path: '/checkout', element: <Payment /> },
       { path: '/order-success', element: <OrderSuccess /> },
+      { path: '/search', element: <Search /> },
       { path: '/track', element: <Track /> },
       { path: '/help', element: <ComingSoon title="Help Center" /> },
       { path: '*', element: <ComingSoon title="Page not found" /> },

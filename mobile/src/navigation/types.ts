@@ -2,6 +2,7 @@ export type HomeStackParamList = {
   HomeMain: { scrollTo?: 'featured' } | undefined;
   Category: { categoryKey: string };
   Shop: { shopId: string };
+  Search: { query?: string } | undefined;
 };
 
 export type CartStackParamList = {

@@ -164,6 +164,34 @@ export async function fetchCategoryPage(keyOrId: string): Promise<CategoryPage |
   return { category, products };
 }
 
+export async function searchProducts(term: string): Promise<Product[]> {
+  const trimmed = term.trim();
+  if (trimmed.length < 2) return [];
+
+  const pattern = `%${trimmed.replace(/[\\%_]/g, (ch) => `\\${ch}`)}%`;
+  const catCols = 'id,name,description,unit,serial_no,retail_price,image_url,category_id,shop_id';
+  const shopCols = 'id,name,description,unit,serial_no,retail_price,image_url,shop_id';
+
+  const [fromCategories, fromShops] = await Promise.all([
+    supabase.from('products_catalog').select(catCols).ilike('name', pattern).limit(60),
+    supabase.from('shop_products_catalog').select(shopCols).ilike('name', pattern).limit(60),
+  ]);
+  if (fromCategories.error) throw fromCategories.error;
+  if (fromShops.error) throw fromShops.error;
+
+  const seen = new Set<string>();
+  const lowered = trimmed.toLowerCase();
+
+  return [...((fromCategories.data ?? []) as ProdRow[]), ...((fromShops.data ?? []) as ProdRow[])]
+    .filter((row) => (seen.has(row.id) ? false : (seen.add(row.id), true)))
+    .sort((a, b) => {
+      const aStarts = a.name.toLowerCase().startsWith(lowered) ? 0 : 1;
+      const bStarts = b.name.toLowerCase().startsWith(lowered) ? 0 : 1;
+      return aStarts !== bStarts ? aStarts - bStarts : a.name.localeCompare(b.name);
+    })
+    .map((row) => mapProduct(row, row.category_id ?? row.shop_id ?? row.id));
+}
+
 export async function fetchProductById(id: string): Promise<Product | null> {
   const catCols = 'id,name,description,unit,retail_price,image_url,category_id,shop_id';
   const cat = await supabase.from('products_catalog').select(catCols).eq('id', id).maybeSingle();

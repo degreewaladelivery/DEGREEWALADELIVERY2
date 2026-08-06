@@ -17,7 +17,13 @@ import {
 import { getBrandImage, getCategoryImage, getShopImage } from '../lib/images';
 import './Home.css';
 
-const POPULAR_SEARCHES = ['Food', 'Grocery', 'Medicine', 'Cakes', 'Meat'];
+const POPULAR_SEARCHES = [
+  { label: 'Food', to: '/category/food' },
+  { label: 'Grocery', to: '/category/grocery' },
+  { label: 'Medicine', to: '/category/medical' },
+  { label: 'Cakes', to: '/category/bakery' },
+  { label: 'Meat', to: '/category/meat' },
+];
 
 const MX_OFFERS = [
   '₹75 OFF above ₹199',
@@ -107,7 +113,7 @@ export function Home() {
               className="mx-search"
               onSubmit={(e) => {
                 e.preventDefault();
-                navigate('/category/food');
+                if (query.trim()) navigate(`/search?q=${encodeURIComponent(query.trim())}`);
               }}
             >
               <span className="mx-search__icon"><SearchIcon size={18} /></span>
@@ -206,7 +212,7 @@ export function Home() {
               className="hero__search"
               onSubmit={(e) => {
                 e.preventDefault();
-                navigate('/category/food');
+                if (query.trim()) navigate(`/search?q=${encodeURIComponent(query.trim())}`);
               }}
             >
               <span className="hero__search-icon"><SearchIcon size={18} /></span>
@@ -222,7 +228,7 @@ export function Home() {
             <div className="hero__popular">
               <span>Popular:</span>
               {POPULAR_SEARCHES.map((p) => (
-                <Link key={p} to="/category/food" className="chip">{p}</Link>
+                <Link key={p.label} to={p.to} className="chip">{p.label}</Link>
               ))}
             </div>
 

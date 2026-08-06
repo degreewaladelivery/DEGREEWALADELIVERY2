@@ -4,6 +4,7 @@ import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import { HomeScreen } from '../screens/HomeScreen';
 import { CategoryScreen } from '../screens/CategoryScreen';
 import { ShopScreen } from '../screens/ShopScreen';
+import { SearchScreen } from '../screens/SearchScreen';
 import { CartScreen } from '../screens/CartScreen';
 import { CheckoutScreen } from '../screens/CheckoutScreen';
 import { OrderSuccessScreen } from '../screens/OrderSuccessScreen';
@@ -23,6 +24,7 @@ function HomeStackNavigator() {
       <HomeStack.Screen name="HomeMain" component={HomeScreen} />
       <HomeStack.Screen name="Category" component={CategoryScreen} />
       <HomeStack.Screen name="Shop" component={ShopScreen} />
+      <HomeStack.Screen name="Search" component={SearchScreen} />
     </HomeStack.Navigator>
   );
 }

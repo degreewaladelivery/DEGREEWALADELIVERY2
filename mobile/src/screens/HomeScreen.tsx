@@ -93,8 +93,14 @@ export function HomeScreen() {
               style={styles.searchInput}
               value={query}
               onChangeText={setQuery}
+              onSubmitEditing={() => {
+                if (query.trim().length >= 2) {
+                  navigation.navigate('Search', { query: query.trim() });
+                }
+              }}
               placeholder="Search for food, grocery, medicine…"
               placeholderTextColor={colors.textFaint}
+              returnKeyType="search"
             />
             <MicIcon size={17} color={colors.brand} />
           </View>
