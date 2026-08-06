@@ -1,11 +1,19 @@
-import { useState } from 'react';
-import { View, Text, StyleSheet } from 'react-native';
-import { WebView, type WebViewMessageEvent } from 'react-native-webview';
+import { useRef, useState, type ComponentType, type Ref } from 'react';
+import { View, Text, TouchableOpacity, StyleSheet } from 'react-native';
+import { WebView, type WebViewProps, type WebViewMessageEvent } from 'react-native-webview';
 import { MAPBOX_TOKEN, hasMapbox } from '../lib/mapbox';
-import { colors, spacing, radius, fontSizes } from '../theme';
+import { colors, spacing, radius, fontSizes, fontWeights } from '../theme';
 
-const DEFAULT_LAT = 13.6741;
-const DEFAULT_LNG = 75.4736;
+const DEFAULT_LAT = 13.3506;
+const DEFAULT_LNG = 75.4645;
+
+interface WebViewHandle {
+  injectJavaScript: (script: string) => void;
+}
+
+const RefWebView = WebView as unknown as ComponentType<
+  WebViewProps & { ref?: Ref<WebViewHandle> }
+>;
 
 interface LocationPickerProps {
   latitude: number | null;
@@ -30,28 +38,57 @@ function buildHtml(token: string, lat: number, lng: number, zoomedIn: boolean): 
     container: 'map',
     style: 'mapbox://styles/mapbox/streets-v12',
     center: [${lng}, ${lat}],
-    zoom: ${zoomedIn ? 15 : 12}
+    zoom: ${zoomedIn ? 16 : 12}
   });
   var marker = new mapboxgl.Marker({ draggable: true, color: '#ff6b00' })
     .setLngLat([${lng}, ${lat}])
     .addTo(map);
-  function send(lngLat) {
-    window.ReactNativeWebView.postMessage(JSON.stringify({ lat: lngLat.lat, lng: lngLat.lng }));
+
+  function send(payload) {
+    window.ReactNativeWebView.postMessage(JSON.stringify(payload));
   }
-  marker.on('dragend', function () { send(marker.getLngLat()); });
+
+  marker.on('dragend', function () {
+    var p = marker.getLngLat();
+    send({ type: 'picked', lat: p.lat, lng: p.lng });
+  });
+
   map.on('click', function (e) {
     marker.setLngLat(e.lngLat);
-    send(e.lngLat);
+    send({ type: 'picked', lat: e.lngLat.lat, lng: e.lngLat.lng });
   });
+
+  window.locateMe = function () {
+    if (!navigator.geolocation) {
+      send({ type: 'error' });
+      return;
+    }
+    navigator.geolocation.getCurrentPosition(
+      function (position) {
+        var lat = position.coords.latitude;
+        var lng = position.coords.longitude;
+        marker.setLngLat([lng, lat]);
+        map.flyTo({ center: [lng, lat], zoom: 16 });
+        send({ type: 'picked', lat: lat, lng: lng });
+      },
+      function () {
+        send({ type: 'error' });
+      },
+      { enableHighAccuracy: true, timeout: 15000, maximumAge: 0 }
+    );
+  };
 </script>
 </body>
 </html>`;
 }
 
 export function LocationPicker({ latitude, longitude, onChange }: LocationPickerProps) {
+  const webRef = useRef<WebViewHandle>(null);
   const [html] = useState(() =>
     buildHtml(MAPBOX_TOKEN, latitude ?? DEFAULT_LAT, longitude ?? DEFAULT_LNG, latitude != null)
   );
+  const [locating, setLocating] = useState(false);
+  const [locateError, setLocateError] = useState<string | null>(null);
 
   if (!hasMapbox()) {
     return (
@@ -63,25 +100,65 @@ export function LocationPicker({ latitude, longitude, onChange }: LocationPicker
     );
   }
 
-  const onMessage = (e: WebViewMessageEvent) => {
-    const { lat, lng } = JSON.parse(e.nativeEvent.data) as { lat: number; lng: number };
-    onChange(lat, lng);
+  const onMessage = (event: WebViewMessageEvent) => {
+    try {
+      const payload = JSON.parse(event.nativeEvent.data) as {
+        type: string;
+        lat?: number;
+        lng?: number;
+      };
+      setLocating(false);
+      if (payload.type === 'picked' && payload.lat != null && payload.lng != null) {
+        setLocateError(null);
+        onChange(payload.lat, payload.lng);
+      } else if (payload.type === 'error') {
+        setLocateError('Could not get your location. Tap the map to pick your spot instead.');
+      }
+    } catch {
+      setLocating(false);
+    }
+  };
+
+  const useCurrentLocation = () => {
+    setLocating(true);
+    setLocateError(null);
+    webRef.current?.injectJavaScript('window.locateMe(); true;');
   };
 
   return (
-    <View style={styles.container}>
-      <WebView
-        originWhitelist={['*']}
-        source={{ html }}
-        onMessage={onMessage}
-        javaScriptEnabled
-        style={styles.webview}
-      />
+    <View style={styles.wrap}>
+      <TouchableOpacity
+        style={[styles.locateBtn, locating && styles.locateBtnDisabled]}
+        activeOpacity={0.9}
+        disabled={locating}
+        onPress={useCurrentLocation}
+      >
+        <Text style={styles.locateText}>
+          {locating ? 'Finding you…' : '📍 Use my current location'}
+        </Text>
+      </TouchableOpacity>
+
+      {locateError && <Text style={styles.error}>{locateError}</Text>}
+
+      <View style={styles.container}>
+        <RefWebView
+          ref={webRef}
+          originWhitelist={['*']}
+          source={{ html }}
+          onMessage={onMessage}
+          javaScriptEnabled
+          geolocationEnabled
+          style={styles.webview}
+        />
+      </View>
+
+      <Text style={styles.hint}>Drag the pin or tap the map to adjust the exact spot.</Text>
     </View>
   );
 }
 
 const styles = StyleSheet.create({
+  wrap: { gap: spacing.sm },
   container: {
     width: '100%',
     height: 220,
@@ -91,6 +168,28 @@ const styles = StyleSheet.create({
     borderColor: colors.border,
   },
   webview: { flex: 1 },
+
+  locateBtn: {
+    alignSelf: 'flex-start',
+    borderWidth: 1.5,
+    borderColor: colors.brand,
+    borderRadius: radius.md,
+    paddingVertical: spacing.sm,
+    paddingHorizontal: spacing.md,
+    backgroundColor: '#fff',
+  },
+  locateBtnDisabled: { opacity: 0.6 },
+  locateText: { color: colors.brand, fontWeight: fontWeights.bold, fontSize: fontSizes.sm },
+
+  hint: { fontSize: fontSizes.xs, color: colors.textMuted },
+  error: {
+    fontSize: fontSizes.xs,
+    color: colors.danger,
+    backgroundColor: '#fdecea',
+    borderRadius: radius.sm,
+    padding: spacing.sm,
+  },
+
   fallback: {
     width: '100%',
     padding: spacing.lg,

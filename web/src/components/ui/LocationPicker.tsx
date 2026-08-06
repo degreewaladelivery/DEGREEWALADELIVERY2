@@ -1,10 +1,10 @@
-import { useEffect, useRef } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import mapboxgl from 'mapbox-gl';
 import 'mapbox-gl/dist/mapbox-gl.css';
 import { MAPBOX_TOKEN, hasMapbox } from '../../lib/mapbox';
 import './LocationPicker.css';
 
-const DEFAULT_CENTER: [number, number] = [75.4736, 13.6741];
+const DEFAULT_CENTER: [number, number] = [75.4645, 13.3506];
 
 interface LocationPickerProps {
   latitude: number | null;
@@ -17,9 +17,12 @@ export function LocationPicker({ latitude, longitude, onChange }: LocationPicker
   const mapRef = useRef<mapboxgl.Map | null>(null);
   const markerRef = useRef<mapboxgl.Marker | null>(null);
   const onChangeRef = useRef(onChange);
+  const [locating, setLocating] = useState(false);
+  const [locateError, setLocateError] = useState<string | null>(null);
+
   useEffect(() => {
     onChangeRef.current = onChange;
-  });
+  }, [onChange]);
 
   useEffect(() => {
     if (!hasMapbox() || !containerRef.current) return;
@@ -61,8 +64,32 @@ export function LocationPicker({ latitude, longitude, onChange }: LocationPicker
   useEffect(() => {
     if (latitude == null || longitude == null || !markerRef.current || !mapRef.current) return;
     markerRef.current.setLngLat([longitude, latitude]);
-    mapRef.current.flyTo({ center: [longitude, latitude] });
+    mapRef.current.flyTo({ center: [longitude, latitude], zoom: 16 });
   }, [latitude, longitude]);
+
+  const useCurrentLocation = () => {
+    if (!('geolocation' in navigator)) {
+      setLocateError('This browser cannot detect your location.');
+      return;
+    }
+    setLocating(true);
+    setLocateError(null);
+    navigator.geolocation.getCurrentPosition(
+      (position) => {
+        setLocating(false);
+        onChangeRef.current(position.coords.latitude, position.coords.longitude);
+      },
+      (error) => {
+        setLocating(false);
+        setLocateError(
+          error.code === error.PERMISSION_DENIED
+            ? 'Location access was blocked. Allow it in your browser, or pick the spot on the map.'
+            : 'Could not get your location. Please pick the spot on the map.'
+        );
+      },
+      { enableHighAccuracy: true, timeout: 15000, maximumAge: 0 }
+    );
+  };
 
   if (!hasMapbox()) {
     return (
@@ -72,5 +99,21 @@ export function LocationPicker({ latitude, longitude, onChange }: LocationPicker
     );
   }
 
-  return <div ref={containerRef} className="location-picker" />;
+  return (
+    <div className="location-picker__wrap">
+      <button
+        type="button"
+        className="location-picker__locate"
+        onClick={useCurrentLocation}
+        disabled={locating}
+      >
+        {locating ? 'Finding you…' : '📍 Use my current location'}
+      </button>
+      {locateError && <p className="location-picker__error">{locateError}</p>}
+      <div ref={containerRef} className="location-picker" />
+      <p className="location-picker__hint">
+        Drag the pin or tap the map to adjust the exact spot.
+      </p>
+    </div>
+  );
 }
