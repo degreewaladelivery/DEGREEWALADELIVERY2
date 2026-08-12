@@ -1,7 +1,11 @@
 .mx { display: none; }
 
 .hero {
-  background: #ffffff;
+  position: relative;
+  background:
+    radial-gradient(58rem 30rem at 88% -12%, rgba(255, 107, 0, 0.11), transparent 62%),
+    radial-gradient(38rem 22rem at -5% 105%, rgba(255, 107, 0, 0.06), transparent 58%),
+    #ffffff;
   overflow: hidden;
 }
 .hero__inner {
@@ -47,7 +51,12 @@
   padding: 7px 7px 7px 18px;
   margin-top: 26px;
   max-width: 520px;
-  box-shadow: var(--shadow-md, 0 4px 16px rgba(16, 24, 40, 0.08));
+  box-shadow: var(--shadow-md);
+  transition: box-shadow var(--dur) var(--ease), border-color var(--dur) var(--ease);
+}
+.hero__search:focus-within {
+  border-color: var(--brand);
+  box-shadow: var(--shadow-lg), 0 0 0 4px rgba(255, 107, 0, 0.1);
 }
 .hero__search-icon {
   color: var(--text-faint, #9aa0ac);
@@ -81,12 +90,16 @@
   border: 1px solid var(--border, #eceef2);
   padding: 6px 14px;
   border-radius: var(--radius-pill, 999px);
-  transition: all 0.16s ease;
+  transition: color var(--dur) var(--ease), border-color var(--dur) var(--ease),
+    background var(--dur) var(--ease), transform var(--dur) var(--ease);
 }
-.chip:hover {
-  color: var(--brand, #ff6b00);
-  border-color: var(--brand, #ff6b00);
-  background: var(--brand-tint, #fff3e0);
+@media (hover: hover) {
+  .chip:hover {
+    color: var(--brand);
+    border-color: var(--brand);
+    background: var(--brand-tint);
+    transform: translateY(-1px);
+  }
 }
 
 .hero__badges {
