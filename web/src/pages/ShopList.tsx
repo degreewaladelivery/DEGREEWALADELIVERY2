@@ -2,31 +2,35 @@ import { useEffect, useState } from 'react';
 import { Link, useParams } from 'react-router-dom';
 import { fetchCategoryPage, type CategoryPage } from '../lib/catalog';
 import { ProductCard } from '../components/cards/ProductCard';
+import { SkeletonRows } from '../components/ui/Skeleton';
 import './ShopList.css';
 
 const BRAND = '#FF6B00';
 
 export function ShopList() {
   const { key = '' } = useParams();
-  const [page, setPage] = useState<CategoryPage | null>(null);
-  const [loading, setLoading] = useState(true);
+  const [loaded, setLoaded] = useState<{ key: string; page: CategoryPage | null } | null>(null);
   const [activeSub, setActiveSub] = useState<string | null>(null);
 
   useEffect(() => {
     let active = true;
-    setLoading(true);
-    setActiveSub(null);
     fetchCategoryPage(key)
-      .then((p) => active && setPage(p))
-      .catch(() => active && setPage(null))
-      .finally(() => active && setLoading(false));
+      .then((p) => active && setLoaded({ key, page: p }))
+      .catch(() => active && setLoaded({ key, page: null }));
     return () => {
       active = false;
     };
   }, [key]);
 
+  const loading = loaded?.key !== key;
+  const page = loaded?.key === key ? loaded.page : null;
+
   if (loading) {
-    return <div className="container shoplist__empty"><p>Loading…</p></div>;
+    return (
+      <div className="container shoplist__body">
+        <SkeletonRows count={7} />
+      </div>
+    );
   }
 
   if (!page) {
@@ -39,7 +43,8 @@ export function ShopList() {
   }
 
   const { category, products } = page;
-  const items = activeSub ? products.filter((p) => p.section === activeSub) : products;
+  const currentSub = activeSub && category.subCategories.includes(activeSub) ? activeSub : null;
+  const items = currentSub ? products.filter((p) => p.section === currentSub) : products;
 
   return (
     <div className="shoplist">
@@ -69,7 +74,7 @@ export function ShopList() {
         {category.subCategories.length > 0 && (
           <div className="subcat-row">
             <button
-              className={'subcat' + (activeSub === null ? ' is-active' : '')}
+              className={'subcat' + (currentSub === null ? ' is-active' : '')}
               onClick={() => setActiveSub(null)}
             >
               All
@@ -77,7 +82,7 @@ export function ShopList() {
             {category.subCategories.map((sub) => (
               <button
                 key={sub}
-                className={'subcat' + (activeSub === sub ? ' is-active' : '')}
+                className={'subcat' + (currentSub === sub ? ' is-active' : '')}
                 onClick={() => setActiveSub(sub)}
               >
                 {sub}

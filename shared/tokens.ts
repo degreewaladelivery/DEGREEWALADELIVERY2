@@ -6,21 +6,25 @@ export const colors = {
   brandDark: '#E85D00',
   brandDeep: '#C44E00',
   brandTint: '#FFF3E0',
+  brandTintStrong: '#FFE7CC',
 
   text: '#15172B',
   textMuted: '#6B7280',
   textFaint: '#9AA0AC',
 
   bg: '#FFFFFF',
-  bgSoft: '#FFFFFF',
+  bgSoft: '#F8F9FC',
   surface: '#F4F6F9',
+  surfaceSunken: '#EEF1F6',
   bgNavy: '#0D1B2A',
   border: '#ECEEF2',
   borderStrong: '#DFE3EA',
 
   success: '#2E9E5B',
+  successTint: '#E8F6EE',
   warning: '#FF9800',
   danger: '#F44336',
+  dangerTint: '#FDECEA',
   star: '#FFB400',
 
   white: '#FFFFFF',
@@ -88,10 +92,10 @@ export const radius = {
 } as const;
 
 export const shadows = {
-  sm: '0 1px 2px rgba(16, 24, 40, 0.06)',
-  md: '0 4px 16px rgba(16, 24, 40, 0.08)',
-  lg: '0 12px 32px rgba(16, 24, 40, 0.12)',
-  brand: '0 8px 24px rgba(255, 107, 0, 0.28)',
+  sm: '0 1px 2px rgba(16, 24, 40, 0.04), 0 1px 3px rgba(16, 24, 40, 0.06)',
+  md: '0 2px 4px rgba(16, 24, 40, 0.04), 0 8px 20px rgba(16, 24, 40, 0.08)',
+  lg: '0 4px 8px rgba(16, 24, 40, 0.04), 0 18px 40px rgba(16, 24, 40, 0.10)',
+  brand: '0 6px 20px rgba(255, 107, 0, 0.30)',
 } as const;
 
 export const fontSizes = {

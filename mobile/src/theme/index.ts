@@ -20,10 +20,10 @@ const shadow = (offsetY: number, opacity: number, blur: number, elevation: numbe
 });
 
 export const shadows = {
-  sm: shadow(1, 0.06, 2, 1),
-  md: shadow(4, 0.08, 16, 4),
-  lg: shadow(12, 0.12, 32, 10),
-  brand: shadow(8, 0.28, 24, 8),
+  sm: shadow(1, 0.05, 3, 1),
+  md: shadow(6, 0.08, 20, 4),
+  lg: shadow(14, 0.1, 40, 10),
+  brand: shadow(6, 0.3, 20, 8),
 };
 
 export const fontWeights = {

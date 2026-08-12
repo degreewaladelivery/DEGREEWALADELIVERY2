@@ -2,53 +2,71 @@
   display: flex;
   flex-direction: column;
   background: #fff;
-  border: 1px solid var(--border, #eceef2);
-  border-radius: var(--radius-lg, 16px);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
   overflow: hidden;
-  box-shadow: var(--shadow-sm, 0 1px 2px rgba(16, 24, 40, 0.06));
-  transition: transform 0.16s ease, box-shadow 0.18s ease;
-}
-
-.shop-card:hover {
-  transform: translateY(-4px);
-  box-shadow: var(--shadow-lg, 0 12px 32px rgba(16, 24, 40, 0.12));
+  box-shadow: var(--shadow-sm);
+  transition: transform var(--dur) var(--ease), box-shadow var(--dur) var(--ease),
+    border-color var(--dur) var(--ease);
 }
 
 .shop-card__thumb {
   position: relative;
-  height: 132px;
+  height: 148px;
+  background: var(--surface);
+  overflow: hidden;
+}
+
+.shop-card__thumb img,
+.shop-card__thumb .thumb-img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  transition: transform 0.4s var(--ease);
+}
+
+.shop-card__thumb::after {
+  content: '';
+  position: absolute;
+  inset: auto 0 0 0;
+  height: 55%;
+  background: linear-gradient(to top, rgba(13, 27, 42, 0.55), transparent);
+  pointer-events: none;
 }
 
 .shop-card__time {
   position: absolute;
   left: 10px;
   bottom: 10px;
+  z-index: 1;
   font-size: 11px;
-  font-weight: 600;
-  color: var(--text, #15172b);
-  background: rgba(255, 255, 255, 0.92);
-  backdrop-filter: blur(4px);
-  padding: 4px 9px;
-  border-radius: var(--radius-pill, 999px);
-  box-shadow: var(--shadow-sm, 0 1px 2px rgba(16, 24, 40, 0.06));
+  font-weight: 700;
+  color: var(--text);
+  background: rgba(255, 255, 255, 0.94);
+  backdrop-filter: blur(6px);
+  padding: 5px 10px;
+  border-radius: var(--radius-pill);
+  box-shadow: var(--shadow-sm);
 }
 
 .shop-card__tag {
   position: absolute;
   top: 10px;
   left: 10px;
+  z-index: 1;
   font-size: 10px;
   font-weight: 700;
-  letter-spacing: 0.03em;
+  letter-spacing: 0.04em;
   text-transform: uppercase;
   color: #fff;
-  background: var(--brand, #ff6b00);
-  padding: 3px 8px;
-  border-radius: var(--radius-pill, 999px);
+  background: linear-gradient(135deg, var(--brand), var(--brand-dark));
+  padding: 4px 9px;
+  border-radius: var(--radius-pill);
+  box-shadow: var(--shadow-brand);
 }
 
 .shop-card__body {
-  padding: 12px 14px 14px;
+  padding: 13px 14px 15px;
 }
 
 .shop-card__row {
@@ -59,28 +77,45 @@
 }
 
 .shop-card__name {
-  font-size: 15px;
+  font-family: 'Poppins', 'Inter', sans-serif;
+  font-size: var(--fs-md);
   font-weight: 700;
+  letter-spacing: -0.02em;
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
 }
 
 .shop-card__rating {
+  display: inline-flex;
+  align-items: center;
+  gap: 2px;
   flex-shrink: 0;
-  font-size: 12px;
+  font-size: var(--fs-xs);
   font-weight: 700;
   color: #fff;
-  background: var(--success, #2e9e5b);
-  padding: 2px 7px;
-  border-radius: 7px;
+  background: var(--success);
+  padding: 3px 8px;
+  border-radius: var(--radius-sm);
 }
 
 .shop-card__desc {
-  margin-top: 3px;
-  font-size: 13px;
-  color: var(--text-muted, #6b7280);
+  margin-top: 4px;
+  font-size: var(--fs-sm);
+  color: var(--text-muted);
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
+}
+
+@media (hover: hover) {
+  .shop-card:hover {
+    transform: translateY(-4px);
+    box-shadow: var(--shadow-lg);
+    border-color: transparent;
+  }
+  .shop-card:hover .shop-card__thumb img,
+  .shop-card:hover .shop-card__thumb .thumb-img {
+    transform: scale(1.06);
+  }
 }

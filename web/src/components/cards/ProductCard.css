@@ -3,22 +3,40 @@
   align-items: center;
   justify-content: space-between;
   gap: 16px;
-  padding: 16px 0;
-  border-bottom: 1px solid var(--border, #eceef2);
+  padding: 16px 12px;
+  margin-inline: -12px;
+  border-radius: var(--radius-lg);
+  border-bottom: 1px solid var(--border);
+  transition: background var(--dur) var(--ease);
+}
+
+.product-card:last-child {
+  border-bottom: none;
 }
 
 .product-card.is-unavailable {
-  opacity: 0.55;
+  opacity: 0.5;
 }
 
 .product-card__thumb {
-  width: 56px;
-  height: 56px;
+  position: relative;
+  width: 68px;
+  height: 68px;
   flex-shrink: 0;
-  border-radius: var(--radius-md, 12px);
+  border-radius: var(--radius-md);
   overflow: hidden;
-  background: var(--surface, #f4f6f9);
+  background: var(--surface);
 }
+
+.product-card__thumb::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  box-shadow: inset 0 0 0 1px rgba(16, 24, 40, 0.06);
+  pointer-events: none;
+}
+
 .product-card__thumb img,
 .product-card__thumb .thumb-img {
   width: 100%;
@@ -33,36 +51,36 @@
 }
 
 .product-card__name {
-  font-size: 15px;
-  font-weight: 600;
   font-family: 'Inter', sans-serif;
+  font-size: var(--fs-base);
+  font-weight: 600;
+  line-height: 1.35;
+  color: var(--text);
 }
 
 .product-card__unit {
   display: block;
-  margin-top: 2px;
-  font-size: 12px;
+  margin-top: 3px;
+  font-size: var(--fs-xs);
   font-weight: 600;
-  color: var(--text-muted, #6b7280);
+  color: var(--text-muted);
 }
 
 .product-card__price {
   display: inline-block;
   margin-top: 8px;
-  font-size: 15px;
-  font-weight: 700;
   font-family: 'Poppins', sans-serif;
+  font-size: var(--fs-md);
+  font-weight: 700;
+  letter-spacing: -0.02em;
 }
 
 .product-card__more {
   display: block;
-  margin-top: 4px;
-  font-size: 12px;
+  margin-top: 5px;
+  font-size: var(--fs-xs);
   font-weight: 600;
-  color: var(--brand, #ff6b00);
-}
-.product-card__more:hover {
-  text-decoration: underline;
+  color: var(--brand);
 }
 
 .product-card__action {
@@ -70,40 +88,37 @@
 }
 
 .product-card__add {
-  background: var(--brand-tint, #fff3e0);
-  color: var(--brand-dark, #e85d00);
+  background: #fff;
+  color: var(--brand-dark);
+  font-family: 'Poppins', sans-serif;
   font-weight: 700;
-  font-size: 14px;
-  padding: 9px 20px;
-  border-radius: var(--radius-md, 12px);
-  border: 1.5px solid #ffd9b3;
-  transition: background 0.16s ease, transform 0.12s ease;
-}
-.product-card__add:hover {
-  background: #ffe7cc;
-}
-.product-card__add:active {
-  transform: scale(0.97);
+  font-size: var(--fs-sm);
+  letter-spacing: 0.02em;
+  padding: 10px 22px;
+  border-radius: var(--radius-md);
+  border: 1.5px solid var(--brand-tint-strong);
+  box-shadow: var(--shadow-sm);
 }
 
 .product-card__soldout {
-  font-size: 12px;
+  font-size: var(--fs-xs);
   font-weight: 700;
-  color: var(--danger, #f44336);
-  background: #fdeceb;
+  color: var(--danger);
+  background: var(--danger-tint);
   padding: 6px 12px;
-  border-radius: var(--radius-pill, 999px);
+  border-radius: var(--radius-pill);
 }
 
 .stepper {
   display: inline-flex;
   align-items: center;
   gap: 14px;
-  background: var(--brand, #ff6b00);
-  border-radius: var(--radius-md, 12px);
-  padding: 7px 12px;
-  box-shadow: var(--shadow-brand, 0 8px 24px rgba(255, 107, 0, 0.28));
+  background: linear-gradient(135deg, var(--brand), var(--brand-dark));
+  border-radius: var(--radius-md);
+  padding: 8px 12px;
+  box-shadow: var(--shadow-brand);
 }
+
 .stepper button {
   color: #fff;
   font-size: 18px;
@@ -111,10 +126,26 @@
   line-height: 1;
   width: 20px;
 }
+
 .stepper__qty {
   color: #fff;
+  font-family: 'Poppins', sans-serif;
   font-weight: 700;
-  font-size: 15px;
+  font-size: var(--fs-base);
   min-width: 14px;
   text-align: center;
+  font-variant-numeric: tabular-nums;
+}
+
+@media (hover: hover) {
+  .product-card:hover {
+    background: var(--bg-soft);
+  }
+  .product-card__add:hover {
+    background: var(--brand-tint);
+    border-color: var(--brand);
+  }
+  .product-card__more:hover {
+    text-decoration: underline;
+  }
 }

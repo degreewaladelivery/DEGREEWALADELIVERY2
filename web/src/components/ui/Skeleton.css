@@ -1,0 +1,74 @@
+.skel-line {
+  height: 12px;
+  border-radius: var(--radius-sm);
+}
+
+.skel-line--title {
+  width: 62%;
+  height: 15px;
+}
+
+.skel-line--sub {
+  width: 34%;
+  margin-top: 8px;
+}
+
+.skel-line--price {
+  width: 22%;
+  height: 15px;
+  margin-top: 12px;
+}
+
+.skel-rows {
+  display: flex;
+  flex-direction: column;
+}
+
+.skel-row {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  padding: 16px 0;
+  border-bottom: 1px solid var(--border);
+}
+
+.skel-row__thumb {
+  width: 68px;
+  height: 68px;
+  flex-shrink: 0;
+  border-radius: var(--radius-md);
+}
+
+.skel-row__info {
+  flex: 1;
+  min-width: 0;
+}
+
+.skel-row__action {
+  width: 92px;
+  height: 40px;
+  flex-shrink: 0;
+  border-radius: var(--radius-md);
+}
+
+.skel-cards {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+  gap: 18px;
+}
+
+.skel-card {
+  background: #fff;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  overflow: hidden;
+}
+
+.skel-card__thumb {
+  height: 148px;
+  border-radius: 0;
+}
+
+.skel-card__body {
+  padding: 13px 14px 16px;
+}
