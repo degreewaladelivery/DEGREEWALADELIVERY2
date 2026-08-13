@@ -1,0 +1,57 @@
+.confirm__backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 200;
+  background: rgba(13, 27, 42, 0.45);
+  backdrop-filter: blur(3px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 20px;
+  animation: confirm-fade 0.16s var(--ease);
+}
+
+.confirm {
+  width: 100%;
+  max-width: 400px;
+  background: #fff;
+  border-radius: var(--radius-xl);
+  padding: 24px;
+  box-shadow: var(--shadow-lg);
+  animation: confirm-pop 0.18s var(--ease);
+}
+
+.confirm__title {
+  font-size: var(--fs-xl);
+  margin-bottom: 8px;
+}
+
+.confirm__message {
+  font-size: var(--fs-base);
+  line-height: 1.55;
+  color: var(--text-muted);
+}
+
+.confirm__actions {
+  display: flex;
+  gap: 10px;
+  justify-content: flex-end;
+  margin-top: 22px;
+}
+
+@keyframes confirm-fade {
+  from { opacity: 0; }
+}
+
+@keyframes confirm-pop {
+  from { opacity: 0; transform: translateY(8px) scale(0.98); }
+}
+
+@media (max-width: 420px) {
+  .confirm__actions {
+    flex-direction: column-reverse;
+  }
+  .confirm__actions .btn {
+    width: 100%;
+  }
+}

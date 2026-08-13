@@ -1,4 +1,4 @@
-import { View, Text, StyleSheet, TouchableOpacity } from 'react-native';
+import { View, Text, StyleSheet, TouchableOpacity, Alert } from 'react-native';
 import type { Product } from '@shared/types';
 import { useCartStore } from '../store/cartStore';
 import { formatRupees } from '../lib/format';
@@ -8,7 +8,24 @@ import { colors, spacing, radius, fontSizes, fontWeights } from '../theme';
 export function ItemRow({ product }: { product: Product }) {
   const qty = useCartStore((s) => s.items[product.id]?.quantity ?? 0);
   const addItem = useCartStore((s) => s.addItem);
+  const replaceCartWith = useCartStore((s) => s.replaceCartWith);
   const decrement = useCartStore((s) => s.decrement);
+
+  const onAdd = () => {
+    if (addItem(product) !== 'needs-confirm') return;
+    Alert.alert(
+      'Start a new cart?',
+      'Your cart has items from another shop. Adding this will empty your current cart.',
+      [
+        { text: 'Keep my cart', style: 'cancel' },
+        {
+          text: 'Empty cart & add',
+          style: 'destructive',
+          onPress: () => replaceCartWith(product),
+        },
+      ]
+    );
+  };
 
   return (
     <View style={styles.row}>
@@ -27,7 +44,7 @@ export function ItemRow({ product }: { product: Product }) {
       </View>
 
       {qty === 0 ? (
-        <TouchableOpacity style={styles.addBtn} activeOpacity={0.8} onPress={() => addItem(product)}>
+        <TouchableOpacity style={styles.addBtn} activeOpacity={0.8} onPress={onAdd}>
           <Text style={styles.addText}>Add +</Text>
         </TouchableOpacity>
       ) : (
