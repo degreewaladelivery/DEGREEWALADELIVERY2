@@ -99,7 +99,7 @@ function Row({ label, value, bold }: { label: string; value: string; bold?: bool
 }
 
 const styles = StyleSheet.create({
-  safe: { flex: 1, backgroundColor: colors.bg },
+  safe: { flex: 1, backgroundColor: colors.bgSoft },
   content: { paddingHorizontal: spacing.lg, paddingTop: spacing.md, paddingBottom: 120 },
   heading: { fontSize: fontSizes.xl + 2, fontWeight: fontWeights.heading, color: colors.text, marginBottom: spacing.lg },
 

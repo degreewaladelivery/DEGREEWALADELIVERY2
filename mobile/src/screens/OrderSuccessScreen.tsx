@@ -64,7 +64,7 @@ export function OrderSuccessScreen() {
 }
 
 const styles = StyleSheet.create({
-  safe: { flex: 1, backgroundColor: colors.bg },
+  safe: { flex: 1, backgroundColor: colors.bgSoft },
   content: { padding: spacing.lg, paddingBottom: 60, flexGrow: 1, justifyContent: 'center' },
 
   card: { backgroundColor: '#fff', borderRadius: radius.lg, padding: spacing.xl, alignItems: 'center', ...shadows.md },

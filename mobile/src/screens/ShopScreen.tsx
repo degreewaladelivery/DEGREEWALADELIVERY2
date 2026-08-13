@@ -119,8 +119,8 @@ export function ShopScreen() {
 }
 
 const styles = StyleSheet.create({
-  screen: { flex: 1, backgroundColor: colors.bg },
-  center: { flex: 1, alignItems: 'center', justifyContent: 'center', gap: spacing.md, backgroundColor: colors.bg },
+  screen: { flex: 1, backgroundColor: colors.bgSoft },
+  center: { flex: 1, alignItems: 'center', justifyContent: 'center', gap: spacing.md, backgroundColor: colors.bgSoft },
   notFound: { fontSize: fontSizes.lg, fontWeight: fontWeights.bold, color: colors.text },
   backLink: { color: colors.brand, fontWeight: fontWeights.semibold },
 

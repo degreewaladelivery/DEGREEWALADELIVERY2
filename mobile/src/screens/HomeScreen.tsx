@@ -235,8 +235,8 @@ export function HomeScreen() {
 }
 
 const styles = StyleSheet.create({
-  safe: { flex: 1, backgroundColor: colors.bg },
-  screen: { flex: 1, backgroundColor: colors.bg },
+  safe: { flex: 1, backgroundColor: colors.bgSoft },
+  screen: { flex: 1, backgroundColor: colors.bgSoft },
 
   top: {
     flexDirection: 'row',

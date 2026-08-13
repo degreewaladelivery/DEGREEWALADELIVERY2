@@ -208,7 +208,7 @@ export function TrackScreen() {
 }
 
 const styles = StyleSheet.create({
-  safe: { flex: 1, backgroundColor: colors.bg },
+  safe: { flex: 1, backgroundColor: colors.bgSoft },
   content: { paddingHorizontal: spacing.lg, paddingTop: spacing.md, paddingBottom: 90 },
   center: { paddingVertical: spacing.xl, alignItems: 'center' },
 
