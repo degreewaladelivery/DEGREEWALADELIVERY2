@@ -10,8 +10,43 @@ import {
   updateAgentLocation,
 } from './api';
 import type { AgentProfile, OrderRow } from './types';
+import {
+  alertsSupported,
+  enableAlerts,
+  findNewOrders,
+  playChime,
+  showNewOrderNotification,
+} from './newOrderAlert';
+import { hasPushSubscription, pushSupported, subscribeToPush } from './pushSubscribe';
 import { formatRupees } from '../lib/format';
 import './agent.css';
+
+/** How often to re-check the pool. Short enough that a waiting customer isn't
+ *  left hanging, long enough not to hammer the database all shift. */
+const POLL_MS = 15000;
+
+/**
+ * Sound the alert for orders that weren't in the pool last time we looked.
+ *
+ * Orders leaving the pool (claimed by someone else) are dropped from the seen
+ * set, so if one is released back it counts as new again.
+ */
+function announceNewOrders(
+  open: OrderRow[],
+  seenRef: { current: Set<string> | null },
+  alertsOnRef: { current: boolean }
+): void {
+  const previous = seenRef.current;
+  seenRef.current = new Set(open.map((order) => order.id));
+
+  if (!alertsOnRef.current) return;
+
+  const fresh = findNewOrders(open, previous);
+  if (fresh.length === 0) return;
+
+  playChime();
+  showNewOrderNotification(fresh.length, fresh[0].total);
+}
 
 export function AgentOrdersPage() {
   const { session } = useAgentAuth();
@@ -25,8 +60,17 @@ export function AgentOrdersPage() {
   const [sharing, setSharing] = useState(true);
   const [locationDenied, setLocationDenied] = useState(false);
 
+  const [alertsOn, setAlertsOn] = useState(false);
+  const [alertsBlocked, setAlertsBlocked] = useState(false);
+  const [pushOn, setPushOn] = useState(false);
+  const [pushError, setPushError] = useState<string | null>(null);
+
   const activeIdsRef = useRef<string[]>([]);
   const lastSentRef = useRef(0);
+  // null until the first load lands — otherwise every order already in the pool
+  // would alert as "new" the moment the agent signs in.
+  const seenOpenIdsRef = useRef<Set<string> | null>(null);
+  const alertsOnRef = useRef(false);
   const activeCount = myOrders?.length ?? 0;
 
   const canShare = typeof navigator !== 'undefined' && 'geolocation' in navigator;
@@ -60,8 +104,10 @@ export function AgentOrdersPage() {
     if (!agentId) return;
     Promise.all([listOpenOrders(), listMyDeliveries(agentId)])
       .then(([open, mine]) => {
+        announceNewOrders(open, seenOpenIdsRef, alertsOnRef);
         setOpenOrders(open);
         setMyOrders(mine);
+        setError(null);
       })
       .catch((err) => setError(err instanceof Error ? err.message : 'Failed to load orders'));
   }, [agentId]);
@@ -72,7 +118,54 @@ export function AgentOrdersPage() {
       .catch(() => {});
   }, []);
 
+  // An agent who already turned alerts on shouldn't be told they're off every
+  // time they reopen the dashboard.
+  useEffect(() => {
+    hasPushSubscription().then((subscribed) => {
+      if (!subscribed) return;
+      setPushOn(true);
+      setAlertsOn(true);
+      alertsOnRef.current = true;
+    });
+  }, []);
+
   useEffect(load, [load]);
+
+  // Keep the pool current without the agent reloading the page. Also refresh
+  // the moment they come back to the tab, so what they see on return is real
+  // rather than however old the last poll was.
+  useEffect(() => {
+    if (!agentId) return;
+
+    const timer = setInterval(load, POLL_MS);
+    const onVisible = () => {
+      if (document.visibilityState === 'visible') load();
+    };
+    window.addEventListener('focus', load);
+    document.addEventListener('visibilitychange', onVisible);
+
+    return () => {
+      clearInterval(timer);
+      window.removeEventListener('focus', load);
+      document.removeEventListener('visibilitychange', onVisible);
+    };
+  }, [agentId, load]);
+
+  const onEnableAlerts = async () => {
+    const permission = await enableAlerts();
+    setAlertsOn(true);
+    alertsOnRef.current = true;
+    setAlertsBlocked(permission === 'denied');
+    playChime(); // confirms out loud that sound actually works on this device
+
+    // Also register for background push, so orders still reach them once this
+    // tab is closed or the phone is locked.
+    if (agentId && pushSupported()) {
+      const result = await subscribeToPush(agentId);
+      setPushOn(result.ok);
+      if (!result.ok) setPushError(result.reason);
+    }
+  };
 
   const onClaim = async (order: OrderRow) => {
     if (!agentId) return;
@@ -166,7 +259,43 @@ export function AgentOrdersPage() {
       <section className="admin-section">
         <div className="admin-section__head">
           <h2>Available Orders{openOrders && openOrders.length > 0 ? ` (${openOrders.length})` : ''}</h2>
+          {alertsSupported() && (
+            <button
+              className="admin-btn admin-btn--sm"
+              onClick={onEnableAlerts}
+              disabled={alertsOn}
+            >
+              {alertsOn ? (pushOn ? '🔔 Alerts on' : '🔔 Alerts on (this page only)') : '🔕 Turn on new order alerts'}
+            </button>
+          )}
         </div>
+
+        {!alertsOn && (
+          <p className="admin-empty">
+            Turn on alerts to get a notification the moment an order comes in — even with this
+            page closed and your phone in your pocket.
+          </p>
+        )}
+        {alertsOn && alertsBlocked && (
+          <p className="admin-login__error">
+            Notifications are blocked for this site, so nothing will reach you unless this page
+            is open. Allow notifications in your browser settings to fix that.
+          </p>
+        )}
+        {alertsOn && !alertsBlocked && !pushOn && (
+          <p className="admin-empty">
+            {pushError === 'unsupported'
+              ? "This browser can't deliver background alerts — keep this page open to hear the chime."
+              : "Background alerts couldn't be set up, so keep this page open to hear the chime."}
+          </p>
+        )}
+        {alertsOn && pushOn && (
+          <p className="admin-empty">
+            You'll be notified even with this page closed. Keep notifications allowed for this
+            site.
+          </p>
+        )}
+
         {openOrders && openOrders.length === 0 && <p className="admin-empty">No unclaimed orders right now.</p>}
         <div className="agent-orders">
           {openOrders?.map((order) => (

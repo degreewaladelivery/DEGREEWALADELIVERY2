@@ -10,7 +10,27 @@ const SUPABASE_URL = Deno.env.get('SUPABASE_URL') ?? '';
 const SERVICE_ROLE_KEY = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? '';
 const MAPBOX_TOKEN = Deno.env.get('MAPBOX_TOKEN') ?? '';
 
+const NOTIFY_AGENTS_SECRET = Deno.env.get('NOTIFY_AGENTS_SECRET') ?? '';
+
 const TAX_RATE = 0.05;
+
+/**
+ * Ask notify-agents to push every agent's registered browser. Fails quietly:
+ * an order that is already in the database must not be reported as failed
+ * because a notification didn't go out.
+ */
+async function notifyAgents(): Promise<void> {
+  if (!NOTIFY_AGENTS_SECRET) return;
+  await fetch(`${SUPABASE_URL}/functions/v1/notify-agents`, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      Authorization: `Bearer ${SERVICE_ROLE_KEY}`,
+      'x-notify-secret': NOTIFY_AGENTS_SECRET,
+    },
+    body: '{}',
+  });
+}
 
 interface PickupPoint {
   latitude: number;
@@ -190,6 +210,11 @@ Deno.serve(async (req) => {
     if (error || !order) {
       return json({ ok: false, error: 'Could not place your order' });
     }
+
+    // Wake the agents. Deliberately not awaited and deliberately swallowed: the
+    // customer's order is already placed, and a push service having a bad day
+    // must never turn a successful order into an error on their screen.
+    notifyAgents().catch(() => undefined);
 
     return json({ ok: true, orderId: order.id, total, deliveryFee: fare.customerFare, distanceKm });
   } catch {
