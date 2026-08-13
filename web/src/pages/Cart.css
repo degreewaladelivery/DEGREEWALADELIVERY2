@@ -80,6 +80,62 @@
   font-size: var(--fs-lg);
   margin-bottom: 16px;
 }
+
+.cart__deliverto {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  width: 100%;
+  text-align: left;
+  background: var(--brand-tint);
+  border: 1px solid var(--brand-tint-strong);
+  border-radius: var(--radius-md);
+  padding: 11px 13px;
+  margin-bottom: 14px;
+}
+.cart__deliverto-icon {
+  font-size: 17px;
+  flex-shrink: 0;
+}
+.cart__deliverto-col {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  line-height: 1.25;
+}
+.cart__deliverto-col small {
+  font-size: 11px;
+  color: var(--text-muted);
+}
+.cart__deliverto-col strong {
+  font-size: var(--fs-sm);
+  color: var(--text);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.cart__deliverto-change {
+  font-size: var(--fs-xs);
+  font-weight: 700;
+  color: var(--brand-dark);
+  flex-shrink: 0;
+}
+
+.bill-row__note {
+  font-style: normal;
+  color: var(--text-faint);
+}
+
+.cart__warn {
+  font-size: var(--fs-sm);
+  line-height: 1.5;
+  color: var(--danger);
+  background: var(--danger-tint);
+  border-radius: var(--radius-sm);
+  padding: 9px 12px;
+  margin-top: 12px;
+}
 .bill-row {
   display: flex;
   justify-content: space-between;

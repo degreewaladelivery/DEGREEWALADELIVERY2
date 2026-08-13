@@ -1,23 +1,33 @@
+import { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useCartStore, selectCount, selectSubtotal } from '../store/cartStore';
+import { useLocationStore } from '../store/locationStore';
+import { useDeliveryFare } from '../lib/useDeliveryFare';
 import { formatRupees } from '../lib/format';
 import { getCustomer } from '../lib/auth';
+import { LocationModal } from '../components/ui/LocationModal';
+import { MAX_DELIVERY_RADIUS_KM } from '@shared/deliveryFare';
 import './Cart.css';
 
-const DELIVERY_FEE = 30;
 const TAX_RATE = 0.05;
 
 export function Cart() {
   const navigate = useNavigate();
   const items = useCartStore((s) => s.items);
+  const shopId = useCartStore((s) => s.shopId);
   const addItem = useCartStore((s) => s.addItem);
   const decrement = useCartStore((s) => s.decrement);
+  const location = useLocationStore((s) => s.location);
+  const [locationOpen, setLocationOpen] = useState(false);
+
+  const { fare, distanceKm, loading, outOfRange, pickupError } = useDeliveryFare(shopId);
 
   const lines = Object.values(items);
   const count = selectCount(items);
   const subtotal = selectSubtotal(items);
   const taxes = Math.round(subtotal * TAX_RATE);
-  const total = subtotal + (count > 0 ? DELIVERY_FEE : 0) + taxes;
+  const deliveryFee = fare?.customerFare ?? null;
+  const total = subtotal + (deliveryFee ?? 0) + taxes;
 
   if (count === 0) {
     return (
@@ -29,6 +39,14 @@ export function Cart() {
       </div>
     );
   }
+
+  const deliveryValue = () => {
+    if (!location) return 'Set location';
+    if (pickupError) return '—';
+    if (loading) return 'Calculating…';
+    if (outOfRange) return 'Too far';
+    return deliveryFee != null ? formatRupees(deliveryFee) : '—';
+  };
 
   return (
     <div className="container cart">
@@ -57,30 +75,68 @@ export function Cart() {
 
         <aside className="cart__bill">
           <h3>Bill Details</h3>
+
+          <button className="cart__deliverto" type="button" onClick={() => setLocationOpen(true)}>
+            <span className="cart__deliverto-icon">📍</span>
+            <span className="cart__deliverto-col">
+              {location ? (
+                <>
+                  <small>Delivering to</small>
+                  <strong>{location.label}</strong>
+                </>
+              ) : (
+                <>
+                  <small>Where are we delivering?</small>
+                  <strong>Set your location</strong>
+                </>
+              )}
+            </span>
+            <span className="cart__deliverto-change">Change</span>
+          </button>
+
           <div className="bill-row">
             <span>Item total</span>
             <span>{formatRupees(subtotal)}</span>
           </div>
           <div className="bill-row">
-            <span>Delivery fee</span>
-            <span>{formatRupees(DELIVERY_FEE)}</span>
+            <span>
+              Delivery fee
+              {distanceKm != null && !outOfRange && (
+                <em className="bill-row__note"> · {distanceKm.toFixed(1)} km</em>
+              )}
+            </span>
+            <span>{deliveryValue()}</span>
           </div>
           <div className="bill-row">
-            <span>Taxes & charges</span>
+            <span>Taxes &amp; charges</span>
             <span>{formatRupees(taxes)}</span>
           </div>
           <div className="bill-row bill-row--total">
             <span>To Pay</span>
-            <span>{formatRupees(total)}</span>
+            <span>{deliveryFee != null ? formatRupees(total) : `${formatRupees(subtotal + taxes)} + delivery`}</span>
           </div>
+
+          {outOfRange && (
+            <p className="cart__warn">
+              That location is {distanceKm?.toFixed(1)} km away — we deliver within{' '}
+              {MAX_DELIVERY_RADIUS_KM} km.
+            </p>
+          )}
+          {pickupError && (
+            <p className="cart__warn">Delivery isn't set up for this shop yet.</p>
+          )}
+
           <button
             className="btn btn-primary btn-lg btn-block"
+            disabled={outOfRange || pickupError}
             onClick={() => navigate(getCustomer() ? '/checkout' : '/login?next=/checkout')}
           >
             Proceed to Checkout
           </button>
         </aside>
       </div>
+
+      {locationOpen && <LocationModal onClose={() => setLocationOpen(false)} />}
     </div>
   );
 }

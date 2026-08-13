@@ -1,6 +1,8 @@
 import { useState } from 'react';
 import { Link, NavLink } from 'react-router-dom';
 import { useCartStore, selectCount } from '../../store/cartStore';
+import { useLocationStore } from '../../store/locationStore';
+import { LocationModal } from '../ui/LocationModal';
 import { CartIcon, MapPinIcon, MenuIcon, XIcon } from '../ui/icons';
 import './Header.css';
 
@@ -14,7 +16,9 @@ const NAV_LINKS = [
 
 export function Header() {
   const count = useCartStore((s) => selectCount(s.items));
+  const location = useLocationStore((s) => s.location);
   const [menuOpen, setMenuOpen] = useState(false);
+  const [locationOpen, setLocationOpen] = useState(false);
 
   return (
     <header className="site-header">
@@ -54,11 +58,11 @@ export function Header() {
         </nav>
 
         <div className="site-header__right">
-          <button className="location-pill" type="button">
+          <button className="location-pill" type="button" onClick={() => setLocationOpen(true)}>
             <span className="location-pill__icon"><MapPinIcon size={18} /></span>
             <span className="location-pill__col">
-              <small>Your Location</small>
-              <strong>Balehonnuru ▾</strong>
+              <small>{location ? 'Delivering to' : 'Set your location'}</small>
+              <strong>{location ? `${location.label} ▾` : 'Choose ▾'}</strong>
             </span>
           </button>
 
@@ -71,10 +75,21 @@ export function Header() {
 
       <div className={'mobile-menu' + (menuOpen ? ' is-open' : '')}>
         <div className="container">
-          <div className="mobile-menu__location">
+          <button
+            className="mobile-menu__location"
+            type="button"
+            onClick={() => {
+              setMenuOpen(false);
+              setLocationOpen(true);
+            }}
+          >
             <span className="location-pill__icon"><MapPinIcon size={16} /></span>
-            Deliver to <strong>Balehonnuru</strong>
-          </div>
+            {location ? (
+              <>Deliver to <strong>{location.label}</strong> · Change</>
+            ) : (
+              <strong>Set your delivery location</strong>
+            )}
+          </button>
           <nav className="mobile-menu__nav">
             {NAV_LINKS.map((link) => (
               <NavLink
@@ -89,6 +104,8 @@ export function Header() {
           </nav>
         </div>
       </div>
+
+      {locationOpen && <LocationModal onClose={() => setLocationOpen(false)} />}
     </header>
   );
 }

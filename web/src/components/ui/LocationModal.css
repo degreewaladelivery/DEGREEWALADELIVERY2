@@ -1,0 +1,94 @@
+.locmodal__backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 210;
+  background: rgba(13, 27, 42, 0.5);
+  backdrop-filter: blur(4px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 20px;
+  animation: locmodal-fade 0.16s var(--ease);
+}
+
+.locmodal {
+  width: 100%;
+  max-width: 480px;
+  max-height: calc(100vh - 40px);
+  overflow-y: auto;
+  background: #fff;
+  border-radius: var(--radius-xl);
+  padding: 22px;
+  box-shadow: var(--shadow-lg);
+  animation: locmodal-pop 0.18s var(--ease);
+}
+
+.locmodal__head {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.locmodal__title {
+  font-size: var(--fs-xl);
+}
+
+.locmodal__close {
+  font-size: 26px;
+  line-height: 1;
+  color: var(--text-faint);
+  padding: 0 4px;
+}
+.locmodal__close:hover {
+  color: var(--text);
+}
+
+.locmodal__lead {
+  font-size: var(--fs-sm);
+  color: var(--text-muted);
+  margin: 6px 0 14px;
+  line-height: 1.5;
+}
+
+.locmodal__resolved {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  margin-top: 12px;
+  padding: 12px 14px;
+  background: var(--brand-tint);
+  border-radius: var(--radius-md);
+}
+.locmodal__resolved strong {
+  font-size: var(--fs-base);
+  color: var(--text);
+}
+.locmodal__resolved span {
+  font-size: var(--fs-xs);
+  color: var(--text-muted);
+}
+
+.locmodal__actions {
+  display: flex;
+  gap: 10px;
+  justify-content: flex-end;
+  margin-top: 18px;
+}
+
+@keyframes locmodal-fade {
+  from { opacity: 0; }
+}
+
+@keyframes locmodal-pop {
+  from { opacity: 0; transform: translateY(10px) scale(0.98); }
+}
+
+@media (max-width: 460px) {
+  .locmodal__actions {
+    flex-direction: column-reverse;
+  }
+  .locmodal__actions .btn {
+    width: 100%;
+  }
+}
