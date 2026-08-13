@@ -141,6 +141,13 @@ Deno.serve(async (req) => {
       sent: webResult.sent + phoneResult.sent,
       web: webResult,
       phones: phoneResult,
+      // With nobody registered yet, "sent 0" looks the same whether a channel
+      // is switched off or simply has no devices. Say which it is, so a silent
+      // channel can be diagnosed without reading the deploy config.
+      configured: {
+        web: Boolean(VAPID_PUBLIC_KEY && VAPID_PRIVATE_KEY),
+        phones: Boolean(FCM_SERVICE_ACCOUNT),
+      },
     });
   } catch (err) {
     return json({ ok: false, error: err instanceof Error ? err.message : 'failed' }, 200);
