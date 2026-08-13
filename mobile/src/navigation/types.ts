@@ -5,6 +5,11 @@ export type HomeStackParamList = {
   Search: { query?: string } | undefined;
 };
 
+export type AccountStackParamList = {
+  AccountMain: undefined;
+  AgentArea: undefined;
+};
+
 export type CartStackParamList = {
   CartMain: undefined;
   Login: { onSuccessRoute: 'Checkout' } | undefined;

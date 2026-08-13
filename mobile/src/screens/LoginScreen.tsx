@@ -97,6 +97,7 @@ export function LoginScreen() {
               <Text style={styles.logoutText}>Log out</Text>
             </TouchableOpacity>
           </View>
+          <PartnerLink onPress={() => navigation.navigate('AgentArea')} />
         </View>
       </SafeAreaView>
     );
@@ -174,8 +175,20 @@ export function LoginScreen() {
 
           <Text style={styles.terms}>By continuing you agree to our Terms & Privacy Policy.</Text>
         </View>
+        {/* Only on the Account tab — not when this screen is gating checkout. */}
+        {!onSuccessRoute && <PartnerLink onPress={() => navigation.navigate('AgentArea')} />}
       </View>
     </SafeAreaView>
+  );
+}
+
+/** Way in for delivery partners, who sign in with an email and password issued
+ *  by the office rather than a customer OTP. */
+function PartnerLink({ onPress }: { onPress: () => void }) {
+  return (
+    <TouchableOpacity style={styles.partner} onPress={onPress} activeOpacity={0.8}>
+      <Text style={styles.partnerText}>🛵 Delivery partner? Sign in here</Text>
+    </TouchableOpacity>
   );
 }
 
@@ -184,6 +197,9 @@ const styles = StyleSheet.create({
   center: { flex: 1, alignItems: 'center', justifyContent: 'center', paddingHorizontal: spacing.lg },
 
   card: { width: '100%', maxWidth: 380, backgroundColor: '#fff', borderRadius: radius.lg, padding: spacing.xl, alignItems: 'center', ...shadows.md },
+
+  partner: { marginTop: spacing.lg, paddingVertical: spacing.sm, paddingHorizontal: spacing.md },
+  partnerText: { fontSize: fontSizes.sm, fontWeight: fontWeights.bold, color: colors.textMuted },
 
   mark: { fontSize: 36, marginBottom: spacing.sm },
   title: { fontSize: fontSizes.xl, fontWeight: fontWeights.heading, color: colors.text, textAlign: 'center' },

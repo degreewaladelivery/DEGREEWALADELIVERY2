@@ -10,14 +10,16 @@ import { CheckoutScreen } from '../screens/CheckoutScreen';
 import { OrderSuccessScreen } from '../screens/OrderSuccessScreen';
 import { TrackScreen } from '../screens/TrackScreen';
 import { LoginScreen } from '../screens/LoginScreen';
+import { AgentGateScreen } from '../screens/AgentGateScreen';
 import { HomeIcon, TagIcon, CartIcon, UserIcon } from '../components/icons';
 import { OrderAlerts } from '../components/OrderAlerts';
 import { colors, fontWeights, shadows } from '../theme';
-import type { HomeStackParamList, CartStackParamList } from './types';
+import type { HomeStackParamList, CartStackParamList, AccountStackParamList } from './types';
 
 const Tab = createBottomTabNavigator();
 const HomeStack = createNativeStackNavigator<HomeStackParamList>();
 const CartStack = createNativeStackNavigator<CartStackParamList>();
+const AccountStack = createNativeStackNavigator<AccountStackParamList>();
 
 function HomeStackNavigator() {
   return (
@@ -39,6 +41,15 @@ function CartStackNavigator() {
       <CartStack.Screen name="OrderSuccess" component={OrderSuccessScreen} />
       <CartStack.Screen name="Track" component={TrackScreen} />
     </CartStack.Navigator>
+  );
+}
+
+function AccountStackNavigator() {
+  return (
+    <AccountStack.Navigator screenOptions={{ headerShown: false }}>
+      <AccountStack.Screen name="AccountMain" component={LoginScreen} />
+      <AccountStack.Screen name="AgentArea" component={AgentGateScreen} />
+    </AccountStack.Navigator>
   );
 }
 
@@ -88,7 +99,7 @@ export function RootNavigator() {
         />
         <Tab.Screen
           name="Account"
-          component={LoginScreen}
+          component={AccountStackNavigator}
           options={{ tabBarIcon: ({ color }) => <UserIcon size={22} color={color} /> }}
         />
       </Tab.Navigator>

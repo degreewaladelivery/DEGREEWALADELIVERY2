@@ -1,74 +1,31 @@
 import { supabase } from '../lib/supabase';
+import * as agentOrders from '@shared/agentOrders';
 import type { AgentProfile, OrderRow } from './types';
 
-export async function getMyProfile(): Promise<AgentProfile> {
-  const { data, error } = await supabase.from('delivery_agents').select('*').single();
-  if (error) throw error;
-  return data;
-}
+/**
+ * Thin binding of the shared agent queries to this app's Supabase client, so
+ * callers here don't have to pass it around. The queries themselves live in
+ * shared/agentOrders.ts and are used by the mobile app too.
+ */
 
-export async function listOpenOrders(): Promise<OrderRow[]> {
-  const { data, error } = await supabase
-    .from('orders')
-    .select('*')
-    .is('claimed_by', null)
-    .eq('status', 'placed')
-    .order('created_at', { ascending: true });
-  if (error) throw error;
-  return data as OrderRow[];
-}
+export const getMyProfile = (): Promise<AgentProfile> => agentOrders.getMyProfile(supabase);
 
-export async function listMyDeliveries(agentId: string): Promise<OrderRow[]> {
-  const { data, error } = await supabase
-    .from('orders')
-    .select('*')
-    .eq('claimed_by', agentId)
-    .neq('status', 'delivered')
-    .order('claimed_at', { ascending: true });
-  if (error) throw error;
-  return data as OrderRow[];
-}
+export const listOpenOrders = (): Promise<OrderRow[]> => agentOrders.listOpenOrders(supabase);
 
-export async function claimOrder(orderId: string, agentId: string): Promise<boolean> {
-  const { data, error } = await supabase
-    .from('orders')
-    .update({ claimed_by: agentId, claimed_at: new Date().toISOString(), status: 'claimed' })
-    .eq('id', orderId)
-    .is('claimed_by', null)
-    .select('id');
-  if (error) throw error;
-  return (data?.length ?? 0) > 0;
-}
+export const listMyDeliveries = (agentId: string): Promise<OrderRow[]> =>
+  agentOrders.listMyDeliveries(supabase, agentId);
 
-export async function updateAgentLocation(
+export const claimOrder = (orderId: string, agentId: string): Promise<boolean> =>
+  agentOrders.claimOrder(supabase, orderId, agentId);
+
+export const updateAgentLocation = (
   orderIds: string[],
   latitude: number,
   longitude: number
-): Promise<void> {
-  if (orderIds.length === 0) return;
-  const { error } = await supabase
-    .from('orders')
-    .update({
-      agent_latitude: latitude,
-      agent_longitude: longitude,
-      agent_location_at: new Date().toISOString(),
-    })
-    .in('id', orderIds);
-  if (error) throw error;
-}
+): Promise<void> => agentOrders.updateAgentLocation(supabase, orderIds, latitude, longitude);
 
-export async function markPickedUp(orderId: string): Promise<void> {
-  const { error } = await supabase
-    .from('orders')
-    .update({ status: 'picked_up', picked_up_at: new Date().toISOString() })
-    .eq('id', orderId);
-  if (error) throw error;
-}
+export const markPickedUp = (orderId: string): Promise<void> =>
+  agentOrders.markPickedUp(supabase, orderId);
 
-export async function markDelivered(orderId: string): Promise<void> {
-  const { error } = await supabase
-    .from('orders')
-    .update({ status: 'delivered', delivered_at: new Date().toISOString() })
-    .eq('id', orderId);
-  if (error) throw error;
-}
+export const markDelivered = (orderId: string): Promise<void> =>
+  agentOrders.markDelivered(supabase, orderId);
