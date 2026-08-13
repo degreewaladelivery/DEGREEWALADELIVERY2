@@ -15,6 +15,8 @@ import {
   MicIcon, ZapIcon, SlidersIcon, BookmarkIcon, PercentCircleIcon,
 } from '../components/ui/icons';
 import { getBrandImage, getCategoryImage, getShopImage } from '../lib/images';
+import { useLocationStore } from '../store/locationStore';
+import { LocationModal } from '../components/ui/LocationModal';
 import './Home.css';
 
 const POPULAR_SEARCHES = [
@@ -69,6 +71,8 @@ const APP_FEATURES = [
 ];
 
 export function Home() {
+  const location = useLocationStore((s) => s.location);
+  const [locationOpen, setLocationOpen] = useState(false);
   const [query, setQuery] = useState('');
   const [categories, setCategories] = useState<Category[]>([]);
   const [shops, setShops] = useState<Shop[]>([]);
@@ -97,11 +101,11 @@ export function Home() {
       <section className="mx" aria-label="Explore">
 
         <div className="container mx-top">
-          <button type="button" className="mx-loc">
+          <button type="button" className="mx-loc" onClick={() => setLocationOpen(true)}>
             <span className="mx-loc__pin"><MapPinIcon size={20} /></span>
             <span className="mx-loc__text">
-              <strong>Balehonnuru ▾</strong>
-              <small>Main Road, Balehonnuru, Chikkamagaluru</small>
+              <strong>{location ? `${location.label} ▾` : 'Set your location ▾'}</strong>
+              <small>{location ? location.address : 'Tap to tell us where to deliver'}</small>
             </span>
           </button>
           <span className="mx-avatar" aria-label="Account">A</span>
@@ -400,6 +404,8 @@ export function Home() {
           </div>
         </div>
       </section>
+
+      {locationOpen && <LocationModal onClose={() => setLocationOpen(false)} />}
     </div>
   );
 }
