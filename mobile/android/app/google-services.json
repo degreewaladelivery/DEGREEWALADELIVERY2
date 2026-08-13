@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "94837437620",
+    "project_id": "degreewaladelivery-b4470",
+    "storage_bucket": "degreewaladelivery-b4470.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:94837437620:android:95f5d448f42015104113e1",
+        "android_client_info": {
+          "package_name": "com.degreewalamobile"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyA99S0ZzYA7XMeZXIb_22VtRHLp7VPlZww"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

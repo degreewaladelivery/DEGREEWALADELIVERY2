@@ -21,7 +21,9 @@ import {
   markPickedUp,
   updateAgentLocation,
 } from '../agent/api';
+import { getMessaging, onMessage } from '@react-native-firebase/messaging';
 import { signOutAgent } from '../agent/supabaseAgent';
+import { registerDeviceForPush, unregisterDeviceForPush } from '../agent/devicePush';
 import type { AgentProfile, OrderRow } from '@shared/agentOrders';
 import { formatRupees } from '../lib/format';
 import { colors, spacing, radius, fontSizes, fontWeights, shadows } from '../theme';
@@ -59,6 +61,32 @@ export function AgentOrdersScreen({ agentId, onSignedOut }: { agentId: string; o
       .then(setProfile)
       .catch(() => undefined);
   }, []);
+
+  // Register this phone for push once they're signed in — asking for
+  // notification permission here, rather than at first launch, means the agent
+  // knows what they're being asked for.
+  useEffect(() => {
+    let stop: (() => void) | undefined;
+    let cancelled = false;
+
+    registerDeviceForPush(agentId).then((unsubscribe) => {
+      if (cancelled) unsubscribe();
+      else stop = unsubscribe;
+    });
+
+    return () => {
+      cancelled = true;
+      stop?.();
+    };
+  }, [agentId]);
+
+  // A push arriving while the app is open shouldn't be a dead notification —
+  // refresh so the new order is already on screen when they look.
+  useEffect(() => {
+    return onMessage(getMessaging(), () => {
+      load();
+    });
+  }, [load]);
 
   useEffect(() => {
     load();
@@ -148,13 +176,15 @@ export function AgentOrdersScreen({ agentId, onSignedOut }: { agentId: string; o
           {
             text: 'Sign out',
             style: 'destructive',
-            onPress: () => signOutAgent().then(onSignedOut),
+            onPress: () => unregisterDeviceForPush().then(() => signOutAgent()).then(onSignedOut),
           },
         ]
       );
       return;
     }
-    signOutAgent().then(onSignedOut);
+    unregisterDeviceForPush()
+      .then(() => signOutAgent())
+      .then(onSignedOut);
   };
 
   return (
