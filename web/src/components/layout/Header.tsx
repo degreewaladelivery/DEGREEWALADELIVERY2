@@ -6,7 +6,6 @@ import './Header.css';
 
 const NAV_LINKS = [
   { label: 'Home', to: '/' },
-  { label: 'Shops', to: '/category/food' },
   { label: 'Categories', to: '/#categories' },
   { label: 'Offers', to: '/#offers' },
   { label: 'Track Order', to: '/track' },

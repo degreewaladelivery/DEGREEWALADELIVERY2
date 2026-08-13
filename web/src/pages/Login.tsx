@@ -1,5 +1,5 @@
 import { useState, type FormEvent } from 'react';
-import { useNavigate, useSearchParams } from 'react-router-dom';
+import { Link, useNavigate, useSearchParams } from 'react-router-dom';
 import { sendOtp, verifyOtp, getCustomer, logoutCustomer } from '../lib/auth';
 import './Login.css';
 
@@ -131,7 +131,10 @@ export function Login() {
           </form>
         )}
 
-        <p className="login__terms">By continuing you agree to our Terms & Privacy Policy.</p>
+        <p className="login__terms">
+          By continuing you agree to our{' '}
+          <Link to="/terms">Terms &amp; Privacy Policy</Link>.
+        </p>
       </div>
     </div>
   );

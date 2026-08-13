@@ -67,6 +67,13 @@
   color: var(--text-faint, #9aa0ac);
   margin-top: 18px;
 }
+.login__terms a {
+  color: var(--brand);
+  font-weight: 600;
+}
+.login__terms a:hover {
+  text-decoration: underline;
+}
 
 .login__error {
   font-size: 13px;

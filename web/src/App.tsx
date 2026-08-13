@@ -9,6 +9,8 @@ import { Payment } from './pages/Payment';
 import { OrderSuccess } from './pages/OrderSuccess';
 import { Track } from './pages/Track';
 import { Search } from './pages/Search';
+import { Help } from './pages/Help';
+import { Terms } from './pages/Terms';
 import { Login } from './pages/Login';
 import { ComingSoon, RouteError } from './pages/ComingSoon';
 import { AdminAuthProvider } from './admin/AdminAuthContext';
@@ -42,7 +44,8 @@ const router = createBrowserRouter([
       { path: '/order-success', element: <OrderSuccess /> },
       { path: '/search', element: <Search /> },
       { path: '/track', element: <Track /> },
-      { path: '/help', element: <ComingSoon title="Help Center" /> },
+      { path: '/help', element: <Help /> },
+      { path: '/terms', element: <Terms /> },
       { path: '*', element: <ComingSoon title="Page not found" /> },
     ],
   },

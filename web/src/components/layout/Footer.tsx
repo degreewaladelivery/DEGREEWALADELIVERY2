@@ -1,7 +1,12 @@
 import { Link } from 'react-router-dom';
 import './Footer.css';
 
-const LINKS = ['About', 'Help', 'Track Order', 'Contact', 'Terms & Privacy'];
+const LINKS = [
+  { label: 'Help', to: '/help' },
+  { label: 'Track Order', to: '/track' },
+  { label: 'Contact', to: '/help#contact' },
+  { label: 'Terms & Privacy', to: '/terms' },
+];
 
 export function Footer() {
   return (
@@ -17,7 +22,7 @@ export function Footer() {
 
         <nav className="site-footer__links">
           {LINKS.map((l) => (
-            <a key={l} href="#">{l}</a>
+            <Link key={l.label} to={l.to}>{l.label}</Link>
           ))}
         </nav>
       </div>

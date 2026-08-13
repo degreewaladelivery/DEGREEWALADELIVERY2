@@ -2,6 +2,7 @@ import { Outlet, ScrollRestoration, useLocation } from 'react-router-dom';
 import { Header } from './Header';
 import { Footer } from './Footer';
 import { BottomNav } from './BottomNav';
+import { OrderAlerts } from '../ui/OrderAlerts';
 
 export function Layout() {
   const { pathname } = useLocation();
@@ -14,6 +15,7 @@ export function Layout() {
       </main>
       <Footer />
       <BottomNav />
+      <OrderAlerts />
 
       <ScrollRestoration />
     </div>

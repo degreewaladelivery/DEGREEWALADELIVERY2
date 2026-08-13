@@ -11,6 +11,7 @@ import { OrderSuccessScreen } from '../screens/OrderSuccessScreen';
 import { TrackScreen } from '../screens/TrackScreen';
 import { LoginScreen } from '../screens/LoginScreen';
 import { HomeIcon, TagIcon, CartIcon, UserIcon } from '../components/icons';
+import { OrderAlerts } from '../components/OrderAlerts';
 import { colors, fontWeights, shadows } from '../theme';
 import type { HomeStackParamList, CartStackParamList } from './types';
 
@@ -91,6 +92,7 @@ export function RootNavigator() {
           options={{ tabBarIcon: ({ color }) => <UserIcon size={22} color={color} /> }}
         />
       </Tab.Navigator>
+      <OrderAlerts />
     </NavigationContainer>
   );
 }
