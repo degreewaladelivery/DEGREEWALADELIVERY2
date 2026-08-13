@@ -4,18 +4,13 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { useNavigation } from '@react-navigation/native';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { useCartStore, selectCount, selectSubtotal } from '../store/cartStore';
+import { useLocationStore } from '../store/locationStore';
+import { useDeliveryFare } from '../lib/useDeliveryFare';
 import { formatRupees } from '../lib/format';
 import { getCustomer, logoutCustomer } from '../lib/auth';
 import { supabase } from '../lib/supabase';
-import { LocationPicker } from '../components/LocationPicker';
-import { MAPBOX_TOKEN, hasMapbox } from '../lib/mapbox';
-import { getPickupPoint, type PickupPoint } from '../lib/deliveryPickup';
-import {
-  calculateDeliveryFare,
-  haversineDistanceKm,
-  MAX_DELIVERY_RADIUS_KM,
-} from '@shared/deliveryFare';
-import { getRouteDistanceKm, type LatLng } from '@shared/mapbox';
+import { LocationSheet } from '../components/LocationSheet';
+import { MAX_DELIVERY_RADIUS_KM } from '@shared/deliveryFare';
 import type { CartStackParamList } from '../navigation/types';
 import { colors, spacing, radius, fontSizes, fontWeights, shadows } from '../theme';
 
@@ -28,17 +23,15 @@ export function CheckoutScreen() {
   const items = useCartStore((s) => s.items);
   const shopId = useCartStore((s) => s.shopId);
   const clear = useCartStore((s) => s.clear);
+  const location = useLocationStore((s) => s.location);
 
-  const [address, setAddress] = useState('');
+  const [address, setAddress] = useState(location?.address ?? '');
   const [placing, setPlacing] = useState(false);
   const [placeError, setPlaceError] = useState<string | null>(null);
+  const [locationOpen, setLocationOpen] = useState(false);
 
-  const [pickupPoint, setPickupPoint] = useState<PickupPoint | null>(null);
-  const [pickupError, setPickupError] = useState(false);
-  const [customerLat, setCustomerLat] = useState<number | null>(null);
-  const [customerLng, setCustomerLng] = useState<number | null>(null);
-  const [distanceKm, setDistanceKm] = useState<number | null>(null);
-  const [fareLoading, setFareLoading] = useState(false);
+  const { fare, distanceKm, loading, outOfRange, pickupError, hasLocation } =
+    useDeliveryFare(shopId);
 
   useEffect(() => {
     getCustomer().then((c) => {
@@ -46,42 +39,17 @@ export function CheckoutScreen() {
     });
   }, [navigation]);
 
-  useEffect(() => {
-    if (!hasMapbox()) return;
-    getPickupPoint(shopId)
-      .then((point) => (point ? setPickupPoint(point) : setPickupError(true)))
-      .catch(() => setPickupError(true));
-  }, [shopId]);
-
-  useEffect(() => {
-    if (!hasMapbox() || !pickupPoint || customerLat == null || customerLng == null) return;
-    const customer: LatLng = { latitude: customerLat, longitude: customerLng };
-    setFareLoading(true);
-    const run = MAPBOX_TOKEN
-      ? getRouteDistanceKm(MAPBOX_TOKEN, pickupPoint, customer)
-      : Promise.resolve(
-          haversineDistanceKm(pickupPoint.latitude, pickupPoint.longitude, customer.latitude, customer.longitude)
-        );
-    run.then((km) => {
-      setDistanceKm(km);
-      setFareLoading(false);
-    });
-  }, [pickupPoint, customerLat, customerLng]);
-
   const count = selectCount(items);
   const subtotal = selectSubtotal(items);
   const taxes = Math.round(subtotal * TAX_RATE);
-  const fare = hasMapbox() ? (distanceKm != null ? calculateDeliveryFare(distanceKm) : null) : calculateDeliveryFare(0);
   const deliveryFee = fare?.customerFare ?? null;
-  const fareReady = !hasMapbox() || fare != null;
-  const total = subtotal + (count > 0 ? deliveryFee ?? 0 : 0) + taxes;
-  const outOfRange = distanceKm != null && distanceKm > MAX_DELIVERY_RADIUS_KM;
+  const total = subtotal + (deliveryFee ?? 0) + taxes;
   const canPlaceOrder =
-    address.trim().length >= 6 && fareReady && !pickupError && !outOfRange && !placing;
+    hasLocation && !loading && !outOfRange && !pickupError && address.trim().length >= 6 && !placing;
 
   const placeOrder = async () => {
     const customer = await getCustomer();
-    if (!customer) return;
+    if (!customer || !location) return;
 
     setPlacing(true);
     setPlaceError(null);
@@ -95,8 +63,8 @@ export function CheckoutScreen() {
           })),
           shopId,
           address: address.trim(),
-          latitude: customerLat,
-          longitude: customerLng,
+          latitude: location.latitude,
+          longitude: location.longitude,
         },
       });
 
@@ -126,43 +94,62 @@ export function CheckoutScreen() {
         </TouchableOpacity>
         <Text style={styles.heading}>Checkout</Text>
 
-        {hasMapbox() && (
-          <View style={styles.card}>
-            <Text style={styles.cardTitle}>🗺️ Delivery Location</Text>
-            {pickupError && (
-              <Text style={styles.hint}>Delivery isn't set up for this shop yet — pickup point is missing.</Text>
-            )}
-            <LocationPicker
-              latitude={customerLat}
-              longitude={customerLng}
-              onChange={(lat, lng) => {
-                setCustomerLat(lat);
-                setCustomerLng(lng);
-              }}
-            />
-            {customerLat == null && (
-              <Text style={styles.hint}>Tap the map to drop a pin at your delivery location.</Text>
-            )}
-            {fareLoading && <Text style={styles.hint}>Calculating delivery fee…</Text>}
-            {!fareLoading && distanceKm != null && (
-              <Text style={styles.hint}>
-                {distanceKm.toFixed(1)} km from pickup · delivery fee {formatRupees(deliveryFee ?? 0)}
-              </Text>
-            )}
-          </View>
-        )}
+        <View style={styles.card}>
+          <Text style={styles.cardTitle}>📍 Delivery Location</Text>
+
+          {location ? (
+            <View style={styles.locRow}>
+              <View style={styles.locCol}>
+                <Text style={styles.locLabel}>{location.label}</Text>
+                <Text style={styles.hint} numberOfLines={2}>{location.address}</Text>
+                {distanceKm != null && !outOfRange && (
+                  <Text style={styles.hint}>{distanceKm.toFixed(1)} km from pickup</Text>
+                )}
+                {loading && <Text style={styles.hint}>Calculating delivery fee…</Text>}
+              </View>
+              <TouchableOpacity
+                style={styles.changeBtn}
+                activeOpacity={0.85}
+                onPress={() => setLocationOpen(true)}
+              >
+                <Text style={styles.changeText}>Change</Text>
+              </TouchableOpacity>
+            </View>
+          ) : (
+            <TouchableOpacity
+              style={styles.setLocBtn}
+              activeOpacity={0.9}
+              onPress={() => setLocationOpen(true)}
+            >
+              <Text style={styles.setLocText}>📍 Set delivery location</Text>
+            </TouchableOpacity>
+          )}
+
+          {pickupError && (
+            <Text style={styles.hint}>Delivery isn't set up for this shop yet.</Text>
+          )}
+          {outOfRange && (
+            <Text style={styles.hint}>
+              That location is {distanceKm?.toFixed(1)} km away — we deliver within{' '}
+              {MAX_DELIVERY_RADIUS_KM} km.
+            </Text>
+          )}
+        </View>
 
         <View style={styles.card}>
-          <Text style={styles.cardTitle}>📍 Delivery Address</Text>
+          <Text style={styles.cardTitle}>🏠 Address Details</Text>
           <TextInput
             style={styles.address}
             value={address}
             onChangeText={setAddress}
-            placeholder="House / flat no., street, landmark, Balehonnuru…"
+            placeholder="House / flat no., floor, landmark…"
             placeholderTextColor={colors.textFaint}
             multiline
             numberOfLines={3}
           />
+          <Text style={styles.hint}>
+            Add the door number and a landmark so the agent finds you quickly.
+          </Text>
         </View>
 
         <View style={styles.card}>
@@ -202,9 +189,11 @@ export function CheckoutScreen() {
         >
           <Text style={styles.placeBtnText}>{placing ? 'Placing order…' : 'Place Order'}</Text>
         </TouchableOpacity>
-        {address.trim().length < 6 && <Text style={styles.hint}>Add a delivery address to continue</Text>}
-        {address.trim().length >= 6 && !fareReady && !pickupError && (
-          <Text style={styles.hint}>Drop a pin on the map to calculate your delivery fee</Text>
+        {!hasLocation && (
+          <Text style={styles.hint}>Set your delivery location to continue</Text>
+        )}
+        {hasLocation && address.trim().length < 6 && (
+          <Text style={styles.hint}>Add your address details to continue</Text>
         )}
         {outOfRange && (
           <Text style={styles.hint}>
@@ -214,6 +203,8 @@ export function CheckoutScreen() {
         )}
         {placeError && <Text style={styles.hint}>{placeError}</Text>}
       </ScrollView>
+
+      <LocationSheet visible={locationOpen} onClose={() => setLocationOpen(false)} />
     </SafeAreaView>
   );
 }
@@ -236,6 +227,35 @@ const styles = StyleSheet.create({
   card: { backgroundColor: colors.surface, borderRadius: radius.lg, padding: spacing.lg, marginBottom: spacing.md },
   cardTitle: { fontSize: fontSizes.md, fontWeight: fontWeights.heading, color: colors.text, marginBottom: spacing.sm },
   hint: { fontSize: fontSizes.xs, color: colors.textMuted, marginTop: spacing.sm },
+
+  locRow: {
+    flexDirection: 'row',
+    alignItems: 'flex-start',
+    gap: spacing.sm,
+    backgroundColor: colors.brandTint,
+    borderWidth: 1,
+    borderColor: colors.brandTintStrong,
+    borderRadius: radius.md,
+    padding: spacing.md,
+  },
+  locCol: { flex: 1, minWidth: 0 },
+  locLabel: { fontSize: fontSizes.md, fontWeight: fontWeights.bold, color: colors.text },
+  changeBtn: {
+    backgroundColor: '#fff',
+    borderWidth: 1,
+    borderColor: colors.borderStrong,
+    borderRadius: radius.md,
+    paddingVertical: spacing.xs,
+    paddingHorizontal: spacing.md,
+  },
+  changeText: { fontSize: fontSizes.xs, fontWeight: fontWeights.bold, color: colors.text },
+  setLocBtn: {
+    backgroundColor: colors.brand,
+    borderRadius: radius.md,
+    paddingVertical: spacing.md,
+    alignItems: 'center',
+  },
+  setLocText: { fontSize: fontSizes.md, fontWeight: fontWeights.heading, color: '#fff' },
 
   address: {
     borderWidth: 1,

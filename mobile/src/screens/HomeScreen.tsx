@@ -19,6 +19,8 @@ import { categoryPalette } from '@shared/tokens';
 import { colors, spacing, radius, fontSizes, fontWeights, shadows } from '../theme';
 import { getBrandImage, getCategoryImage, getShopImage } from '../lib/images';
 import { Thumb } from '../components/Thumb';
+import { LocationSheet } from '../components/LocationSheet';
+import { useLocationStore } from '../store/locationStore';
 import { MapPinIcon, SearchIcon, MicIcon, SlidersIcon, ZapIcon, BookmarkIcon, PercentCircleIcon } from '../components/icons';
 
 const { width: SCREEN_W } = Dimensions.get('window');
@@ -44,6 +46,13 @@ export function HomeScreen() {
   const [itemCounts, setItemCounts] = useState<Record<string, number>>({});
   const heroArt = getBrandImage('hero');
   const insets = useSafeAreaInsets();
+  const location = useLocationStore((s) => s.location);
+  const prompted = useLocationStore((s) => s.prompted);
+  const hydrated = useLocationStore((s) => s.hydrated);
+  const [locationOpen, setLocationOpen] = useState(false);
+
+  // First launch: ask before they browse, so every fee they see is their real fee.
+  const showLocation = locationOpen || (hydrated && !location && !prompted);
 
   const scrollRef = useRef<ScrollView>(null);
   const featuredY = useRef(0);
@@ -72,12 +81,18 @@ export function HomeScreen() {
       >
 
         <View style={styles.top}>
-          <TouchableOpacity style={styles.loc} activeOpacity={0.7}>
+          <TouchableOpacity
+            style={styles.loc}
+            activeOpacity={0.7}
+            onPress={() => setLocationOpen(true)}
+          >
             <MapPinIcon size={20} color={colors.brand} />
             <View style={styles.locText}>
-              <Text style={styles.locTitle}>Balehonnuru ▾</Text>
+              <Text style={styles.locTitle}>
+                {location ? `${location.label} ▾` : 'Set your location ▾'}
+              </Text>
               <Text style={styles.locSub} numberOfLines={1}>
-                Main Road, Balehonnuru, Chikkamagaluru
+                {location ? location.address : 'Tap to tell us where to deliver'}
               </Text>
             </View>
           </TouchableOpacity>
@@ -230,6 +245,8 @@ export function HomeScreen() {
 
         <View style={{ height: 78 + insets.bottom }} />
       </ScrollView>
+
+      <LocationSheet visible={showLocation} onClose={() => setLocationOpen(false)} />
     </SafeAreaView>
   );
 }

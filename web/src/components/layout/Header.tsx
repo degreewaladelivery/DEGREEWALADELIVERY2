@@ -17,8 +17,12 @@ const NAV_LINKS = [
 export function Header() {
   const count = useCartStore((s) => selectCount(s.items));
   const location = useLocationStore((s) => s.location);
+  const prompted = useLocationStore((s) => s.prompted);
   const [menuOpen, setMenuOpen] = useState(false);
   const [locationOpen, setLocationOpen] = useState(false);
+
+  // First visit: ask before they browse, so every fee they see is their real fee.
+  const showLocation = locationOpen || (!location && !prompted);
 
   return (
     <header className="site-header">
@@ -105,7 +109,7 @@ export function Header() {
         </div>
       </div>
 
-      {locationOpen && <LocationModal onClose={() => setLocationOpen(false)} />}
+      {showLocation && <LocationModal onClose={() => setLocationOpen(false)} />}
     </header>
   );
 }
