@@ -2,6 +2,7 @@ import { useEffect, useRef, useState, type ComponentType, type Ref } from 'react
 import { View, Text, StyleSheet } from 'react-native';
 import { WebView, type WebViewProps } from 'react-native-webview';
 import { MAPBOX_TOKEN, hasMapbox } from '../lib/mapbox';
+import { BLOCK_ATTRIBUTION_LINKS_JS, allowMapOnly } from '../lib/mapHtml';
 import { colors, spacing, radius, fontSizes } from '../theme';
 
 export interface MapPoint {
@@ -36,6 +37,8 @@ function buildHtml(token: string): string {
     center: [75.4645, 13.3506],
     zoom: 12
   });
+  ${BLOCK_ATTRIBUTION_LINKS_JS}
+
   var COLORS = { pickup: '#6b7280', delivery: '#ff6b00', agent: '#00897b' };
   var markers = {};
   var ready = false;
@@ -117,6 +120,7 @@ export function TrackingMap({
         source={{ html }}
         javaScriptEnabled
         onLoadEnd={() => setLoaded(true)}
+        onShouldStartLoadWithRequest={allowMapOnly}
         style={styles.webview}
       />
     </View>

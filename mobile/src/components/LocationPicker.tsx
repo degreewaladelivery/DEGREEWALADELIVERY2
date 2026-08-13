@@ -2,6 +2,7 @@ import { useRef, useState, type ComponentType, type Ref } from 'react';
 import { View, Text, TouchableOpacity, StyleSheet } from 'react-native';
 import { WebView, type WebViewProps, type WebViewMessageEvent } from 'react-native-webview';
 import { MAPBOX_TOKEN, hasMapbox } from '../lib/mapbox';
+import { BLOCK_ATTRIBUTION_LINKS_JS, allowMapOnly } from '../lib/mapHtml';
 import { colors, spacing, radius, fontSizes, fontWeights } from '../theme';
 
 const DEFAULT_LAT = 13.3506;
@@ -44,15 +45,7 @@ function buildHtml(token: string, lat: number, lng: number, zoomedIn: boolean): 
     .setLngLat([${lng}, ${lat}])
     .addTo(map);
 
-  // Mapbox's logo and attribution are links. Keep them on screen for
-  // attribution, but swallow the click so picking an address never turns into
-  // a trip to mapbox.com. The (i) toggle still expands the credits.
-  document.addEventListener('click', function (e) {
-    var link = e.target && e.target.closest && e.target.closest('.mapboxgl-ctrl a');
-    if (!link) return;
-    e.preventDefault();
-    e.stopPropagation();
-  }, true);
+  ${BLOCK_ATTRIBUTION_LINKS_JS}
 
   function send(payload) {
     window.ReactNativeWebView.postMessage(JSON.stringify(payload));
@@ -90,15 +83,6 @@ function buildHtml(token: string, lat: number, lng: number, zoomedIn: boolean): 
 </script>
 </body>
 </html>`;
-}
-
-/**
- * The picker is a map, not a browser. Only the inline document may load — a tap
- * that navigated the WebView to mapbox.com would strand the customer inside the
- * sheet with no way back.
- */
-function allowMapOnly(request: { url: string }): boolean {
-  return request.url.startsWith('about:') || request.url.startsWith('data:');
 }
 
 export function LocationPicker({ latitude, longitude, onChange }: LocationPickerProps) {
