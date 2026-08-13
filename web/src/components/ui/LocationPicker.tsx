@@ -54,7 +54,20 @@ export function LocationPicker({ latitude, longitude, onChange }: LocationPicker
       onChangeRef.current(e.lngLat.lat, e.lngLat.lng);
     });
 
+    // Mapbox's logo and attribution are links. Keep them on screen for
+    // attribution, but swallow the click so picking an address never turns
+    // into a trip to mapbox.com. The (i) toggle still expands the credits.
+    const container = containerRef.current;
+    const blockLinks = (e: MouseEvent) => {
+      const target = e.target as HTMLElement | null;
+      if (!target?.closest('.mapboxgl-ctrl a')) return;
+      e.preventDefault();
+      e.stopPropagation();
+    };
+    container.addEventListener('click', blockLinks, true);
+
     return () => {
+      container.removeEventListener('click', blockLinks, true);
       map.remove();
       mapRef.current = null;
       markerRef.current = null;

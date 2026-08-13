@@ -44,6 +44,16 @@ function buildHtml(token: string, lat: number, lng: number, zoomedIn: boolean): 
     .setLngLat([${lng}, ${lat}])
     .addTo(map);
 
+  // Mapbox's logo and attribution are links. Keep them on screen for
+  // attribution, but swallow the click so picking an address never turns into
+  // a trip to mapbox.com. The (i) toggle still expands the credits.
+  document.addEventListener('click', function (e) {
+    var link = e.target && e.target.closest && e.target.closest('.mapboxgl-ctrl a');
+    if (!link) return;
+    e.preventDefault();
+    e.stopPropagation();
+  }, true);
+
   function send(payload) {
     window.ReactNativeWebView.postMessage(JSON.stringify(payload));
   }
@@ -80,6 +90,15 @@ function buildHtml(token: string, lat: number, lng: number, zoomedIn: boolean): 
 </script>
 </body>
 </html>`;
+}
+
+/**
+ * The picker is a map, not a browser. Only the inline document may load — a tap
+ * that navigated the WebView to mapbox.com would strand the customer inside the
+ * sheet with no way back.
+ */
+function allowMapOnly(request: { url: string }): boolean {
+  return request.url.startsWith('about:') || request.url.startsWith('data:');
 }
 
 export function LocationPicker({ latitude, longitude, onChange }: LocationPickerProps) {
@@ -148,6 +167,7 @@ export function LocationPicker({ latitude, longitude, onChange }: LocationPicker
           onMessage={onMessage}
           javaScriptEnabled
           geolocationEnabled
+          onShouldStartLoadWithRequest={allowMapOnly}
           style={styles.webview}
         />
       </View>
