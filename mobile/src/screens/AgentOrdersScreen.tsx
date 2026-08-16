@@ -26,6 +26,7 @@ import {
 import { getMessaging, onMessage } from '@react-native-firebase/messaging';
 import { signOutAgent } from '../agent/supabaseAgent';
 import { registerDeviceForPush, unregisterDeviceForPush } from '../agent/devicePush';
+import { startBackgroundTracking, stopBackgroundTracking } from '../agent/backgroundTracking';
 import type { AgentProfile, OrderRow } from '@shared/agentOrders';
 import { formatRupees } from '../lib/format';
 import { colors, spacing, radius, fontSizes, fontWeights, shadows } from '../theme';
@@ -125,8 +126,16 @@ export function AgentOrdersScreen({ agentId, onSignedOut }: { agentId: string; o
 
   // Share location only while actually carrying something — watching GPS with
   // no active delivery would drain a rider's battery for nothing.
+  //
+  // Background tracking is switched on alongside it: an agent taps Navigate and
+  // is in Maps seconds later, and without it the customer's map freezes there.
   useEffect(() => {
-    if (activeCount === 0) return;
+    if (activeCount === 0) {
+      stopBackgroundTracking();
+      return;
+    }
+
+    startBackgroundTracking();
 
     const watchId = Geolocation.watchPosition(
       (position) => {
@@ -143,7 +152,12 @@ export function AgentOrdersScreen({ agentId, onSignedOut }: { agentId: string; o
       { enableHighAccuracy: true, distanceFilter: 25 }
     );
 
-    return () => Geolocation.clearWatch(watchId);
+    return () => {
+      Geolocation.clearWatch(watchId);
+      // Leaving the service running with nothing to deliver would keep a
+      // notification on the agent's phone and keep their GPS awake.
+      stopBackgroundTracking();
+    };
   }, [activeCount]);
 
   const onRefresh = async () => {
@@ -195,13 +209,18 @@ export function AgentOrdersScreen({ agentId, onSignedOut }: { agentId: string; o
           {
             text: 'Sign out',
             style: 'destructive',
-            onPress: () => unregisterDeviceForPush().then(() => signOutAgent()).then(onSignedOut),
+            onPress: () =>
+              stopBackgroundTracking()
+                .then(() => unregisterDeviceForPush())
+                .then(() => signOutAgent())
+                .then(onSignedOut),
           },
         ]
       );
       return;
     }
-    unregisterDeviceForPush()
+    stopBackgroundTracking()
+      .then(() => unregisterDeviceForPush())
       .then(() => signOutAgent())
       .then(onSignedOut);
   };

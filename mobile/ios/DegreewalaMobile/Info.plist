@@ -34,7 +34,18 @@
 		<true/>
 	</dict>
 	<key>NSLocationWhenInUseUsageDescription</key>
-	<string></string>
+	<string>Used to set your delivery address, and to show customers where their delivery agent is.</string>
+	<key>NSLocationAlwaysAndWhenInUseUsageDescription</key>
+	<string>Delivery agents share their location while carrying an order, so the customer can watch it arrive. This continues while the app is in the background, and stops when the delivery is complete.</string>
+	<!--
+	  Without the location background mode, iOS suspends updates the moment an
+	  agent switches to Maps to navigate — the middle of every delivery.
+	-->
+	<key>UIBackgroundModes</key>
+	<array>
+		<string>location</string>
+		<string>remote-notification</string>
+	</array>
 	<key>RCTNewArchEnabled</key>
 	<true/>
 	<key>UILaunchStoryboardName</key>

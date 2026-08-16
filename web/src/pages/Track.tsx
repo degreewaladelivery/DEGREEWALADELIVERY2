@@ -155,11 +155,11 @@ function ActiveOrderCard({ order }: { order: TrackedOrder }) {
       ? { latitude: order.delivery_latitude, longitude: order.delivery_longitude }
       : null;
 
-  // An old position is worse than none: it shows the agent parked somewhere
-  // they left long ago, and the customer believes it.
+  // A stale position still gets drawn, but never dressed up as live — a waiting
+  // customer is better served by "here 12 minutes ago" than by a blank map.
   const locationFresh = isAgentLocationFresh(order.agent_location_at);
   const agent =
-    locationFresh && order.agent_latitude != null && order.agent_longitude != null
+    order.agent_latitude != null && order.agent_longitude != null
       ? { latitude: order.agent_latitude, longitude: order.agent_longitude }
       : null;
 
@@ -195,7 +195,12 @@ function ActiveOrderCard({ order }: { order: TrackedOrder }) {
       <ul className="otrack__legend">
         <li><span className="otrack__key otrack__key--pickup" /> Shop</li>
         <li><span className="otrack__key otrack__key--delivery" /> Your address</li>
-        {agent && <li><span className="otrack__key otrack__key--agent" /> Your agent</li>}
+        {agent && (
+          <li>
+            <span className="otrack__key otrack__key--agent" />{' '}
+            {locationFresh ? 'Your agent' : 'Agent — last known'}
+          </li>
+        )}
       </ul>
 
       {order.agent ? (
@@ -203,9 +208,11 @@ function ActiveOrderCard({ order }: { order: TrackedOrder }) {
           <div>
             <strong>{order.agent.name}</strong>
             <p className="otrack__muted">
-              {agentDistanceKm != null
-                ? `${agentDistanceKm.toFixed(1)} km away · updated ${timeAgo(order.agent_location_at)}`
-                : 'Live location unavailable right now'}
+              {agentDistanceKm == null
+                ? 'Location not shared yet'
+                : locationFresh
+                  ? `${agentDistanceKm.toFixed(1)} km away · updated ${timeAgo(order.agent_location_at)}`
+                  : `Last seen ${agentDistanceKm.toFixed(1)} km away, ${timeAgo(order.agent_location_at)}`}
             </p>
           </div>
           <a href={`tel:${order.agent.phone}`} className="btn btn-light">

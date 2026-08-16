@@ -152,11 +152,11 @@ function ActiveOrderCard({ order }: { order: TrackedOrder }) {
       ? { latitude: order.delivery_latitude, longitude: order.delivery_longitude }
       : null;
 
-  // An old position is worse than none: it shows the agent parked somewhere
-  // they left long ago, and the customer believes it.
+  // A stale position still gets drawn, but never dressed up as live — a waiting
+  // customer is better served by "here 12 minutes ago" than by a blank map.
   const fresh = isAgentLocationFresh(order.agent_location_at);
   const agent =
-    fresh && order.agent_latitude != null && order.agent_longitude != null
+    order.agent_latitude != null && order.agent_longitude != null
       ? { latitude: order.agent_latitude, longitude: order.agent_longitude }
       : null;
 
@@ -199,7 +199,7 @@ function ActiveOrderCard({ order }: { order: TrackedOrder }) {
         {agent && (
           <View style={styles.legendItem}>
             <View style={[styles.legendKey, styles.keyAgent]} />
-            <Text style={styles.legendText}>Your agent</Text>
+            <Text style={styles.legendText}>{fresh ? 'Your agent' : 'Agent — last known'}</Text>
           </View>
         )}
       </View>
@@ -209,9 +209,11 @@ function ActiveOrderCard({ order }: { order: TrackedOrder }) {
           <View style={styles.agentInfo}>
             <Text style={styles.agentName}>{order.agent.name}</Text>
             <Text style={styles.muted}>
-              {agentDistanceKm != null
-                ? `${agentDistanceKm.toFixed(1)} km away · updated ${timeAgo(order.agent_location_at)}`
-                : 'Live location unavailable right now'}
+              {agentDistanceKm == null
+                ? 'Location not shared yet'
+                : fresh
+                  ? `${agentDistanceKm.toFixed(1)} km away · updated ${timeAgo(order.agent_location_at)}`
+                  : `Last seen ${agentDistanceKm.toFixed(1)} km away, ${timeAgo(order.agent_location_at)}`}
             </Text>
           </View>
           <TouchableOpacity
