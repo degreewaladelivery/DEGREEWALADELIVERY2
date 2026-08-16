@@ -15,6 +15,7 @@ import { fetchMyOrders, SignedOutError, type TrackedOrder } from '../lib/trackin
 import { formatRupees } from '../lib/format';
 import { TrackingMap } from '../components/TrackingMap';
 import { haversineDistanceKm } from '@shared/deliveryFare';
+import { isActiveOrder, isAgentLocationFresh, orderStatusLabel } from '@shared/agentOrders';
 import { colors, spacing, radius, fontSizes, fontWeights, shadows } from '../theme';
 
 const STEPS = [
@@ -80,31 +81,11 @@ export function TrackScreen() {
     };
   }, [navigation]);
 
-  const active = orders?.find((o) => o.status !== 'delivered' && o.status !== 'cancelled') ?? null;
-  const past = (orders ?? []).filter((o) => o.id !== active?.id);
-
-  const pickupPoint =
-    active?.pickup_latitude != null && active?.pickup_longitude != null
-      ? { latitude: active.pickup_latitude, longitude: active.pickup_longitude }
-      : null;
-  const deliveryPoint =
-    active?.delivery_latitude != null && active?.delivery_longitude != null
-      ? { latitude: active.delivery_latitude, longitude: active.delivery_longitude }
-      : null;
-  const agentPoint =
-    active?.agent_latitude != null && active?.agent_longitude != null
-      ? { latitude: active.agent_latitude, longitude: active.agent_longitude }
-      : null;
-
-  const agentDistanceKm =
-    agentPoint && deliveryPoint
-      ? haversineDistanceKm(
-          agentPoint.latitude,
-          agentPoint.longitude,
-          deliveryPoint.latitude,
-          deliveryPoint.longitude
-        )
-      : null;
+  // Every in-flight order gets its own card. Showing only the first hid the
+  // others, and they then appeared under "Past Orders" — a live delivery
+  // labelled as finished.
+  const active = (orders ?? []).filter(isActiveOrder);
+  const past = (orders ?? []).filter((o) => !isActiveOrder(o));
 
   return (
     <SafeAreaView style={styles.safe} edges={['top']}>
@@ -126,57 +107,11 @@ export function TrackScreen() {
           <Text style={styles.muted}>You haven't placed any orders yet.</Text>
         )}
 
-        {active && (
-          <View style={styles.card}>
-            <View style={styles.row}>
-              <Text style={styles.pickup}>📦 {active.pickup_label}</Text>
-              <Text style={styles.total}>{formatRupees(active.total)}</Text>
-            </View>
-            <Text style={styles.muted}>#{active.id.slice(0, 8).toUpperCase()}</Text>
+        {active.map((order) => (
+          <ActiveOrderCard key={order.id} order={order} />
+        ))}
 
-            <View style={styles.steps}>
-              {STEPS.map((step, index) => {
-                const done = index <= (STEP_INDEX[active.status] ?? 0);
-                return (
-                  <View key={step.key} style={styles.step}>
-                    <View style={[styles.dot, done && styles.dotDone]} />
-                    <Text style={[styles.stepLabel, done && styles.stepLabelDone]}>
-                      {step.label}
-                    </Text>
-                  </View>
-                );
-              })}
-            </View>
-
-            <TrackingMap pickup={pickupPoint} delivery={deliveryPoint} agent={agentPoint} />
-
-            {active.agent ? (
-              <View style={styles.agentRow}>
-                <View style={styles.agentInfo}>
-                  <Text style={styles.agentName}>{active.agent.name}</Text>
-                  <Text style={styles.muted}>
-                    {agentDistanceKm != null
-                      ? `${agentDistanceKm.toFixed(1)} km away · updated ${timeAgo(active.agent_location_at)}`
-                      : 'Location not shared yet'}
-                  </Text>
-                </View>
-                <TouchableOpacity
-                  style={styles.callBtn}
-                  activeOpacity={0.9}
-                  onPress={() => Linking.openURL(`tel:${active.agent?.phone}`)}
-                >
-                  <Text style={styles.callBtnText}>📞 Call</Text>
-                </TouchableOpacity>
-              </View>
-            ) : (
-              <Text style={styles.muted}>Waiting for a delivery agent to accept your order.</Text>
-            )}
-
-            <Text style={styles.muted}>📍 {active.delivery_address}</Text>
-          </View>
-        )}
-
-        {orders && orders.length > 0 && !active && (
+        {orders && orders.length > 0 && active.length === 0 && (
           <Text style={styles.muted}>No active orders right now.</Text>
         )}
 
@@ -195,7 +130,7 @@ export function TrackScreen() {
                 <View style={styles.pastRight}>
                   <Text style={styles.total}>{formatRupees(order.total)}</Text>
                   <Text style={order.status === 'cancelled' ? styles.tagBad : styles.tag}>
-                    {order.status === 'delivered' ? 'Delivered' : 'Cancelled'}
+                    {orderStatusLabel(order.status)}
                   </Text>
                 </View>
               </View>
@@ -207,7 +142,104 @@ export function TrackScreen() {
   );
 }
 
+function ActiveOrderCard({ order }: { order: TrackedOrder }) {
+  const pickup =
+    order.pickup_latitude != null && order.pickup_longitude != null
+      ? { latitude: order.pickup_latitude, longitude: order.pickup_longitude }
+      : null;
+  const delivery =
+    order.delivery_latitude != null && order.delivery_longitude != null
+      ? { latitude: order.delivery_latitude, longitude: order.delivery_longitude }
+      : null;
+
+  // An old position is worse than none: it shows the agent parked somewhere
+  // they left long ago, and the customer believes it.
+  const fresh = isAgentLocationFresh(order.agent_location_at);
+  const agent =
+    fresh && order.agent_latitude != null && order.agent_longitude != null
+      ? { latitude: order.agent_latitude, longitude: order.agent_longitude }
+      : null;
+
+  const agentDistanceKm =
+    agent && delivery
+      ? haversineDistanceKm(agent.latitude, agent.longitude, delivery.latitude, delivery.longitude)
+      : null;
+
+  return (
+    <View style={styles.card}>
+      <View style={styles.row}>
+        <Text style={styles.pickup}>📦 {order.pickup_label}</Text>
+        <Text style={styles.total}>{formatRupees(order.total)}</Text>
+      </View>
+      <Text style={styles.muted}>#{order.id.slice(0, 8).toUpperCase()}</Text>
+
+      <View style={styles.steps}>
+        {STEPS.map((step, index) => {
+          const done = index <= (STEP_INDEX[order.status] ?? 0);
+          return (
+            <View key={step.key} style={styles.step}>
+              <View style={[styles.dot, done && styles.dotDone]} />
+              <Text style={[styles.stepLabel, done && styles.stepLabelDone]}>{step.label}</Text>
+            </View>
+          );
+        })}
+      </View>
+
+      <TrackingMap pickup={pickup} delivery={delivery} agent={agent} />
+
+      <View style={styles.legend}>
+        <View style={styles.legendItem}>
+          <View style={[styles.legendKey, styles.keyShop]} />
+          <Text style={styles.legendText}>Shop</Text>
+        </View>
+        <View style={styles.legendItem}>
+          <View style={[styles.legendKey, styles.keyHome]} />
+          <Text style={styles.legendText}>Your address</Text>
+        </View>
+        {agent && (
+          <View style={styles.legendItem}>
+            <View style={[styles.legendKey, styles.keyAgent]} />
+            <Text style={styles.legendText}>Your agent</Text>
+          </View>
+        )}
+      </View>
+
+      {order.agent ? (
+        <View style={styles.agentRow}>
+          <View style={styles.agentInfo}>
+            <Text style={styles.agentName}>{order.agent.name}</Text>
+            <Text style={styles.muted}>
+              {agentDistanceKm != null
+                ? `${agentDistanceKm.toFixed(1)} km away · updated ${timeAgo(order.agent_location_at)}`
+                : 'Live location unavailable right now'}
+            </Text>
+          </View>
+          <TouchableOpacity
+            style={styles.callBtn}
+            activeOpacity={0.9}
+            onPress={() => Linking.openURL(`tel:${order.agent?.phone}`)}
+          >
+            <Text style={styles.callBtnText}>📞 Call</Text>
+          </TouchableOpacity>
+        </View>
+      ) : (
+        <Text style={styles.muted}>Waiting for a delivery agent to accept your order.</Text>
+      )}
+
+      <Text style={styles.muted}>📍 {order.delivery_address}</Text>
+    </View>
+  );
+}
+
 const styles = StyleSheet.create({
+  legend: { flexDirection: 'row', flexWrap: 'wrap', gap: spacing.md, marginTop: spacing.sm },
+  legendItem: { flexDirection: 'row', alignItems: 'center', gap: 6 },
+  legendKey: { width: 10, height: 10, borderRadius: 5 },
+  legendText: { fontSize: 11, color: colors.textMuted },
+  keyShop: { backgroundColor: '#6b7280' },
+  keyHome: { backgroundColor: '#ff6b00' },
+  keyAgent: { backgroundColor: '#00897b' },
+
   safe: { flex: 1, backgroundColor: colors.bgSoft },
   content: { paddingHorizontal: spacing.lg, paddingTop: spacing.md, paddingBottom: 90 },
   center: { paddingVertical: spacing.xl, alignItems: 'center' },

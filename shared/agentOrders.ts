@@ -101,12 +101,57 @@ export async function listMyDeliveries(db: Db, agentId: string): Promise<OrderRo
 export async function claimOrder(db: Db, orderId: string, agentId: string): Promise<boolean> {
   const { data, error } = await db
     .from('orders')
-    .update({ claimed_by: agentId, claimed_at: new Date().toISOString(), status: 'claimed' })
+    .update({
+      claimed_by: agentId,
+      claimed_at: new Date().toISOString(),
+      status: 'claimed',
+      // Wipe any position left by a previous agent. Without this, an order that
+      // changes hands shows the new agent's name against the old agent's pin —
+      // the customer watches a stranger's stale location and believes it's
+      // their delivery.
+      agent_latitude: null,
+      agent_longitude: null,
+      agent_location_at: null,
+    })
     .eq('id', orderId)
     .is('claimed_by', null)
     .select('id');
   if (error) throw error;
   return (data?.length ?? 0) > 0;
+}
+
+/**
+ * How long an agent's reported position stays believable.
+ *
+ * Agents report every 15s while carrying an order. Anything older than this
+ * means the app was closed or signal dropped, and drawing that pin would tell
+ * the customer their agent is parked somewhere they left long ago.
+ */
+export const AGENT_LOCATION_FRESH_MS = 10 * 60 * 1000;
+
+export function isAgentLocationFresh(locationAt: string | null | undefined): boolean {
+  if (!locationAt) return false;
+  const age = Date.now() - new Date(locationAt).getTime();
+  return age >= 0 && age < AGENT_LOCATION_FRESH_MS;
+}
+
+/** Orders still in flight — anything the customer is waiting on. */
+export function isActiveOrder(order: { status: string }): boolean {
+  return order.status !== 'delivered' && order.status !== 'cancelled';
+}
+
+const STATUS_LABELS: Record<string, string> = {
+  placed: 'Waiting for an agent',
+  claimed: 'Agent assigned',
+  picked_up: 'On the way',
+  delivered: 'Delivered',
+  cancelled: 'Cancelled',
+};
+
+/** Never guess from a boolean — an unfinished order must not read "Delivered"
+ *  or "Cancelled" just because it isn't the one being tracked. */
+export function orderStatusLabel(status: string): string {
+  return STATUS_LABELS[status] ?? status;
 }
 
 export async function updateAgentLocation(

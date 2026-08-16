@@ -5,6 +5,7 @@ import { fetchMyOrders, SignedOutError, type TrackedOrder } from '../lib/trackin
 import { formatRupees } from '../lib/format';
 import { TrackingMap } from '../components/ui/TrackingMap';
 import { haversineDistanceKm } from '@shared/deliveryFare';
+import { isActiveOrder, isAgentLocationFresh, orderStatusLabel } from '@shared/agentOrders';
 import './Track.css';
 
 const STEPS = [
@@ -71,34 +72,11 @@ export function Track() {
     };
   }, [customer, navigate]);
 
-  const active = orders?.find((o) => o.status !== 'delivered' && o.status !== 'cancelled') ?? null;
-  const past = (orders ?? []).filter((o) => o.id !== active?.id);
-
-  const pickupLat = active?.pickup_latitude ?? null;
-  const pickupLng = active?.pickup_longitude ?? null;
-  const deliveryLat = active?.delivery_latitude ?? null;
-  const deliveryLng = active?.delivery_longitude ?? null;
-  const agentLat = active?.agent_latitude ?? null;
-  const agentLng = active?.agent_longitude ?? null;
-
-  const pickupPoint =
-    pickupLat != null && pickupLng != null ? { latitude: pickupLat, longitude: pickupLng } : null;
-  const deliveryPoint =
-    deliveryLat != null && deliveryLng != null
-      ? { latitude: deliveryLat, longitude: deliveryLng }
-      : null;
-  const agentPoint =
-    agentLat != null && agentLng != null ? { latitude: agentLat, longitude: agentLng } : null;
-
-  const agentDistanceKm =
-    agentPoint && deliveryPoint
-      ? haversineDistanceKm(
-          agentPoint.latitude,
-          agentPoint.longitude,
-          deliveryPoint.latitude,
-          deliveryPoint.longitude
-        )
-      : null;
+  // Every in-flight order gets its own card. Showing only the first one hid the
+  // others, and they then appeared under "Past Orders" — a live delivery
+  // labelled as finished.
+  const active = (orders ?? []).filter(isActiveOrder);
+  const past = (orders ?? []).filter((o) => !isActiveOrder(o));
 
   if (!customer) return null;
 
@@ -134,56 +112,10 @@ export function Track() {
     <div className="container otrack">
       <h1 className="otrack__heading">Track Your Order</h1>
 
-      {active ? (
-        <div className="otrack__card">
-          <div className="otrack__row">
-            <div>
-              <strong className="otrack__pickup">📦 {active.pickup_label}</strong>
-              <p className="otrack__muted">Order #{active.id.slice(0, 8).toUpperCase()}</p>
-            </div>
-            <strong>{formatRupees(active.total)}</strong>
-          </div>
-
-          <ol className="otrack__steps">
-            {STEPS.map((step, index) => {
-              const reached = index <= (STEP_INDEX[active.status] ?? 0);
-              return (
-                <li
-                  key={step.key}
-                  className={'otrack__step' + (reached ? ' is-done' : '')}
-                >
-                  <span className="otrack__dot" />
-                  <span>{step.label}</span>
-                </li>
-              );
-            })}
-          </ol>
-
-          <TrackingMap pickup={pickupPoint} delivery={deliveryPoint} agent={agentPoint} />
-
-          {active.agent ? (
-            <div className="otrack__agent">
-              <div>
-                <strong>{active.agent.name}</strong>
-                <p className="otrack__muted">
-                  {agentDistanceKm != null
-                    ? `${agentDistanceKm.toFixed(1)} km away · updated ${timeAgo(active.agent_location_at)}`
-                    : 'Location not shared yet'}
-                </p>
-              </div>
-              <a href={`tel:${active.agent.phone}`} className="btn btn-light">
-                📞 Call
-              </a>
-            </div>
-          ) : (
-            <p className="otrack__muted">Waiting for a delivery agent to accept your order.</p>
-          )}
-
-          <p className="otrack__muted">📍 Delivering to {active.delivery_address}</p>
-        </div>
-      ) : (
-        <p className="otrack__muted">No active orders right now.</p>
-      )}
+      {active.length === 0 && <p className="otrack__muted">No active orders right now.</p>}
+      {active.map((order) => (
+        <ActiveOrderCard key={order.id} order={order} />
+      ))}
 
       {past.length > 0 && (
         <>
@@ -201,7 +133,7 @@ export function Track() {
                 <div className="otrack__pastright">
                   <strong>{formatRupees(order.total)}</strong>
                   <span className={'otrack__tag' + (order.status === 'cancelled' ? ' is-bad' : '')}>
-                    {order.status === 'delivered' ? 'Delivered' : 'Cancelled'}
+                    {orderStatusLabel(order.status)}
                   </span>
                 </div>
               </div>
@@ -209,6 +141,82 @@ export function Track() {
           </div>
         </>
       )}
+    </div>
+  );
+}
+
+function ActiveOrderCard({ order }: { order: TrackedOrder }) {
+  const pickup =
+    order.pickup_latitude != null && order.pickup_longitude != null
+      ? { latitude: order.pickup_latitude, longitude: order.pickup_longitude }
+      : null;
+  const delivery =
+    order.delivery_latitude != null && order.delivery_longitude != null
+      ? { latitude: order.delivery_latitude, longitude: order.delivery_longitude }
+      : null;
+
+  // An old position is worse than none: it shows the agent parked somewhere
+  // they left long ago, and the customer believes it.
+  const locationFresh = isAgentLocationFresh(order.agent_location_at);
+  const agent =
+    locationFresh && order.agent_latitude != null && order.agent_longitude != null
+      ? { latitude: order.agent_latitude, longitude: order.agent_longitude }
+      : null;
+
+  const agentDistanceKm =
+    agent && delivery
+      ? haversineDistanceKm(agent.latitude, agent.longitude, delivery.latitude, delivery.longitude)
+      : null;
+
+  return (
+    <div className="otrack__card">
+      <div className="otrack__row">
+        <div>
+          <strong className="otrack__pickup">📦 {order.pickup_label}</strong>
+          <p className="otrack__muted">Order #{order.id.slice(0, 8).toUpperCase()}</p>
+        </div>
+        <strong>{formatRupees(order.total)}</strong>
+      </div>
+
+      <ol className="otrack__steps">
+        {STEPS.map((step, index) => {
+          const reached = index <= (STEP_INDEX[order.status] ?? 0);
+          return (
+            <li key={step.key} className={'otrack__step' + (reached ? ' is-done' : '')}>
+              <span className="otrack__dot" />
+              <span>{step.label}</span>
+            </li>
+          );
+        })}
+      </ol>
+
+      <TrackingMap pickup={pickup} delivery={delivery} agent={agent} />
+
+      <ul className="otrack__legend">
+        <li><span className="otrack__key otrack__key--pickup" /> Shop</li>
+        <li><span className="otrack__key otrack__key--delivery" /> Your address</li>
+        {agent && <li><span className="otrack__key otrack__key--agent" /> Your agent</li>}
+      </ul>
+
+      {order.agent ? (
+        <div className="otrack__agent">
+          <div>
+            <strong>{order.agent.name}</strong>
+            <p className="otrack__muted">
+              {agentDistanceKm != null
+                ? `${agentDistanceKm.toFixed(1)} km away · updated ${timeAgo(order.agent_location_at)}`
+                : 'Live location unavailable right now'}
+            </p>
+          </div>
+          <a href={`tel:${order.agent.phone}`} className="btn btn-light">
+            📞 Call
+          </a>
+        </div>
+      ) : (
+        <p className="otrack__muted">Waiting for a delivery agent to accept your order.</p>
+      )}
+
+      <p className="otrack__muted">📍 Delivering to {order.delivery_address}</p>
     </div>
   );
 }
