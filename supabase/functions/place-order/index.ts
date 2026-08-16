@@ -216,6 +216,14 @@ Deno.serve(async (req) => {
     // must never turn a successful order into an error on their screen.
     notifyAgents().catch(() => undefined);
 
+    // Sweep orders abandoned by an agent back into the pool. Also runs on a
+    // cron, but doing it here means it still happens if that schedule was never
+    // created — and a new order is the moment agents are looking anyway.
+    admin.rpc('release_stalled_orders').then(
+      () => undefined,
+      () => undefined
+    );
+
     return json({ ok: true, orderId: order.id, total, deliveryFee: fare.customerFare, distanceKm });
   } catch {
     return json({ ok: false, error: 'Something went wrong' });

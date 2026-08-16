@@ -190,6 +190,13 @@ function ActiveOrderCard({ order }: { order: TrackedOrder }) {
         })}
       </ol>
 
+      {order.stalled_at && (
+        <p className="otrack__stalled">
+          This order hasn't moved in a while and we're looking into it. Please call us if you'd
+          rather cancel or reorder — you won't be charged for a delivery that never arrives.
+        </p>
+      )}
+
       <TrackingMap pickup={pickup} delivery={delivery} agent={agent} />
 
       <ul className="otrack__legend">

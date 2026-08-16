@@ -20,6 +20,9 @@ export interface TrackedOrder {
   agent_latitude: number | null;
   agent_longitude: number | null;
   agent_location_at: string | null;
+  /** Set when an order needs a human — abandoned repeatedly, or picked up and
+   *  never delivered. Non-null means don't present it as normal progress. */
+  stalled_at: string | null;
   distance_km: number | null;
   items: TrackedOrderItem[];
   subtotal: number;

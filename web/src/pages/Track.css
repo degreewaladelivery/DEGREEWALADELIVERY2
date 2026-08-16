@@ -167,3 +167,15 @@
 .otrack__key--pickup { background: #6b7280; }
 .otrack__key--delivery { background: #ff6b00; }
 .otrack__key--agent { background: #00897b; }
+
+/* A stalled order must stop looking like normal progress. */
+.otrack__stalled {
+  margin: 10px 0 0;
+  padding: 12px 14px;
+  border-radius: var(--radius-md, 12px);
+  background: #fff8e6;
+  border: 1px solid #f4d491;
+  font-size: 13px;
+  line-height: 1.55;
+  color: var(--text, #1f2430);
+}

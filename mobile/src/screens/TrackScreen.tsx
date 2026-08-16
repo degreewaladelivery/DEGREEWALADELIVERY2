@@ -185,6 +185,13 @@ function ActiveOrderCard({ order }: { order: TrackedOrder }) {
         })}
       </View>
 
+      {order.stalled_at && (
+        <Text style={styles.stalled}>
+          This order hasn't moved in a while and we're looking into it. Please call us if you'd
+          rather cancel or reorder — you won't be charged for a delivery that never arrives.
+        </Text>
+      )}
+
       <TrackingMap pickup={pickup} delivery={delivery} agent={agent} />
 
       <View style={styles.legend}>
@@ -234,6 +241,17 @@ function ActiveOrderCard({ order }: { order: TrackedOrder }) {
 }
 
 const styles = StyleSheet.create({
+  stalled: {
+    marginTop: spacing.sm,
+    padding: spacing.md,
+    borderRadius: radius.md,
+    backgroundColor: '#FFF8E6',
+    borderWidth: 1,
+    borderColor: '#F4D491',
+    fontSize: fontSizes.xs,
+    lineHeight: 18,
+    color: colors.text,
+  },
   legend: { flexDirection: 'row', flexWrap: 'wrap', gap: spacing.md, marginTop: spacing.sm },
   legendItem: { flexDirection: 'row', alignItems: 'center', gap: 6 },
   legendKey: { width: 10, height: 10, borderRadius: 5 },
