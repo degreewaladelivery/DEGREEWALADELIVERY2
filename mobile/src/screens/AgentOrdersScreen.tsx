@@ -19,6 +19,8 @@ import {
   listOpenOrders,
   markDelivered,
   markPickedUp,
+  subscribeToPool,
+  announceClaim,
   updateAgentLocation,
 } from '../agent/api';
 import { getMessaging, onMessage } from '@react-native-firebase/messaging';
@@ -79,6 +81,16 @@ export function AgentOrdersScreen({ agentId, onSignedOut }: { agentId: string; o
       stop?.();
     };
   }, [agentId]);
+
+  // Real-time pool updates, so a job taken by another agent disappears here
+  // straight away rather than lingering until the next poll.
+  useEffect(() => {
+    return subscribeToPool({
+      onNewOrder: load,
+      onOrderClaimed: (orderId) =>
+        setOpenOrders((current) => current?.filter((o) => o.id !== orderId) ?? current),
+    });
+  }, [load]);
 
   // A push arriving while the app is open shouldn't be a dead notification —
   // refresh so the new order is already on screen when they look.
@@ -144,7 +156,14 @@ export function AgentOrdersScreen({ agentId, onSignedOut }: { agentId: string; o
     setBusyId(order.id);
     try {
       const won = await claimOrder(order.id, agentId);
-      if (!won) setError('Another agent accepted that order first.');
+      if (won) {
+        // Off this screen immediately, and tell the other agents so it vanishes
+        // from theirs too rather than waiting for their next poll.
+        setOpenOrders((current) => current?.filter((o) => o.id !== order.id) ?? current);
+        announceClaim(order.id);
+      } else {
+        setError('Another agent accepted that order first.');
+      }
       await load();
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Could not accept the order');

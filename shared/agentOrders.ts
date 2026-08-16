@@ -64,13 +64,21 @@ export async function getMyProfile(db: Db): Promise<AgentProfile> {
   return data;
 }
 
+/**
+ * The unclaimed pool, newest first — a new order lands at the top where an
+ * agent is looking, instead of below everything already sitting there.
+ *
+ * Claimed orders are excluded here, and the RLS policy on `orders` enforces the
+ * same rule, so one agent can't see another's job even if this filter were
+ * wrong.
+ */
 export async function listOpenOrders(db: Db): Promise<OrderRow[]> {
   const { data, error } = await db
     .from('orders')
     .select('*')
     .is('claimed_by', null)
     .eq('status', 'placed')
-    .order('created_at', { ascending: true });
+    .order('created_at', { ascending: false });
   if (error) throw error;
   return data as OrderRow[];
 }

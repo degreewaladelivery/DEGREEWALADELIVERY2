@@ -1,5 +1,6 @@
 import { supabaseAgent } from './supabaseAgent';
 import * as agentOrders from '@shared/agentOrders';
+import * as agentPool from '@shared/agentPool';
 import type { AgentProfile, OrderRow } from '@shared/agentOrders';
 
 /**
@@ -28,3 +29,9 @@ export const markPickedUp = (orderId: string): Promise<void> =>
 
 export const markDelivered = (orderId: string): Promise<void> =>
   agentOrders.markDelivered(supabaseAgent, orderId);
+
+export const subscribeToPool = (handlers: agentPool.AgentPoolHandlers): (() => void) =>
+  agentPool.subscribeToAgentPool(supabaseAgent, handlers);
+
+export const announceClaim = (orderId: string): Promise<void> =>
+  agentPool.announceClaim(supabaseAgent, orderId);

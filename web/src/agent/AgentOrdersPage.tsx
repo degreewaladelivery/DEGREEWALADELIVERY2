@@ -7,6 +7,8 @@ import {
   listOpenOrders,
   markDelivered,
   markPickedUp,
+  subscribeToPool,
+  announceClaim,
   updateAgentLocation,
 } from './api';
 import type { AgentProfile, OrderRow } from './types';
@@ -167,13 +169,31 @@ export function AgentOrdersPage() {
     }
   };
 
+  // Real-time pool updates, so a job taken by someone else disappears here
+  // straight away rather than lingering until the next poll.
+  useEffect(() => {
+    if (!agentId) return;
+    return subscribeToPool({
+      onNewOrder: load,
+      onOrderClaimed: (orderId) =>
+        setOpenOrders((current) => current?.filter((o) => o.id !== orderId) ?? current),
+    });
+  }, [agentId, load]);
+
   const onClaim = async (order: OrderRow) => {
     if (!agentId) return;
     setBusyId(order.id);
     setError(null);
     try {
       const claimed = await claimOrder(order.id, agentId);
-      if (!claimed) setError('Someone else already claimed that order.');
+      if (claimed) {
+        // Off this screen immediately, and tell the other agents so it vanishes
+        // from theirs too rather than waiting for their next poll.
+        setOpenOrders((current) => current?.filter((o) => o.id !== order.id) ?? current);
+        announceClaim(order.id);
+      } else {
+        setError('Someone else already claimed that order.');
+      }
       load();
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Could not claim order');
