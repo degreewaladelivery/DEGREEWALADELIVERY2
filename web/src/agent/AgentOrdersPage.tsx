@@ -59,8 +59,10 @@ export function AgentOrdersPage() {
   const [myOrders, setMyOrders] = useState<OrderRow[] | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [busyId, setBusyId] = useState<string | null>(null);
-  const [sharing, setSharing] = useState(true);
-  const [locationDenied, setLocationDenied] = useState(false);
+  // Location is a condition of working, not a preference — a customer watching
+  // a stationary pin has no way to know the agent simply switched it off.
+  // 'unknown' until the browser answers.
+  const [geoPermission, setGeoPermission] = useState<'unknown' | 'granted' | 'denied'>('unknown');
 
   const [alertsOn, setAlertsOn] = useState(false);
   const [alertsBlocked, setAlertsBlocked] = useState(false);
@@ -81,11 +83,28 @@ export function AgentOrdersPage() {
     activeIdsRef.current = (myOrders ?? []).map((order) => order.id);
   }, [myOrders]);
 
+  // Ask the moment they sign in, not when they accept a job. Asking at accept
+  // time meant an agent could take a delivery and only then refuse location,
+  // leaving the customer with a job in progress and no tracking.
+  // A browser with no geolocation at all is treated the same as a refusal:
+  // either way the customer gets no tracking.
+  const locationState = canShare ? geoPermission : 'denied';
+
   useEffect(() => {
-    if (!sharing || !canShare || activeCount === 0) return;
+    if (!canShare) return;
+    navigator.geolocation.getCurrentPosition(
+      () => setGeoPermission('granted'),
+      () => setGeoPermission('denied'),
+      { enableHighAccuracy: true, timeout: 20000 }
+    );
+  }, [canShare]);
+
+  useEffect(() => {
+    if (!canShare || activeCount === 0) return;
 
     const watchId = navigator.geolocation.watchPosition(
       (position) => {
+        setGeoPermission('granted');
         const now = Date.now();
         if (now - lastSentRef.current < 15000) return;
         lastSentRef.current = now;
@@ -95,12 +114,12 @@ export function AgentOrdersPage() {
           position.coords.longitude
         ).catch(() => {});
       },
-      () => setLocationDenied(true),
+      () => setGeoPermission('denied'),
       { enableHighAccuracy: true, maximumAge: 10000, timeout: 20000 }
     );
 
     return () => navigator.geolocation.clearWatch(watchId);
-  }, [sharing, canShare, activeCount]);
+  }, [canShare, activeCount]);
 
   const load = useCallback(() => {
     if (!agentId) return;
@@ -236,22 +255,28 @@ export function AgentOrdersPage() {
 
       {error && <p className="admin-login__error">{error}</p>}
 
+      {locationState === 'denied' && (
+        <div className="agent-blocker">
+          <strong>📍 Turn on location to take deliveries</strong>
+          <p>
+            Customers watch your position on a map while they wait, so location has to stay on for
+            the whole delivery. Allow location for this site in your browser settings, then reload
+            this page.
+          </p>
+          <p className="agent-blocker__hint">
+            On a phone, keep this page open while delivering — the browser stops sending your
+            position when you switch away. The DegreeWala app keeps sending in the background.
+          </p>
+        </div>
+      )}
+
       <section className="admin-section">
         <div className="admin-section__head">
           <h2>My Deliveries{myOrders && myOrders.length > 0 ? ` (${myOrders.length})` : ''}</h2>
-          {activeCount > 0 && canShare && (
-            <button className="admin-btn admin-btn--sm" onClick={() => setSharing((on) => !on)}>
-              {sharing ? '📍 Sharing live location' : 'Location sharing off'}
-            </button>
+          {activeCount > 0 && locationState === 'granted' && (
+            <span className="agent-sharing">📍 Sharing live location</span>
           )}
         </div>
-
-        {activeCount > 0 && sharing && locationDenied && (
-          <p className="admin-login__error">
-            Location access is blocked, so customers can't see where you are. Allow location for
-            this site in your browser settings.
-          </p>
-        )}
         {activeCount > 0 && !canShare && (
           <p className="admin-empty">
             This browser can't share location, so customers won't see live tracking.
@@ -316,6 +341,10 @@ export function AgentOrdersPage() {
           </p>
         )}
 
+        {locationState === 'denied' && (
+          <p className="admin-empty">Accepting is disabled until location is on.</p>
+        )}
+
         {openOrders && openOrders.length === 0 && <p className="admin-empty">No unclaimed orders right now.</p>}
         <div className="agent-orders">
           {openOrders?.map((order) => (
@@ -323,7 +352,13 @@ export function AgentOrdersPage() {
               key={order.id}
               order={order}
               busy={busyId === order.id}
-              action={{ label: 'Accept', onClick: () => onClaim(order) }}
+              action={{
+                label: 'Accept',
+                onClick: () => onClaim(order),
+                // A delivery accepted without location is one the customer
+                // cannot follow, so the button is genuinely unavailable.
+                disabled: locationState !== 'granted',
+              }}
             />
           ))}
         </div>
@@ -338,7 +373,7 @@ function OrderCard({
   busy,
 }: {
   order: OrderRow;
-  action: { label: string; onClick: () => void };
+  action: { label: string; onClick: () => void; disabled?: boolean };
   busy: boolean;
 }) {
   return (
@@ -365,7 +400,11 @@ function OrderCard({
         <span>📞 {order.customer_phone}</span>
         <strong>You earn {formatRupees(order.agent_payout)}</strong>
       </div>
-      <button className="admin-btn admin-btn--primary" onClick={action.onClick} disabled={busy}>
+      <button
+        className="admin-btn admin-btn--primary"
+        onClick={action.onClick}
+        disabled={busy || action.disabled}
+      >
         {busy ? '…' : action.label}
       </button>
     </div>

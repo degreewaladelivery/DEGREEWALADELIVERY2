@@ -41,3 +41,38 @@
 .agent-order__items li {
   margin: 2px 0;
 }
+
+/* Location is a condition of taking deliveries, so refusing it has to look
+   like a wall, not a hint. */
+.agent-blocker {
+  background: #fdecea;
+  border: 1px solid #f5c6c2;
+  border-radius: var(--radius-md, 12px);
+  padding: 14px 16px;
+  margin-bottom: 16px;
+}
+
+.agent-blocker strong {
+  display: block;
+  font-size: 15px;
+  color: #b3261e;
+  margin-bottom: 4px;
+}
+
+.agent-blocker p {
+  margin: 0;
+  font-size: 13px;
+  line-height: 1.5;
+  color: var(--text, #1f2430);
+}
+
+.agent-blocker__hint {
+  margin-top: 8px !important;
+  color: var(--text-muted, #6b7280) !important;
+}
+
+.agent-sharing {
+  font-size: 12px;
+  font-weight: 600;
+  color: #2e9e5b;
+}

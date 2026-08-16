@@ -58,6 +58,29 @@ async function ensureAndroidNotificationPermission(): Promise<void> {
   }
 }
 
+/**
+ * Ask for location up front, when the agent signs in.
+ *
+ * Asking only once they accept a job meant an agent could take a delivery and
+ * then refuse, leaving a customer with an order in progress and no tracking.
+ * Returns whether we may actually locate them.
+ */
+export async function requestLocationPermission(): Promise<boolean> {
+  if (Platform.OS === 'android') {
+    const granted = await PermissionsAndroid.request(
+      PermissionsAndroid.PERMISSIONS.ACCESS_FINE_LOCATION
+    );
+    return granted === PermissionsAndroid.RESULTS.GRANTED;
+  }
+
+  return new Promise<boolean>((resolve) => {
+    Geolocation.requestAuthorization(
+      () => resolve(true),
+      () => resolve(false)
+    );
+  });
+}
+
 /** Begin background-capable tracking. Call when an agent has an active delivery. */
 export async function startBackgroundTracking(): Promise<void> {
   try {

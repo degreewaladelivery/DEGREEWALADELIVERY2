@@ -26,7 +26,11 @@ import {
 import { getMessaging, onMessage } from '@react-native-firebase/messaging';
 import { signOutAgent } from '../agent/supabaseAgent';
 import { registerDeviceForPush, unregisterDeviceForPush } from '../agent/devicePush';
-import { startBackgroundTracking, stopBackgroundTracking } from '../agent/backgroundTracking';
+import {
+  requestLocationPermission,
+  startBackgroundTracking,
+  stopBackgroundTracking,
+} from '../agent/backgroundTracking';
 import type { AgentProfile, OrderRow } from '@shared/agentOrders';
 import { formatRupees } from '../lib/format';
 import { colors, spacing, radius, fontSizes, fontWeights, shadows } from '../theme';
@@ -44,6 +48,9 @@ export function AgentOrdersScreen({ agentId, onSignedOut }: { agentId: string; o
   const [error, setError] = useState<string | null>(null);
   const [busyId, setBusyId] = useState<string | null>(null);
   const [refreshing, setRefreshing] = useState(false);
+  // Location is a condition of working, not a preference — a customer watching a
+  // stationary pin can't tell the agent simply switched it off.
+  const [locationGranted, setLocationGranted] = useState<boolean | null>(null);
 
   const activeIdsRef = useRef<string[]>([]);
   const lastSentRef = useRef(0);
@@ -63,6 +70,11 @@ export function AgentOrdersScreen({ agentId, onSignedOut }: { agentId: string; o
     getMyProfile()
       .then(setProfile)
       .catch(() => undefined);
+  }, []);
+
+  // Ask the moment they're signed in, not when they accept a job.
+  useEffect(() => {
+    requestLocationPermission().then(setLocationGranted);
   }, []);
 
   // Register this phone for push once they're signed in — asking for
@@ -167,6 +179,15 @@ export function AgentOrdersScreen({ agentId, onSignedOut }: { agentId: string; o
   };
 
   const onClaim = async (order: OrderRow) => {
+    if (!locationGranted) {
+      // Re-ask rather than only scolding — they may have tapped Deny by reflex.
+      const granted = await requestLocationPermission();
+      setLocationGranted(granted);
+      if (!granted) {
+        setError('Turn on location to accept deliveries — customers track you on a map.');
+        return;
+      }
+    }
     setBusyId(order.id);
     try {
       const won = await claimOrder(order.id, agentId);
@@ -246,6 +267,23 @@ export function AgentOrdersScreen({ agentId, onSignedOut }: { agentId: string; o
 
         {error && <Text style={styles.error}>{error}</Text>}
 
+        {locationGranted === false && (
+          <View style={styles.blocker}>
+            <Text style={styles.blockerTitle}>📍 Turn on location to take deliveries</Text>
+            <Text style={styles.blockerText}>
+              Customers watch your position on a map while they wait, so location has to stay on
+              for the whole delivery.
+            </Text>
+            <TouchableOpacity
+              style={styles.blockerBtn}
+              activeOpacity={0.9}
+              onPress={() => requestLocationPermission().then(setLocationGranted)}
+            >
+              <Text style={styles.blockerBtnText}>Turn on location</Text>
+            </TouchableOpacity>
+          </View>
+        )}
+
         <Text style={styles.section}>
           My Deliveries{activeCount > 0 ? ` (${activeCount})` : ''}
         </Text>
@@ -276,6 +314,7 @@ export function AgentOrdersScreen({ agentId, onSignedOut }: { agentId: string; o
             busy={busyId === order.id}
             actionLabel="Accept"
             onAction={() => onClaim(order)}
+            disabled={locationGranted === false}
           />
         ))}
       </ScrollView>
@@ -289,12 +328,14 @@ function OrderCard({
   onAction,
   busy,
   showContact,
+  disabled,
 }: {
   order: OrderRow;
   actionLabel: string;
   onAction: () => void;
   busy: boolean;
   showContact?: boolean;
+  disabled?: boolean;
 }) {
   const openMaps = () => {
     if (order.delivery_latitude == null || order.delivery_longitude == null) return;
@@ -338,9 +379,9 @@ function OrderCard({
           </>
         )}
         <TouchableOpacity
-          style={[styles.primaryBtn, busy && styles.btnDisabled]}
+          style={[styles.primaryBtn, (busy || disabled) && styles.btnDisabled]}
           onPress={onAction}
-          disabled={busy}
+          disabled={busy || disabled}
           activeOpacity={0.9}
         >
           <Text style={styles.primaryText}>{busy ? 'Working…' : actionLabel}</Text>
@@ -368,6 +409,30 @@ const styles = StyleSheet.create({
     marginBottom: spacing.sm,
   },
   empty: { fontSize: fontSizes.sm, color: colors.textMuted },
+
+  blocker: {
+    backgroundColor: colors.dangerTint,
+    borderWidth: 1,
+    borderColor: '#F5C6C2',
+    borderRadius: radius.md,
+    padding: spacing.md,
+    marginTop: spacing.md,
+  },
+  blockerTitle: { fontSize: fontSizes.md, fontWeight: fontWeights.bold, color: colors.danger },
+  blockerText: {
+    fontSize: fontSizes.xs,
+    color: colors.text,
+    marginTop: 4,
+    lineHeight: 18,
+  },
+  blockerBtn: {
+    marginTop: spacing.sm,
+    backgroundColor: colors.brand,
+    borderRadius: radius.md,
+    paddingVertical: spacing.sm,
+    alignItems: 'center',
+  },
+  blockerBtnText: { color: '#fff', fontWeight: fontWeights.bold, fontSize: fontSizes.sm },
 
   error: {
     marginTop: spacing.md,
