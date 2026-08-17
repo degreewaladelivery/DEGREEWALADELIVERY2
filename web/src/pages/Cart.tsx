@@ -4,6 +4,7 @@ import { useCartStore, selectCount, selectSubtotal } from '../store/cartStore';
 import { useLocationStore } from '../store/locationStore';
 import { useDeliveryFare } from '../lib/useDeliveryFare';
 import { formatRupees } from '../lib/format';
+import { Thumb } from '../components/ui/Thumb';
 import { getCustomer } from '../lib/auth';
 import { LocationModal } from '../components/ui/LocationModal';
 import { MAX_DELIVERY_RADIUS_KM } from '@shared/deliveryFare';
@@ -57,6 +58,9 @@ export function Cart() {
         <div className="cart__lines">
           {lines.map((line) => (
             <div key={line.product.id} className="cart-line">
+              <div className="cart-line__thumb">
+                <Thumb src={line.product.imageUrl} emoji="🛒" tint="#F4F6F9" alt={line.product.name} />
+              </div>
               <div className="cart-line__info">
                 <h4>{line.product.name}</h4>
                 <span>{formatRupees(line.product.price)}</span>

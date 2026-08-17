@@ -147,8 +147,8 @@ Deno.serve(async (req) => {
 
     const ids = [...quantities.keys()];
     const [fromCategories, fromShops] = await Promise.all([
-      admin.from('products_catalog').select('id, name, unit, retail_price').in('id', ids),
-      admin.from('shop_products_catalog').select('id, name, unit, retail_price').in('id', ids),
+      admin.from('products_catalog').select('id, name, unit, retail_price, image_url').in('id', ids),
+      admin.from('shop_products_catalog').select('id, name, unit, retail_price, image_url').in('id', ids),
     ]);
 
     const available = [...(fromCategories.data ?? []), ...(fromShops.data ?? [])];
@@ -162,6 +162,10 @@ Deno.serve(async (req) => {
       price: Number(product.retail_price),
       quantity: quantities.get(product.id) ?? 1,
       unit: product.unit ?? null,
+      // Snapshot the picture alongside the name and price. An order is a record
+      // of what was bought; if the catalogue photo changes later, the receipt
+      // should still show what the customer actually chose.
+      image_url: product.image_url ?? null,
     }));
 
     const subtotal = items.reduce((sum, item) => sum + item.price * item.quantity, 0);

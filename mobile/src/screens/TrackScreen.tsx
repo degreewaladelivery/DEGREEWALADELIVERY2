@@ -13,6 +13,7 @@ import { useNavigation } from '@react-navigation/native';
 import { getCustomer, logoutCustomer } from '../lib/auth';
 import { fetchMyOrders, SignedOutError, type TrackedOrder } from '../lib/tracking';
 import { formatRupees } from '../lib/format';
+import { Thumb } from '../components/Thumb';
 import { TrackingMap } from '../components/TrackingMap';
 import { haversineDistanceKm } from '@shared/deliveryFare';
 import { isActiveOrder, isAgentLocationFresh, orderStatusLabel } from '@shared/agentOrders';
@@ -119,29 +120,80 @@ export function TrackScreen() {
           <>
             <Text style={styles.subheading}>Past Orders</Text>
             {past.map((order) => (
-              <View key={order.id} style={styles.past}>
-                <View style={styles.agentInfo}>
-                  <Text style={styles.agentName}>{order.pickup_label}</Text>
-                  <Text style={styles.muted}>
-                    {new Date(order.created_at).toLocaleDateString('en-IN')} · {order.items.length}{' '}
-                    item{order.items.length === 1 ? '' : 's'}
-                  </Text>
-                </View>
-                <View style={styles.pastRight}>
-                  <Text style={styles.total}>{formatRupees(order.total)}</Text>
-                  <Text style={order.status === 'cancelled' ? styles.tagBad : styles.tag}>
-                    {orderStatusLabel(order.status)}
-                  </Text>
-                  {order.cancel_reason ? (
-                    <Text style={styles.reason}>{order.cancel_reason}</Text>
-                  ) : null}
-                </View>
-              </View>
+              <PastOrderRow key={order.id} order={order} />
             ))}
           </>
         )}
       </ScrollView>
     </SafeAreaView>
+  );
+}
+
+/**
+ * A past order opens to show what was actually in it. "3 items" tells a
+ * customer nothing about what they bought, which is the first thing anyone
+ * wants from order history.
+ */
+function PastOrderRow({ order }: { order: TrackedOrder }) {
+  const [open, setOpen] = useState(false);
+
+  return (
+    <View style={styles.past}>
+      <TouchableOpacity
+        style={styles.pastHead}
+        activeOpacity={0.7}
+        onPress={() => setOpen((o) => !o)}
+      >
+        <View style={styles.agentInfo}>
+          <Text style={styles.agentName}>{order.pickup_label}</Text>
+          <Text style={styles.muted}>
+            {new Date(order.created_at).toLocaleDateString('en-IN')} · {order.items.length}{' '}
+            item{order.items.length === 1 ? '' : 's'}
+          </Text>
+        </View>
+        <View style={styles.pastRight}>
+          <Text style={styles.total}>{formatRupees(order.total)}</Text>
+          <Text style={order.status === 'cancelled' ? styles.tagBad : styles.tag}>
+            {orderStatusLabel(order.status)}
+          </Text>
+          {order.cancel_reason ? <Text style={styles.reason}>{order.cancel_reason}</Text> : null}
+        </View>
+        <Text style={styles.chev}>{open ? '\u2303' : '\u2304'}</Text>
+      </TouchableOpacity>
+
+      {open && (
+        <View style={styles.detail}>
+          {order.items.map((item) => (
+            <View key={item.id} style={styles.detailItem}>
+              <Thumb src={item.image_url ?? undefined} emoji="\ud83d\uded2" style={styles.detailThumb} fontSize={18} />
+              <Text style={styles.detailName} numberOfLines={2}>
+                {item.name}{item.unit ? ` (${item.unit})` : ''}
+              </Text>
+              <Text style={styles.detailQty}>x{item.quantity}</Text>
+              <Text style={styles.detailPrice}>{formatRupees(item.price * item.quantity)}</Text>
+            </View>
+          ))}
+
+          <View style={styles.detailBill}>
+            <BillRow label="Items" value={formatRupees(order.subtotal)} />
+            <BillRow label="Delivery" value={formatRupees(order.delivery_fee)} />
+            <BillRow label="Taxes" value={formatRupees(order.taxes)} />
+            <BillRow label="Total" value={formatRupees(order.total)} bold />
+          </View>
+
+          <Text style={styles.muted}>\ud83d\udccd {order.delivery_address}</Text>
+        </View>
+      )}
+    </View>
+  );
+}
+
+function BillRow({ label, value, bold }: { label: string; value: string; bold?: boolean }) {
+  return (
+    <View style={styles.billRow}>
+      <Text style={[styles.billLabel, bold && styles.billBold]}>{label}</Text>
+      <Text style={[styles.billLabel, bold && styles.billBold]}>{value}</Text>
+    </View>
   );
 }
 
@@ -244,6 +296,18 @@ function ActiveOrderCard({ order }: { order: TrackedOrder }) {
 }
 
 const styles = StyleSheet.create({
+  pastHead: { flexDirection: 'row', alignItems: 'center' },
+  chev: { marginLeft: spacing.sm, color: colors.textMuted, fontSize: 16 },
+  detail: { marginTop: spacing.sm, borderTopWidth: 1, borderTopColor: colors.border, paddingTop: spacing.sm },
+  detailItem: { flexDirection: 'row', alignItems: 'center', gap: spacing.sm, paddingVertical: 6 },
+  detailThumb: { width: 40, height: 40, borderRadius: radius.sm },
+  detailName: { flex: 1, fontSize: fontSizes.sm, color: colors.text },
+  detailQty: { fontSize: fontSizes.xs, color: colors.textMuted },
+  detailPrice: { fontSize: fontSizes.sm, fontWeight: fontWeights.bold, color: colors.text, minWidth: 60, textAlign: 'right' },
+  detailBill: { marginTop: spacing.sm, paddingTop: spacing.sm, borderTopWidth: 1, borderTopColor: colors.borderStrong },
+  billRow: { flexDirection: 'row', justifyContent: 'space-between', paddingVertical: 2 },
+  billLabel: { fontSize: fontSizes.xs, color: colors.textMuted },
+  billBold: { fontSize: fontSizes.sm, fontWeight: fontWeights.heading, color: colors.text },
   reason: { fontSize: 10, color: colors.textMuted, textAlign: 'right', maxWidth: 150 },
   stalled: {
     marginTop: spacing.sm,

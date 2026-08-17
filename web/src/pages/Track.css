@@ -188,3 +188,80 @@
   text-align: right;
   max-width: 180px;
 }
+
+/* Past orders open to show what was actually bought. */
+.otrack__past-wrap {
+  border-radius: var(--radius-md, 12px);
+  overflow: hidden;
+  background: #fff;
+}
+
+.otrack__past--button {
+  width: 100%;
+  font: inherit;
+  text-align: left;
+  background: none;
+  border: 0;
+  cursor: pointer;
+  align-items: center;
+}
+
+.otrack__chev {
+  margin-left: 10px;
+  color: var(--text-muted, #6b7280);
+  font-size: 16px;
+}
+
+.otrack__detail {
+  padding: 4px 14px 14px;
+  border-top: 1px solid var(--border, #eceef2);
+}
+
+.otrack__detail-item {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 8px 0;
+}
+
+.otrack__detail-thumb {
+  width: 40px;
+  height: 40px;
+  flex-shrink: 0;
+  border-radius: 8px;
+  overflow: hidden;
+  background: var(--surface, #f4f6f9);
+}
+
+.otrack__detail-thumb img,
+.otrack__detail-thumb .thumb-img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.otrack__detail-name { flex: 1; font-size: 14px; }
+.otrack__detail-name small { color: var(--text-muted, #6b7280); }
+.otrack__detail-qty { color: var(--text-muted, #6b7280); font-size: 13px; }
+.otrack__detail-price { font-weight: 600; font-size: 14px; min-width: 64px; text-align: right; }
+
+.otrack__detail-bill {
+  margin-top: 10px;
+  padding-top: 10px;
+  border-top: 1px dashed var(--border-strong, #dfe3ea);
+  font-size: 13px;
+}
+
+.otrack__detail-bill div {
+  display: flex;
+  justify-content: space-between;
+  padding: 3px 0;
+  color: var(--text-muted, #6b7280);
+}
+
+.otrack__detail-bill .is-total {
+  color: var(--text, #1f2430);
+  font-weight: 700;
+  font-size: 15px;
+  padding-top: 6px;
+}

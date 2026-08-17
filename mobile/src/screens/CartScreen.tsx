@@ -7,6 +7,7 @@ import { useCartStore, selectCount, selectSubtotal } from '../store/cartStore';
 import { useLocationStore } from '../store/locationStore';
 import { useDeliveryFare } from '../lib/useDeliveryFare';
 import { formatRupees } from '../lib/format';
+import { Thumb } from '../components/Thumb';
 import { getCustomer } from '../lib/auth';
 import { LocationSheet } from '../components/LocationSheet';
 import { MAX_DELIVERY_RADIUS_KM } from '@shared/deliveryFare';
@@ -62,6 +63,7 @@ export function CartScreen() {
 
         {lines.map((line) => (
           <View key={line.product.id} style={styles.line}>
+            <Thumb src={line.product.imageUrl} emoji="🛒" style={styles.lineThumb} fontSize={20} />
             <View style={styles.lineInfo}>
               <Text style={styles.lineName}>{line.product.name}</Text>
               <Text style={styles.linePrice}>{formatRupees(line.product.price)}</Text>
@@ -170,6 +172,7 @@ const styles = StyleSheet.create({
   emptySub: { fontSize: fontSizes.sm, color: colors.textMuted, textAlign: 'center' },
 
   line: { flexDirection: 'row', alignItems: 'center', gap: spacing.md, paddingVertical: spacing.md, borderBottomWidth: 1, borderBottomColor: colors.border },
+  lineThumb: { width: 46, height: 46, borderRadius: radius.md },
   lineInfo: { flex: 1 },
   lineName: { fontSize: fontSizes.md, fontWeight: fontWeights.bold, color: colors.text },
   linePrice: { fontSize: fontSizes.sm, color: colors.textMuted, marginTop: 2 },

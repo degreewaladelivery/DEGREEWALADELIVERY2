@@ -21,6 +21,7 @@ import {
 } from './newOrderAlert';
 import { hasPushSubscription, pushSupported, subscribeToPush } from './pushSubscribe';
 import { formatRupees } from '../lib/format';
+import { Thumb } from '../components/ui/Thumb';
 import './agent.css';
 
 /** How often to re-check the pool. Short enough that a waiting customer isn't
@@ -391,8 +392,15 @@ function OrderCard({
       <ul className="agent-order__items">
         {order.items.map((item) => (
           <li key={item.id}>
-            {item.quantity} × {item.name}
-            {item.unit ? ` (${item.unit})` : ''}
+            {/* A picture is how an agent finds the right packet on a crowded
+                shelf — the name alone is slower and easier to get wrong. */}
+            <span className="agent-order__thumb">
+              <Thumb src={item.image_url ?? undefined} emoji="🛒" tint="#F4F6F9" alt={item.name} />
+            </span>
+            <span>
+              {item.quantity} × {item.name}
+              {item.unit ? ` (${item.unit})` : ''}
+            </span>
           </li>
         ))}
       </ul>

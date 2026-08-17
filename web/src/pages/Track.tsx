@@ -3,6 +3,7 @@ import { Link, useNavigate } from 'react-router-dom';
 import { getCustomer, logoutCustomer } from '../lib/auth';
 import { fetchMyOrders, SignedOutError, type TrackedOrder } from '../lib/tracking';
 import { formatRupees } from '../lib/format';
+import { Thumb } from '../components/ui/Thumb';
 import { TrackingMap } from '../components/ui/TrackingMap';
 import { haversineDistanceKm } from '@shared/deliveryFare';
 import { isActiveOrder, isAgentLocationFresh, orderStatusLabel } from '@shared/agentOrders';
@@ -122,24 +123,7 @@ export function Track() {
           <h2 className="otrack__subheading">Past Orders</h2>
           <div className="otrack__list">
             {past.map((order) => (
-              <div key={order.id} className="otrack__past">
-                <div>
-                  <strong>{order.pickup_label}</strong>
-                  <p className="otrack__muted">
-                    {new Date(order.created_at).toLocaleDateString('en-IN')} ·{' '}
-                    {order.items.length} item{order.items.length === 1 ? '' : 's'}
-                  </p>
-                </div>
-                <div className="otrack__pastright">
-                  <strong>{formatRupees(order.total)}</strong>
-                  <span className={'otrack__tag' + (order.status === 'cancelled' ? ' is-bad' : '')}>
-                    {orderStatusLabel(order.status)}
-                  </span>
-                  {order.cancel_reason && (
-                    <span className="otrack__reason">{order.cancel_reason}</span>
-                  )}
-                </div>
-              </div>
+              <PastOrderRow key={order.id} order={order} />
             ))}
           </div>
         </>
@@ -234,6 +218,70 @@ function ActiveOrderCard({ order }: { order: TrackedOrder }) {
       )}
 
       <p className="otrack__muted">📍 Delivering to {order.delivery_address}</p>
+    </div>
+  );
+}
+
+/**
+ * A past order opens to show what was actually in it.
+ *
+ * The summary row alone ("3 items") tells a customer nothing about what they
+ * bought — the first thing anyone wants from order history.
+ */
+function PastOrderRow({ order }: { order: TrackedOrder }) {
+  const [open, setOpen] = useState(false);
+
+  return (
+    <div className={'otrack__past-wrap' + (open ? ' is-open' : '')}>
+      <button
+        type="button"
+        className="otrack__past otrack__past--button"
+        onClick={() => setOpen((o) => !o)}
+        aria-expanded={open}
+      >
+        <div>
+          <strong>{order.pickup_label}</strong>
+          <p className="otrack__muted">
+            {new Date(order.created_at).toLocaleDateString('en-IN')} · {order.items.length} item
+            {order.items.length === 1 ? '' : 's'}
+          </p>
+        </div>
+        <div className="otrack__pastright">
+          <strong>{formatRupees(order.total)}</strong>
+          <span className={'otrack__tag' + (order.status === 'cancelled' ? ' is-bad' : '')}>
+            {orderStatusLabel(order.status)}
+          </span>
+          {order.cancel_reason && <span className="otrack__reason">{order.cancel_reason}</span>}
+        </div>
+        <span className="otrack__chev" aria-hidden="true">{open ? '\u2303' : '\u2304'}</span>
+      </button>
+
+      {open && (
+        <div className="otrack__detail">
+          {order.items.map((item) => (
+            <div key={item.id} className="otrack__detail-item">
+              <span className="otrack__detail-thumb">
+                <Thumb src={item.image_url ?? undefined} emoji="\ud83d\uded2" tint="#F4F6F9" alt={item.name} />
+              </span>
+              <span className="otrack__detail-name">
+                {item.name}
+                {item.unit ? <small> ({item.unit})</small> : null}
+              </span>
+              <span className="otrack__detail-qty">x{item.quantity}</span>
+              <span className="otrack__detail-price">{formatRupees(item.price * item.quantity)}</span>
+            </div>
+          ))}
+
+          <div className="otrack__detail-bill">
+            <div><span>Items</span><span>{formatRupees(order.subtotal)}</span></div>
+            <div><span>Delivery</span><span>{formatRupees(order.delivery_fee)}</span></div>
+            <div><span>Taxes</span><span>{formatRupees(order.taxes)}</span></div>
+            <div className="is-total"><span>Total</span><span>{formatRupees(order.total)}</span></div>
+          </div>
+
+          <p className="otrack__muted">\ud83d\udccd {order.delivery_address}</p>
+        </div>
+      )}
     </div>
   );
 }

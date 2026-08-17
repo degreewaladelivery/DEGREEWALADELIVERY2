@@ -6,6 +6,8 @@ export interface TrackedOrderItem {
   price: number;
   quantity: number;
   unit: string | null;
+  /** Snapshotted at order time; null on orders placed before we captured it. */
+  image_url?: string | null;
 }
 
 export interface TrackedOrder {

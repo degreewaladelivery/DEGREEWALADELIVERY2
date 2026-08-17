@@ -33,6 +33,7 @@ import {
 } from '../agent/backgroundTracking';
 import type { AgentProfile, OrderRow } from '@shared/agentOrders';
 import { formatRupees } from '../lib/format';
+import { Thumb } from '../components/Thumb';
 import { colors, spacing, radius, fontSizes, fontWeights, shadows } from '../theme';
 
 /** How often to re-check the pool while the app is open. */
@@ -363,6 +364,19 @@ function OrderCard({
         </Text>
       )}
 
+      {/* A picture is how an agent finds the right packet on a crowded shelf. */}
+      <View style={styles.items}>
+        {order.items.map((item) => (
+          <View key={item.id} style={styles.itemRow}>
+            <Thumb src={item.image_url ?? undefined} emoji="🛒" style={styles.itemThumb} fontSize={16} />
+            <Text style={styles.itemText} numberOfLines={1}>
+              {item.quantity} × {item.name}
+              {item.unit ? ` (${item.unit})` : ''}
+            </Text>
+          </View>
+        ))}
+      </View>
+
       <View style={styles.actions}>
         {showContact && (
           <>
@@ -463,6 +477,10 @@ const styles = StyleSheet.create({
   },
   meta: { fontSize: fontSizes.xs, color: colors.textMuted, marginTop: 4 },
 
+  items: { marginTop: spacing.sm, gap: 6 },
+  itemRow: { flexDirection: 'row', alignItems: 'center', gap: spacing.sm },
+  itemThumb: { width: 32, height: 32, borderRadius: radius.sm },
+  itemText: { flex: 1, fontSize: fontSizes.xs, color: colors.textMuted },
   actions: { flexDirection: 'row', gap: spacing.sm, marginTop: spacing.md },
   ghostBtn: {
     borderWidth: 1.5,

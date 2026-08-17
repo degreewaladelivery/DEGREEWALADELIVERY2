@@ -15,6 +15,8 @@ export interface OrderItem {
   price: number;
   quantity: number;
   unit: string | null;
+  /** Snapshotted at order time. Null on orders placed before we captured it. */
+  image_url?: string | null;
 }
 
 export type OrderStatus = 'placed' | 'claimed' | 'picked_up' | 'delivered' | 'cancelled';
