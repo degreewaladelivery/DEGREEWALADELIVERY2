@@ -23,6 +23,7 @@ import { ShopsPage } from './admin/ShopsPage';
 import { ShopDetailPage } from './admin/ShopDetailPage';
 import { SettingsPage } from './admin/SettingsPage';
 import { AgentsPage } from './admin/AgentsPage';
+import { AttentionPage } from './admin/AttentionPage';
 import { AgentAuthProvider } from './agent/AgentAuthContext';
 import { AgentLogin } from './agent/AgentLogin';
 import { AgentLayout } from './agent/AgentLayout';
@@ -72,6 +73,7 @@ const router = createBrowserRouter([
           { path: 'shops/:shopId', element: <ShopDetailPage /> },
           { path: 'settings', element: <SettingsPage /> },
           { path: 'agents', element: <AgentsPage /> },
+          { path: 'attention', element: <AttentionPage /> },
         ],
       },
     ],

@@ -132,6 +132,9 @@ export function TrackScreen() {
                   <Text style={order.status === 'cancelled' ? styles.tagBad : styles.tag}>
                     {orderStatusLabel(order.status)}
                   </Text>
+                  {order.cancel_reason ? (
+                    <Text style={styles.reason}>{order.cancel_reason}</Text>
+                  ) : null}
                 </View>
               </View>
             ))}
@@ -241,6 +244,7 @@ function ActiveOrderCard({ order }: { order: TrackedOrder }) {
 }
 
 const styles = StyleSheet.create({
+  reason: { fontSize: 10, color: colors.textMuted, textAlign: 'right', maxWidth: 150 },
   stalled: {
     marginTop: spacing.sm,
     padding: spacing.md,

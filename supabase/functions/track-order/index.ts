@@ -25,6 +25,7 @@ const ORDER_FIELDS = [
   'payment_method',
   'claimed_by',
   'stalled_at',
+  'cancel_reason',
   'created_at',
   'claimed_at',
   'picked_up_at',

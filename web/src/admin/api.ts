@@ -518,3 +518,94 @@ export async function uploadCatalogImage(
   const { data } = supabase.storage.from('catalog-images').getPublicUrl(path);
   return data.publicUrl;
 }
+
+// ---------------------------------------------------------------------------
+// Orders needing a person
+// ---------------------------------------------------------------------------
+
+export interface AttentionOrder {
+  id: string;
+  status: string;
+  customer_phone: string;
+  pickup_label: string;
+  delivery_address: string;
+  total: number;
+  release_count: number;
+  stalled_at: string | null;
+  claimed_at: string | null;
+  picked_up_at: string | null;
+  created_at: string;
+  agent: { name: string; phone: string } | null;
+}
+
+/**
+ * Orders the system couldn't finish on its own — picked up and never delivered,
+ * or bounced between agents. Admins bypass agent RLS, so this sees everything.
+ */
+export async function listOrdersNeedingAttention(): Promise<AttentionOrder[]> {
+  const { data, error } = await supabase
+    .from('orders')
+    .select(
+      'id, status, customer_phone, pickup_label, delivery_address, total, release_count, stalled_at, claimed_at, picked_up_at, created_at, claimed_by'
+    )
+    .not('stalled_at', 'is', null)
+    .neq('status', 'delivered')
+    .neq('status', 'cancelled')
+    .order('stalled_at', { ascending: true });
+  if (error) throw error;
+
+  const rows = (data ?? []) as (Omit<AttentionOrder, 'agent'> & { claimed_by: string | null })[];
+  const agentIds = [...new Set(rows.map((r) => r.claimed_by).filter(Boolean))] as string[];
+
+  const names = new Map<string, { name: string; phone: string }>();
+  if (agentIds.length > 0) {
+    const { data: agents } = await supabase
+      .from('delivery_agents')
+      .select('user_id, name, phone')
+      .in('user_id', agentIds);
+    for (const a of agents ?? []) names.set(a.user_id, { name: a.name, phone: a.phone });
+  }
+
+  return rows.map(({ claimed_by, ...rest }) => ({
+    ...rest,
+    agent: claimed_by ? (names.get(claimed_by) ?? null) : null,
+  }));
+}
+
+/** Put it back in the pool for any agent to take. Clears the previous agent's
+ *  position so the next one doesn't inherit it. */
+export async function returnOrderToPool(orderId: string): Promise<void> {
+  const { error } = await supabase
+    .from('orders')
+    .update({
+      claimed_by: null,
+      claimed_at: null,
+      picked_up_at: null,
+      status: 'placed',
+      stalled_at: null,
+      agent_latitude: null,
+      agent_longitude: null,
+      agent_location_at: null,
+    })
+    .eq('id', orderId);
+  if (error) throw error;
+}
+
+/** Close it for good, with a reason the customer will see. */
+export async function cancelOrder(orderId: string, reason: string): Promise<void> {
+  const { error } = await supabase
+    .from('orders')
+    .update({ status: 'cancelled', cancel_reason: reason, stalled_at: null })
+    .eq('id', orderId);
+  if (error) throw error;
+}
+
+/** Mark it delivered — for when the agent completed the drop but never tapped
+ *  the button, which is the most common reason an order sticks. */
+export async function markOrderDelivered(orderId: string): Promise<void> {
+  const { error } = await supabase
+    .from('orders')
+    .update({ status: 'delivered', delivered_at: new Date().toISOString(), stalled_at: null })
+    .eq('id', orderId);
+  if (error) throw error;
+}

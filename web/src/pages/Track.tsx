@@ -135,6 +135,9 @@ export function Track() {
                   <span className={'otrack__tag' + (order.status === 'cancelled' ? ' is-bad' : '')}>
                     {orderStatusLabel(order.status)}
                   </span>
+                  {order.cancel_reason && (
+                    <span className="otrack__reason">{order.cancel_reason}</span>
+                  )}
                 </div>
               </div>
             ))}
