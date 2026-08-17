@@ -26,12 +26,20 @@
 }
 .cart-line {
   display: grid;
-  grid-template-columns: 1fr auto auto;
+  /* Four columns: thumbnail, name, stepper, line total. Adding the thumbnail to
+     a three-column grid pushed the total onto its own row. */
+  grid-template-columns: auto 1fr auto auto;
   align-items: center;
-  gap: 18px;
+  gap: 12px;
   padding: 16px 0;
   border-bottom: 1px solid var(--border);
 }
+
+@media (min-width: 480px) {
+  .cart-line { gap: 18px; }
+}
+
+.cart-line__info { min-width: 0; }
 .cart-line:last-child {
   border-bottom: none;
 }
@@ -50,7 +58,7 @@
   font-family: 'Poppins', sans-serif;
   font-size: var(--fs-base);
   font-weight: 700;
-  min-width: 70px;
+  min-width: 62px;
   text-align: right;
   font-variant-numeric: tabular-nums;
 }
