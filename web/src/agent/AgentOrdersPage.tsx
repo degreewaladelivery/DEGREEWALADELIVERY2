@@ -480,6 +480,18 @@ function OrderCard({
           )}
         </div>
       )}
+
+      {showRoute && (
+        // Opening Maps backgrounds this tab, and browsers suspend location for
+        // a background tab — so the customer's map freezes the moment an agent
+        // navigates. Nothing can fix that on the web; say so rather than let it
+        // fail silently.
+        <p className="agent-order__warn">
+          ⚠️ Using Navigate here pauses live tracking — this browser stops sending your position
+          once you switch away. Use the DegreeWala app to keep the customer updated while you
+          drive.
+        </p>
+      )}
       <button
         className="admin-btn admin-btn--primary"
         onClick={action.onClick}

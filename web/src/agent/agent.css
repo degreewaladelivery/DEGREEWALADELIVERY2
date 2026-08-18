@@ -129,3 +129,14 @@
 .agent-key--pickup { background: #6b7280; }
 .agent-key--delivery { background: #ff6b00; }
 .agent-key--me { background: #00897b; }
+
+.agent-order__warn {
+  margin: 0 0 10px;
+  padding: 10px 12px;
+  border-radius: var(--radius-sm, 8px);
+  background: #fff8e6;
+  border: 1px solid #f4d491;
+  font-size: 12px;
+  line-height: 1.5;
+  color: var(--text, #1f2430);
+}
