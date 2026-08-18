@@ -13,6 +13,7 @@ import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context'
 import { useNavigation, useRoute, type RouteProp } from '@react-navigation/native';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { fetchCategories, fetchShops, fetchCategoryItemCounts } from '../lib/catalog';
+import { loadCached } from '../lib/cachedFetch';
 import type { HomeStackParamList } from '../navigation/types';
 import type { Category, Shop } from '@shared/types';
 import { categoryPalette } from '@shared/tokens';
@@ -57,10 +58,13 @@ export function HomeScreen() {
   const scrollRef = useRef<ScrollView>(null);
   const featuredY = useRef(0);
 
+  // Draw the last known catalogue immediately, then correct it from the
+  // network. Opening to a blank screen while Supabase answers — or forever,
+  // with no signal — is the single biggest thing that made this feel slow.
   useEffect(() => {
-    fetchCategories().then(setCategories).catch(() => {});
-    fetchShops().then(setShops).catch(() => {});
-    fetchCategoryItemCounts().then(setItemCounts).catch(() => {});
+    loadCached('categories', fetchCategories, setCategories);
+    loadCached('shops', fetchShops, setShops);
+    loadCached('itemCounts', fetchCategoryItemCounts, setItemCounts);
   }, []);
 
   useEffect(() => {

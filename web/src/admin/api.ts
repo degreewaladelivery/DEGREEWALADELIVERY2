@@ -1,5 +1,6 @@
 import { supabase } from '../lib/supabase';
 import { notifyCustomer } from '@shared/notifyCustomer';
+import { resizeForUpload } from './resizeImage';
 import type {
   CategoryRow,
   SubcategoryRow,
@@ -509,10 +510,16 @@ export async function uploadCatalogImage(
   file: File,
   folder: 'categories' | 'subcategories' | 'products' | 'shops' | 'shop-categories' | 'shop-products'
 ): Promise<string> {
-  const ext = file.name.split('.').pop() ?? 'jpg';
+  // Shrink before storing: photos arrive at full camera resolution and nothing
+  // ever draws them that large.
+  const resized = await resizeForUpload(file);
+  const ext = resized.name.split('.').pop() ?? 'jpg';
   const path = `${folder}/${crypto.randomUUID()}.${ext}`;
-  const { error } = await supabase.storage.from('catalog-images').upload(path, file, {
-    cacheControl: '3600',
+  const { error } = await supabase.storage.from('catalog-images').upload(path, resized, {
+    // A year. The filename is a fresh UUID on every upload, so a stored image
+    // never changes underneath a cached copy — the short TTL was only forcing
+    // phones to re-download pictures that could not have changed.
+    cacheControl: '31536000',
     upsert: false,
   });
   if (error) throw error;
