@@ -2,6 +2,8 @@ import { useRef, useState, type ComponentType, type Ref } from 'react';
 import { View, Text, TouchableOpacity, StyleSheet } from 'react-native';
 import { WebView, type WebViewProps, type WebViewMessageEvent } from 'react-native-webview';
 import { MAPBOX_TOKEN, hasMapbox } from '../lib/mapbox';
+import Geolocation from '@react-native-community/geolocation';
+import { ensureLocationPermission } from '../lib/locationPermission';
 import { BLOCK_ATTRIBUTION_LINKS_JS, allowMapOnly } from '../lib/mapHtml';
 import { colors, spacing, radius, fontSizes, fontWeights } from '../theme';
 
@@ -61,24 +63,13 @@ function buildHtml(token: string, lat: number, lng: number, zoomedIn: boolean): 
     send({ type: 'picked', lat: e.lngLat.lat, lng: e.lngLat.lng });
   });
 
-  window.locateMe = function () {
-    if (!navigator.geolocation) {
-      send({ type: 'error' });
-      return;
-    }
-    navigator.geolocation.getCurrentPosition(
-      function (position) {
-        var lat = position.coords.latitude;
-        var lng = position.coords.longitude;
-        marker.setLngLat([lng, lat]);
-        map.flyTo({ center: [lng, lat], zoom: 16 });
-        send({ type: 'picked', lat: lat, lng: lng });
-      },
-      function () {
-        send({ type: 'error' });
-      },
-      { enableHighAccuracy: true, timeout: 15000, maximumAge: 0 }
-    );
+  // The app locates the phone natively and tells us where to draw. The page
+  // cannot do it itself: this document is inline HTML with no real origin, and
+  // Chromium refuses geolocation to an opaque origin however the app is
+  // permissioned — which looked exactly like a permission failure.
+  window.setPin = function (lat, lng) {
+    marker.setLngLat([lng, lat]);
+    map.flyTo({ center: [lng, lat], zoom: 16 });
   };
 </script>
 </body>
@@ -122,10 +113,39 @@ export function LocationPicker({ latitude, longitude, onChange }: LocationPicker
     }
   };
 
-  const useCurrentLocation = () => {
+  const useCurrentLocation = async () => {
     setLocating(true);
     setLocateError(null);
-    webRef.current?.injectJavaScript('window.locateMe(); true;');
+
+    // The map runs in a WebView, and its geolocation request is refused flat
+    // when the host app has no permission — so ask for it before asking the
+    // page to locate, or the customer sees a failure with no prompt at all.
+    const granted = await ensureLocationPermission();
+    if (!granted) {
+      setLocating(false);
+      setLocateError(
+        'Location permission is off, so we can\u2019t find you. Allow it in Settings, or tap the map to pick your spot.'
+      );
+      return;
+    }
+
+    Geolocation.getCurrentPosition(
+      (position) => {
+        const foundLat = position.coords.latitude;
+        const foundLng = position.coords.longitude;
+        setLocating(false);
+        setLocateError(null);
+        webRef.current?.injectJavaScript(`window.setPin(${foundLat}, ${foundLng}); true;`);
+        onChange(foundLat, foundLng);
+      },
+      () => {
+        setLocating(false);
+        setLocateError(
+          'Could not get your location. Check that GPS is on, or tap the map to pick your spot.'
+        );
+      },
+      { enableHighAccuracy: true, timeout: 20000, maximumAge: 10000 }
+    );
   };
 
   return (
