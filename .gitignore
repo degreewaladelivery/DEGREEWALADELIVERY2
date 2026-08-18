@@ -33,3 +33,7 @@ yarn-error.log*
 # watchman transient files
 .watchman-cookie-*
 **/.watchman-cookie-*
+
+# One-off maintenance scripts pull their own deps
+scripts/node_modules/
+scripts/package-lock.json

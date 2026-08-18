@@ -1,0 +1,10 @@
+{
+  "name": "degreewala-scripts",
+  "private": true,
+  "type": "module",
+  "description": "One-off maintenance scripts. Not part of the app build.",
+  "dependencies": {
+    "@supabase/supabase-js": "^2.110.0",
+    "sharp": "^0.34.0"
+  }
+}
