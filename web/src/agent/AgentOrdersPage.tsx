@@ -21,6 +21,7 @@ import {
 } from './newOrderAlert';
 import { hasPushSubscription, pushSupported, subscribeToPush } from './pushSubscribe';
 import { formatRupees } from '../lib/format';
+import { TrackingMap } from '../components/ui/TrackingMap';
 import { Thumb } from '../components/ui/Thumb';
 import './agent.css';
 
@@ -72,6 +73,9 @@ export function AgentOrdersPage() {
 
   const [alertsOn, setAlertsOn] = useState(false);
   const [alertsBlocked, setAlertsBlocked] = useState(false);
+  const [myPosition, setMyPosition] = useState<{ latitude: number; longitude: number } | null>(
+    null
+  );
   const [pushOn, setPushOn] = useState(false);
   const [pushError, setPushError] = useState<string | null>(null);
 
@@ -117,6 +121,10 @@ export function AgentOrdersPage() {
     const watchId = navigator.geolocation.watchPosition(
       (position) => {
         setGeoPermission('granted');
+        setMyPosition({
+          latitude: position.coords.latitude,
+          longitude: position.coords.longitude,
+        });
         const now = Date.now();
         if (now - lastSentRef.current < 15000) return;
         lastSentRef.current = now;
@@ -304,6 +312,8 @@ export function AgentOrdersPage() {
               key={order.id}
               order={order}
               busy={busyId === order.id}
+              myPosition={myPosition}
+              showRoute
               action={
                 order.status === 'claimed'
                   ? { label: 'Mark picked up', onClick: () => onPickedUp(order) }
@@ -390,11 +400,27 @@ function OrderCard({
   order,
   action,
   busy,
+  myPosition,
+  showRoute,
 }: {
   order: OrderRow;
   action: { label: string; onClick: () => void; disabled?: boolean };
+  /** Where the agent is, so the map can show them against the customer. */
+  myPosition?: { latitude: number; longitude: number } | null;
+  /** Only their own deliveries get a map and the call/navigate buttons — the
+   *  open pool would render a map per order for jobs they haven't taken. */
+  showRoute?: boolean;
   busy: boolean;
 }) {
+  const pickup =
+    order.pickup_latitude != null && order.pickup_longitude != null
+      ? { latitude: order.pickup_latitude, longitude: order.pickup_longitude }
+      : null;
+  const delivery =
+    order.delivery_latitude != null && order.delivery_longitude != null
+      ? { latitude: order.delivery_latitude, longitude: order.delivery_longitude }
+      : null;
+
   return (
     <div className="agent-order">
       <div className="agent-order__row">
@@ -422,10 +448,38 @@ function OrderCard({
           </li>
         ))}
       </ul>
+      {showRoute && delivery && (
+        <>
+          <TrackingMap pickup={pickup} delivery={delivery} agent={myPosition ?? null} />
+          <ul className="agent-order__legend">
+            <li><span className="agent-key agent-key--pickup" /> Shop</li>
+            <li><span className="agent-key agent-key--delivery" /> Customer</li>
+            {myPosition && <li><span className="agent-key agent-key--me" /> You</li>}
+          </ul>
+        </>
+      )}
+
       <div className="agent-order__row">
-        <span>📞 {order.customer_phone}</span>
-        <strong>You earn {formatRupees(order.agent_payout)}</strong>
+        <span>💰 You earn {formatRupees(order.agent_payout)}</span>
       </div>
+
+      {showRoute && (
+        <div className="agent-order__tools">
+          <a className="admin-btn admin-btn--sm" href={`tel:${order.customer_phone}`}>
+            📞 Call customer
+          </a>
+          {delivery && (
+            <a
+              className="admin-btn admin-btn--sm"
+              href={`https://www.google.com/maps/dir/?api=1&destination=${delivery.latitude},${delivery.longitude}`}
+              target="_blank"
+              rel="noopener noreferrer"
+            >
+              🧭 Navigate
+            </a>
+          )}
+        </div>
+      )}
       <button
         className="admin-btn admin-btn--primary"
         onClick={action.onClick}

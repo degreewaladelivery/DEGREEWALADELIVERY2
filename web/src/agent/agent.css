@@ -98,3 +98,34 @@
   height: 100%;
   object-fit: cover;
 }
+
+/* Route tools on an agent's own delivery. */
+.agent-order__tools {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+  margin: 10px 0;
+}
+
+.agent-order__tools .admin-btn {
+  text-decoration: none;
+  display: inline-flex;
+  align-items: center;
+}
+
+.agent-order__legend {
+  display: flex;
+  gap: 14px;
+  list-style: none;
+  margin: 8px 0 0;
+  padding: 0;
+  font-size: 12px;
+  color: var(--text-muted, #6b7280);
+}
+
+.agent-order__legend li { display: flex; align-items: center; gap: 6px; }
+
+.agent-key { width: 10px; height: 10px; border-radius: 50%; flex-shrink: 0; }
+.agent-key--pickup { background: #6b7280; }
+.agent-key--delivery { background: #ff6b00; }
+.agent-key--me { background: #00897b; }

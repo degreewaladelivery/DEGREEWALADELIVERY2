@@ -34,6 +34,7 @@ import {
 import type { AgentProfile, OrderRow } from '@shared/agentOrders';
 import { formatRupees } from '../lib/format';
 import { Thumb } from '../components/Thumb';
+import { TrackingMap } from '../components/TrackingMap';
 import { colors, spacing, radius, fontSizes, fontWeights, shadows } from '../theme';
 
 /** How often to re-check the pool while the app is open. */
@@ -52,6 +53,9 @@ export function AgentOrdersScreen({ agentId, onSignedOut }: { agentId: string; o
   // Location is a condition of working, not a preference — a customer watching a
   // stationary pin can't tell the agent simply switched it off.
   const [locationGranted, setLocationGranted] = useState<boolean | null>(null);
+  const [myPosition, setMyPosition] = useState<{ latitude: number; longitude: number } | null>(
+    null
+  );
 
   const activeIdsRef = useRef<string[]>([]);
   const lastSentRef = useRef(0);
@@ -152,6 +156,10 @@ export function AgentOrdersScreen({ agentId, onSignedOut }: { agentId: string; o
 
     const watchId = Geolocation.watchPosition(
       (position) => {
+        setMyPosition({
+          latitude: position.coords.latitude,
+          longitude: position.coords.longitude,
+        });
         const now = Date.now();
         if (now - lastSentRef.current < LOCATION_MIN_GAP_MS) return;
         lastSentRef.current = now;
@@ -298,6 +306,7 @@ export function AgentOrdersScreen({ agentId, onSignedOut }: { agentId: string; o
             busy={busyId === order.id}
             actionLabel={order.status === 'claimed' ? 'Mark picked up' : 'Mark delivered'}
             onAction={() => onAdvance(order)}
+            myPosition={myPosition}
             showContact
           />
         ))}
@@ -330,6 +339,7 @@ function OrderCard({
   busy,
   showContact,
   disabled,
+  myPosition,
 }: {
   order: OrderRow;
   actionLabel: string;
@@ -337,6 +347,8 @@ function OrderCard({
   busy: boolean;
   showContact?: boolean;
   disabled?: boolean;
+  /** Where the agent is, so the map shows them against the customer. */
+  myPosition?: { latitude: number; longitude: number } | null;
 }) {
   const openMaps = () => {
     if (order.delivery_latitude == null || order.delivery_longitude == null) return;
@@ -362,6 +374,23 @@ function OrderCard({
           {order.items.length === 1 ? '' : 's'} · {formatRupees(order.total)}{' '}
           {order.payment_method === 'cod' ? 'to collect' : 'paid'}
         </Text>
+      )}
+
+      {showContact && order.delivery_latitude != null && order.delivery_longitude != null && (
+        <View style={styles.mapWrap}>
+          <TrackingMap
+            pickup={
+              order.pickup_latitude != null && order.pickup_longitude != null
+                ? { latitude: order.pickup_latitude, longitude: order.pickup_longitude }
+                : null
+            }
+            delivery={{
+              latitude: order.delivery_latitude,
+              longitude: order.delivery_longitude,
+            }}
+            agent={myPosition ?? null}
+          />
+        </View>
       )}
 
       {/* A picture is how an agent finds the right packet on a crowded shelf. */}
@@ -477,6 +506,7 @@ const styles = StyleSheet.create({
   },
   meta: { fontSize: fontSizes.xs, color: colors.textMuted, marginTop: 4 },
 
+  mapWrap: { marginTop: spacing.sm },
   items: { marginTop: spacing.sm, gap: 6 },
   itemRow: { flexDirection: 'row', alignItems: 'center', gap: spacing.sm },
   itemThumb: { width: 32, height: 32, borderRadius: radius.sm },
