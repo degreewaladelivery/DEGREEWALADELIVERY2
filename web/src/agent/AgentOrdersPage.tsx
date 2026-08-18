@@ -63,7 +63,12 @@ export function AgentOrdersPage() {
   // Location is a condition of working, not a preference — a customer watching
   // a stationary pin has no way to know the agent simply switched it off.
   // 'unknown' until the browser answers.
-  const [geoPermission, setGeoPermission] = useState<'unknown' | 'granted' | 'denied'>('unknown');
+  // 'searching' matters as much as the other three: an agent who allowed
+  // location but whose GPS hasn't locked on yet has not refused anything, and
+  // must not be stopped from working.
+  const [geoPermission, setGeoPermission] = useState<
+    'unknown' | 'granted' | 'searching' | 'denied'
+  >('unknown');
 
   const [alertsOn, setAlertsOn] = useState(false);
   const [alertsBlocked, setAlertsBlocked] = useState(false);
@@ -95,7 +100,13 @@ export function AgentOrdersPage() {
     if (!canShare) return;
     navigator.geolocation.getCurrentPosition(
       () => setGeoPermission('granted'),
-      () => setGeoPermission('denied'),
+      (err) => {
+        // Only an actual refusal blocks work. A timeout or an unavailable fix
+        // means they said yes and the phone hasn't got a position yet —
+        // standing inside a shop is enough to cause it. The watch below keeps
+        // trying and flips this to 'granted' the moment a fix arrives.
+        setGeoPermission(err.code === err.PERMISSION_DENIED ? 'denied' : 'searching');
+      },
       { enableHighAccuracy: true, timeout: 20000 }
     );
   }, [canShare]);
@@ -115,7 +126,8 @@ export function AgentOrdersPage() {
           position.coords.longitude
         ).catch(() => {});
       },
-      () => setGeoPermission('denied'),
+      (err) =>
+        setGeoPermission(err.code === err.PERMISSION_DENIED ? 'denied' : 'searching'),
       { enableHighAccuracy: true, maximumAge: 10000, timeout: 20000 }
     );
 
@@ -345,6 +357,12 @@ export function AgentOrdersPage() {
         {locationState === 'denied' && (
           <p className="admin-empty">Accepting is disabled until location is on.</p>
         )}
+        {locationState === 'searching' && (
+          <p className="admin-empty">
+            Finding your location… you can still accept orders. If you're indoors, step outside for
+            a moment so customers can see you move.
+          </p>
+        )}
 
         {openOrders && openOrders.length === 0 && <p className="admin-empty">No unclaimed orders right now.</p>}
         <div className="agent-orders">
@@ -358,7 +376,7 @@ export function AgentOrdersPage() {
                 onClick: () => onClaim(order),
                 // A delivery accepted without location is one the customer
                 // cannot follow, so the button is genuinely unavailable.
-                disabled: locationState !== 'granted',
+                disabled: locationState === 'denied',
               }}
             />
           ))}
