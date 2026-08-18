@@ -3,6 +3,7 @@ import { View, Text, Image, ScrollView, StyleSheet, TouchableOpacity, ActivityIn
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useNavigation, useRoute, type RouteProp } from '@react-navigation/native';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
+import { loadCached } from '../lib/cachedFetch';
 import { fetchCategoryPage, type CategoryPage } from '../lib/catalog';
 import type { HomeStackParamList } from '../navigation/types';
 import { ItemRow } from '../components/ItemRow';
@@ -22,13 +23,19 @@ export function CategoryScreen() {
   const [activeSub, setActiveSub] = useState<string | null>(null);
   const cartCount = useCartStore((s) => selectCount(s.items));
 
+  // Draw the version we saw last time straight away, then refresh. A category
+  // holds hundreds of items, so waiting on the network to show any of them is
+  // the difference between instant and a spinner on every tap.
   useEffect(() => {
     let active = true;
     setLoading(true);
-    fetchCategoryPage(params.categoryKey)
-      .then((p) => active && setPage(p))
-      .catch(() => active && setPage(null))
-      .finally(() => active && setLoading(false));
+    loadCached(`category:${params.categoryKey}`, () => fetchCategoryPage(params.categoryKey), (value) => {
+      if (!active) return;
+      setPage(value);
+      setLoading(false);
+    }).finally(() => {
+      if (active) setLoading(false);
+    });
     return () => {
       active = false;
     };

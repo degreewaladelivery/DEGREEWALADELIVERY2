@@ -4,6 +4,7 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useNavigation, useRoute, type RouteProp } from '@react-navigation/native';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import type { Product } from '@shared/types';
+import { loadCached } from '../lib/cachedFetch';
 import { fetchShopPage, type ShopPage } from '../lib/catalog';
 import type { HomeStackParamList } from '../navigation/types';
 import { Thumb } from '../components/Thumb';
@@ -32,13 +33,18 @@ export function ShopScreen() {
   const [loading, setLoading] = useState(true);
   const cartCount = useCartStore((s) => selectCount(s.items));
 
+  // Same reasoning as the category screen: show the last known shop instantly,
+  // correct it behind the scenes.
   useEffect(() => {
     let active = true;
     setLoading(true);
-    fetchShopPage(params.shopId)
-      .then((p) => active && setPage(p))
-      .catch(() => active && setPage(null))
-      .finally(() => active && setLoading(false));
+    loadCached(`shop:${params.shopId}`, () => fetchShopPage(params.shopId), (value) => {
+      if (!active) return;
+      setPage(value);
+      setLoading(false);
+    }).finally(() => {
+      if (active) setLoading(false);
+    });
     return () => {
       active = false;
     };
