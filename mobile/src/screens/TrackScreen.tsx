@@ -165,7 +165,7 @@ function PastOrderRow({ order }: { order: TrackedOrder }) {
         <View style={styles.detail}>
           {order.items.map((item) => (
             <View key={item.id} style={styles.detailItem}>
-              <Thumb src={item.image_url ?? undefined} emoji="\ud83d\uded2" style={styles.detailThumb} fontSize={18} />
+              <Thumb src={item.image_url ?? undefined} emoji="\ud83d\uded2" style={styles.detailThumb} fontSize={18} width={120} />
               <Text style={styles.detailName} numberOfLines={2}>
                 {item.name}{item.unit ? ` (${item.unit})` : ''}
               </Text>

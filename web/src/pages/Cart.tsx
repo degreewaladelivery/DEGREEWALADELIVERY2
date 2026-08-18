@@ -59,7 +59,7 @@ export function Cart() {
           {lines.map((line) => (
             <div key={line.product.id} className="cart-line">
               <div className="cart-line__thumb">
-                <Thumb src={line.product.imageUrl} emoji="🛒" tint="#F4F6F9" alt={line.product.name} />
+                <Thumb src={line.product.imageUrl} emoji="🛒" tint="#F4F6F9" alt={line.product.name} width={120} />
               </div>
               <div className="cart-line__info">
                 <h4>{line.product.name}</h4>

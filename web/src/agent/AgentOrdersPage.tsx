@@ -439,7 +439,7 @@ function OrderCard({
             {/* A picture is how an agent finds the right packet on a crowded
                 shelf — the name alone is slower and easier to get wrong. */}
             <span className="agent-order__thumb">
-              <Thumb src={item.image_url ?? undefined} emoji="🛒" tint="#F4F6F9" alt={item.name} />
+              <Thumb src={item.image_url ?? undefined} emoji="🛒" tint="#F4F6F9" alt={item.name} width={120} />
             </span>
             <span>
               {item.quantity} × {item.name}

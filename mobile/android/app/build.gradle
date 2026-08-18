@@ -85,6 +85,13 @@ android {
         targetSdkVersion rootProject.ext.targetSdkVersion
         versionCode 1
         versionName "1.0"
+
+        ndk {
+            // x86 and x86_64 exist only for emulators and were 34 MB of an
+            // 80 MB download. Every real phone is arm, and a rider on rural
+            // mobile data pays for every megabyte.
+            abiFilters "armeabi-v7a", "arm64-v8a"
+        }
     }
     signingConfigs {
         debug {

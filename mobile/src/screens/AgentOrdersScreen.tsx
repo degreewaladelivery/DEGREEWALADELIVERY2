@@ -397,7 +397,7 @@ function OrderCard({
       <View style={styles.items}>
         {order.items.map((item) => (
           <View key={item.id} style={styles.itemRow}>
-            <Thumb src={item.image_url ?? undefined} emoji="🛒" style={styles.itemThumb} fontSize={16} />
+            <Thumb src={item.image_url ?? undefined} emoji="🛒" style={styles.itemThumb} fontSize={16} width={120} />
             <Text style={styles.itemText} numberOfLines={1}>
               {item.quantity} × {item.name}
               {item.unit ? ` (${item.unit})` : ''}

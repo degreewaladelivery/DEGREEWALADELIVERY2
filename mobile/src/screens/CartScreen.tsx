@@ -63,7 +63,7 @@ export function CartScreen() {
 
         {lines.map((line) => (
           <View key={line.product.id} style={styles.line}>
-            <Thumb src={line.product.imageUrl} emoji="🛒" style={styles.lineThumb} fontSize={20} />
+            <Thumb src={line.product.imageUrl} emoji="🛒" style={styles.lineThumb} fontSize={20} width={120} />
             <View style={styles.lineInfo}>
               <Text style={styles.lineName}>{line.product.name}</Text>
               <Text style={styles.linePrice}>{formatRupees(line.product.price)}</Text>
