@@ -7,6 +7,7 @@ import { Thumb } from '../components/ui/Thumb';
 import { TrackingMap } from '../components/ui/TrackingMap';
 import { haversineDistanceKm } from '@shared/deliveryFare';
 import { isActiveOrder, isAgentLocationFresh, orderStatusLabel } from '@shared/agentOrders';
+import { customerPushSupported, enableOrderUpdates, orderUpdatesEnabled } from '../lib/customerPush';
 import './Track.css';
 
 const STEPS = [
@@ -38,10 +39,19 @@ export function Track() {
   const [customer] = useState(() => getCustomer());
   const [orders, setOrders] = useState<TrackedOrder[] | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const [updatesOn, setUpdatesOn] = useState(false);
+  const [updatesFailed, setUpdatesFailed] = useState(false);
 
   useEffect(() => {
     if (!customer) navigate('/login?next=/track', { replace: true });
   }, [customer, navigate]);
+
+  // Don't nag someone who already turned updates on.
+  useEffect(() => {
+    orderUpdatesEnabled().then((on) => {
+      if (on) setUpdatesOn(true);
+    });
+  }, []);
 
   useEffect(() => {
     if (!customer) return;
@@ -112,6 +122,35 @@ export function Track() {
   return (
     <div className="container otrack">
       <h1 className="otrack__heading">Track Your Order</h1>
+
+      {customerPushSupported() && !updatesOn && active.length > 0 && (
+        <div className="otrack__updates">
+          <div>
+            <strong>Get told when your order arrives</strong>
+            <p>
+              We'll notify you when an agent picks it up and when it reaches you — even with this
+              page closed.
+            </p>
+            {updatesFailed && (
+              <p className="otrack__updates-error">
+                Notifications are blocked for this site. Allow them in your browser settings to
+                turn this on.
+              </p>
+            )}
+          </div>
+          <button
+            type="button"
+            className="btn btn-primary"
+            onClick={async () => {
+              const ok = await enableOrderUpdates(customer.token);
+              setUpdatesOn(ok);
+              setUpdatesFailed(!ok);
+            }}
+          >
+            Turn on
+          </button>
+        </div>
+      )}
 
       {active.length === 0 && <p className="otrack__muted">No active orders right now.</p>}
       {active.map((order) => (

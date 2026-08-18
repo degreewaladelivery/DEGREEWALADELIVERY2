@@ -1,6 +1,7 @@
 import { supabase } from '../lib/supabase';
 import * as agentOrders from '@shared/agentOrders';
 import * as agentPool from '@shared/agentPool';
+import { notifyCustomer } from '@shared/notifyCustomer';
 import type { AgentProfile, OrderRow } from './types';
 
 /**
@@ -16,8 +17,11 @@ export const listOpenOrders = (): Promise<OrderRow[]> => agentOrders.listOpenOrd
 export const listMyDeliveries = (agentId: string): Promise<OrderRow[]> =>
   agentOrders.listMyDeliveries(supabase, agentId);
 
-export const claimOrder = (orderId: string, agentId: string): Promise<boolean> =>
-  agentOrders.claimOrder(supabase, orderId, agentId);
+export const claimOrder = async (orderId: string, agentId: string): Promise<boolean> => {
+  const won = await agentOrders.claimOrder(supabase, orderId, agentId);
+  if (won) notifyCustomer(supabase, orderId);
+  return won;
+};
 
 export const updateAgentLocation = (
   orderIds: string[],
@@ -25,11 +29,15 @@ export const updateAgentLocation = (
   longitude: number
 ): Promise<void> => agentOrders.updateAgentLocation(supabase, orderIds, latitude, longitude);
 
-export const markPickedUp = (orderId: string): Promise<void> =>
-  agentOrders.markPickedUp(supabase, orderId);
+export const markPickedUp = async (orderId: string): Promise<void> => {
+  await agentOrders.markPickedUp(supabase, orderId);
+  notifyCustomer(supabase, orderId);
+};
 
-export const markDelivered = (orderId: string): Promise<void> =>
-  agentOrders.markDelivered(supabase, orderId);
+export const markDelivered = async (orderId: string): Promise<void> => {
+  await agentOrders.markDelivered(supabase, orderId);
+  notifyCustomer(supabase, orderId);
+};
 
 export const subscribeToPool = (handlers: agentPool.AgentPoolHandlers): (() => void) =>
   agentPool.subscribeToAgentPool(supabase, handlers);

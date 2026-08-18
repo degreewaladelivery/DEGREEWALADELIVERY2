@@ -265,3 +265,20 @@
   font-size: 15px;
   padding-top: 6px;
 }
+
+.otrack__updates {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  flex-wrap: wrap;
+  background: var(--brand-tint, #fff3e0);
+  border: 1px solid var(--brand-tint-strong, #ffe7cc);
+  border-radius: var(--radius-md, 12px);
+  padding: 14px 16px;
+  margin-bottom: 14px;
+}
+
+.otrack__updates > div { flex: 1; min-width: 200px; }
+.otrack__updates strong { display: block; font-size: 15px; }
+.otrack__updates p { margin: 4px 0 0; font-size: 13px; color: var(--text-muted, #6b7280); line-height: 1.5; }
+.otrack__updates-error { color: var(--danger, #f44336) !important; }

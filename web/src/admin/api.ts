@@ -1,4 +1,5 @@
 import { supabase } from '../lib/supabase';
+import { notifyCustomer } from '@shared/notifyCustomer';
 import type {
   CategoryRow,
   SubcategoryRow,
@@ -598,6 +599,7 @@ export async function cancelOrder(orderId: string, reason: string): Promise<void
     .update({ status: 'cancelled', cancel_reason: reason, stalled_at: null })
     .eq('id', orderId);
   if (error) throw error;
+  notifyCustomer(supabase, orderId);
 }
 
 /** Mark it delivered — for when the agent completed the drop but never tapped
@@ -608,4 +610,5 @@ export async function markOrderDelivered(orderId: string): Promise<void> {
     .update({ status: 'delivered', delivered_at: new Date().toISOString(), stalled_at: null })
     .eq('id', orderId);
   if (error) throw error;
+  notifyCustomer(supabase, orderId);
 }
