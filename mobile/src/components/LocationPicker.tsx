@@ -2,8 +2,8 @@ import { useRef, useState, type ComponentType, type Ref } from 'react';
 import { View, Text, TouchableOpacity, StyleSheet } from 'react-native';
 import { WebView, type WebViewProps, type WebViewMessageEvent } from 'react-native-webview';
 import { MAPBOX_TOKEN, hasMapbox } from '../lib/mapbox';
-import Geolocation from '@react-native-community/geolocation';
 import { ensureLocationPermission } from '../lib/locationPermission';
+import { getBestPosition } from '../lib/getPosition';
 import { BLOCK_ATTRIBUTION_LINKS_JS, allowMapOnly } from '../lib/mapHtml';
 import { colors, spacing, radius, fontSizes, fontWeights } from '../theme';
 
@@ -129,23 +129,29 @@ export function LocationPicker({ latitude, longitude, onChange }: LocationPicker
       return;
     }
 
-    Geolocation.getCurrentPosition(
-      (position) => {
-        const foundLat = position.coords.latitude;
-        const foundLng = position.coords.longitude;
-        setLocating(false);
-        setLocateError(null);
-        webRef.current?.injectJavaScript(`window.setPin(${foundLat}, ${foundLng}); true;`);
-        onChange(foundLat, foundLng);
-      },
-      () => {
-        setLocating(false);
-        setLocateError(
-          'Could not get your location. Check that GPS is on, or tap the map to pick your spot.'
-        );
-      },
-      { enableHighAccuracy: true, timeout: 20000, maximumAge: 10000 }
+    const position = await getBestPosition((better) => {
+      // A sharper fix arrived after we'd already drawn one — move the pin to it
+      // rather than making the customer tap again.
+      webRef.current?.injectJavaScript(
+        `window.setPin(${better.latitude}, ${better.longitude}); true;`
+      );
+      onChange(better.latitude, better.longitude);
+    });
+
+    setLocating(false);
+
+    if (!position) {
+      setLocateError(
+        'Could not find you. Turn on Location in your phone settings, or tap the map to pick your spot.'
+      );
+      return;
+    }
+
+    setLocateError(null);
+    webRef.current?.injectJavaScript(
+      `window.setPin(${position.latitude}, ${position.longitude}); true;`
     );
+    onChange(position.latitude, position.longitude);
   };
 
   return (
