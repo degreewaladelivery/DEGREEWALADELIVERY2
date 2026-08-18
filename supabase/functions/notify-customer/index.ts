@@ -1,5 +1,6 @@
 import { createClient } from 'jsr:@supabase/supabase-js@2';
 import { sendPush } from '../_shared/webpush.ts';
+import { describeStatusChange } from '../../../shared/orderAlerts.ts';
 
 /**
  * Pushes an order update to the customer's registered browsers.
@@ -47,7 +48,7 @@ Deno.serve(async (req) => {
 
     const { data: order } = await admin
       .from('orders')
-      .select('customer_id, claimed_by')
+      .select('customer_id, claimed_by, status')
       .eq('id', orderId)
       .maybeSingle();
     if (!order) return json({ ok: false, error: 'No such order' });
@@ -60,7 +61,7 @@ Deno.serve(async (req) => {
 
     const { data: subscriptions } = await admin
       .from('customer_push_subscriptions')
-      .select('endpoint')
+      .select('endpoint, p256dh, auth')
       .eq('customer_id', order.customer_id);
 
     if (!subscriptions || subscriptions.length === 0) return json({ ok: true, sent: 0 });
@@ -71,8 +72,23 @@ Deno.serve(async (req) => {
       subject: VAPID_SUBJECT,
     };
 
+    // The exact same wording the in-app alerts use, so a customer who sees both
+    // isn't told two different things.
+    const change = describeStatusChange(orderId, order.status);
+    const payload = change ? JSON.stringify({ title: change.title, body: change.body }) : undefined;
+
     const results = await Promise.all(
-      subscriptions.map((row) => sendPush({ endpoint: row.endpoint as string }, vapid))
+      subscriptions.map((row) =>
+        sendPush(
+          {
+            endpoint: row.endpoint as string,
+            keys: { p256dh: row.p256dh as string, auth: row.auth as string },
+          },
+          vapid,
+          900,
+          payload
+        )
+      )
     );
 
     // Clear out browsers the push service has retired.
