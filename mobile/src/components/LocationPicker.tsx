@@ -3,7 +3,7 @@ import { View, Text, TouchableOpacity, StyleSheet } from 'react-native';
 import { WebView, type WebViewProps, type WebViewMessageEvent } from 'react-native-webview';
 import { MAPBOX_TOKEN, hasMapbox } from '../lib/mapbox';
 import { ensureLocationPermission } from '../lib/locationPermission';
-import { getBestPosition } from '../lib/getPosition';
+import { getBestPosition, lastLocationError } from '../lib/getPosition';
 import { BLOCK_ATTRIBUTION_LINKS_JS, allowMapOnly } from '../lib/mapHtml';
 import { colors, spacing, radius, fontSizes, fontWeights } from '../theme';
 
@@ -141,9 +141,18 @@ export function LocationPicker({ latitude, longitude, onChange }: LocationPicker
     setLocating(false);
 
     if (!position) {
-      setLocateError(
-        'Could not find you. Turn on Location in your phone settings, or tap the map to pick your spot.'
-      );
+      // Say which of the three things is actually wrong. "Could not find you"
+      // leaves a customer with nothing to try.
+      const err = lastLocationError();
+      const detail =
+        err?.code === 1
+          ? 'Location permission is off for this app.'
+          : err?.code === 2
+            ? 'Your phone says location is unavailable — check Location is switched on in your phone settings.'
+            : err?.code === 3
+              ? 'Timed out looking for you. Try again near a window, or tap the map.'
+              : 'Could not find you.';
+      setLocateError(`${detail} You can also tap the map to pick your spot.`);
       return;
     }
 

@@ -1,3 +1,4 @@
+import { Platform } from 'react-native';
 import Geolocation from '@react-native-community/geolocation';
 
 /**
@@ -13,6 +14,26 @@ import Geolocation from '@react-native-community/geolocation';
  * Something on the map beats nothing while GPS is still thinking.
  */
 
+/**
+ * Use Google's fused location provider on Android.
+ *
+ * The library defaults to the legacy LocationManager, whose NETWORK_PROVIDER
+ * modern phones no longer ship — Google replaced it with the fused provider.
+ * That left both paths dead indoors: no network provider to ask, and GPS
+ * unable to see satellites through a roof. The fused provider blends wifi,
+ * cell and GPS and answers in a second from inside a building.
+ *
+ * Configured once, at module load, before anything asks for a position.
+ */
+if (Platform.OS === 'android') {
+  Geolocation.setRNConfiguration({
+    skipPermissionRequests: true, // we ask explicitly, with our own wording
+    authorizationLevel: 'whenInUse',
+    enableBackgroundLocationUpdates: false,
+    locationProvider: 'playServices',
+  });
+}
+
 export interface Position {
   latitude: number;
   longitude: number;
@@ -20,16 +41,29 @@ export interface Position {
   accuracy: number;
 }
 
+/** The last failure seen, so the UI can say something specific rather than
+ *  "could not find you" — which tells a customer nothing they can act on. */
+let lastError: { code: number; message: string } | null = null;
+
+export function lastLocationError(): { code: number; message: string } | null {
+  return lastError;
+}
+
 function once(options: Parameters<typeof Geolocation.getCurrentPosition>[2]): Promise<Position | null> {
   return new Promise((resolve) => {
     Geolocation.getCurrentPosition(
-      (p) =>
+      (p) => {
+        lastError = null;
         resolve({
           latitude: p.coords.latitude,
           longitude: p.coords.longitude,
           accuracy: p.coords.accuracy ?? 9999,
-        }),
-      () => resolve(null),
+        });
+      },
+      (err) => {
+        lastError = { code: err?.code ?? 0, message: err?.message ?? 'unknown' };
+        resolve(null);
+      },
       options
     );
   });
