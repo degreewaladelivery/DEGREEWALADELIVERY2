@@ -10,6 +10,7 @@ import {
   Alert,
   AppState,
 } from 'react-native';
+import { useTabBarSpace } from '../lib/tabBarSpace';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import Geolocation from '@react-native-community/geolocation';
 import {
@@ -44,6 +45,7 @@ const POLL_MS = 15000;
 const LOCATION_MIN_GAP_MS = 15000;
 
 export function AgentOrdersScreen({ agentId, onSignedOut }: { agentId: string; onSignedOut: () => void }) {
+  const tabBarSpace = useTabBarSpace();
   const [profile, setProfile] = useState<AgentProfile | null>(null);
   const [openOrders, setOpenOrders] = useState<OrderRow[] | null>(null);
   const [myOrders, setMyOrders] = useState<OrderRow[] | null>(null);
@@ -258,7 +260,7 @@ export function AgentOrdersScreen({ agentId, onSignedOut }: { agentId: string; o
   return (
     <SafeAreaView style={styles.safe} edges={['top']}>
       <ScrollView
-        contentContainerStyle={styles.content}
+        contentContainerStyle={[styles.content, { paddingBottom: tabBarSpace }]}
         showsVerticalScrollIndicator={false}
         refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} />}
       >

@@ -8,6 +8,7 @@ import {
   ActivityIndicator,
   Linking,
 } from 'react-native';
+import { useTabBarSpace } from '../lib/tabBarSpace';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useNavigation } from '@react-navigation/native';
 import { getCustomer, logoutCustomer } from '../lib/auth';
@@ -43,6 +44,7 @@ function timeAgo(iso: string | null): string {
 }
 
 export function TrackScreen() {
+  const tabBarSpace = useTabBarSpace();
   const navigation = useNavigation<any>();
   const [orders, setOrders] = useState<TrackedOrder[] | null>(null);
   const [error, setError] = useState<string | null>(null);
@@ -90,7 +92,7 @@ export function TrackScreen() {
 
   return (
     <SafeAreaView style={styles.safe} edges={['top']}>
-      <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={styles.content}>
+      <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={[styles.content, { paddingBottom: tabBarSpace }]}>
         <TouchableOpacity onPress={() => navigation.goBack()} hitSlop={10}>
           <Text style={styles.back}>← Back</Text>
         </TouchableOpacity>

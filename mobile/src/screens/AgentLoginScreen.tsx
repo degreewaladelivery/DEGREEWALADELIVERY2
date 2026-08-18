@@ -9,11 +9,13 @@ import {
   Platform,
   ScrollView,
 } from 'react-native';
+import { useTabBarSpace } from '../lib/tabBarSpace';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { signInAgent } from '../agent/supabaseAgent';
 import { colors, spacing, radius, fontSizes, fontWeights, shadows } from '../theme';
 
 export function AgentLoginScreen({ onSignedIn, onBack }: { onSignedIn: () => void; onBack: () => void }) {
+  const tabBarSpace = useTabBarSpace();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [busy, setBusy] = useState(false);
@@ -36,7 +38,7 @@ export function AgentLoginScreen({ onSignedIn, onBack }: { onSignedIn: () => voi
         style={styles.flex}
         behavior={Platform.OS === 'ios' ? 'padding' : undefined}
       >
-        <ScrollView contentContainerStyle={styles.content} keyboardShouldPersistTaps="handled">
+        <ScrollView contentContainerStyle={[styles.content, { paddingBottom: tabBarSpace }]} keyboardShouldPersistTaps="handled">
           <TouchableOpacity onPress={onBack} hitSlop={10}>
             <Text style={styles.back}>← Back</Text>
           </TouchableOpacity>

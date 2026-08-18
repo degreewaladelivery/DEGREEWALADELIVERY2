@@ -13,6 +13,7 @@ import { LoginScreen } from '../screens/LoginScreen';
 import { AgentGateScreen } from '../screens/AgentGateScreen';
 import { HomeIcon, TagIcon, CartIcon, UserIcon } from '../components/icons';
 import { OrderAlerts } from '../components/OrderAlerts';
+import { TAB_BAR_HEIGHT, TAB_BAR_INSET } from '../lib/tabBarSpace';
 import { colors, fontWeights, shadows } from '../theme';
 import type { HomeStackParamList, CartStackParamList, AccountStackParamList } from './types';
 
@@ -66,8 +67,8 @@ export function RootNavigator() {
             position: 'absolute',
             left: 14,
             right: 14,
-            bottom: 14,
-            height: 64,
+            bottom: TAB_BAR_INSET,
+            height: TAB_BAR_HEIGHT,
             borderRadius: 999,
             borderTopWidth: 0,
             backgroundColor: '#fff',

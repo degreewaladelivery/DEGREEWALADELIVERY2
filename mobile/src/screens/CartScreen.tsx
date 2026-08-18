@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { View, Text, ScrollView, StyleSheet, TouchableOpacity } from 'react-native';
+import { useTabBarSpace } from '../lib/tabBarSpace';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useNavigation } from '@react-navigation/native';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
@@ -19,6 +20,7 @@ const TAX_RATE = 0.05;
 type Nav = NativeStackNavigationProp<CartStackParamList, 'CartMain'>;
 
 export function CartScreen() {
+  const tabBarSpace = useTabBarSpace();
   const navigation = useNavigation<Nav>();
   const items = useCartStore((s) => s.items);
   const shopId = useCartStore((s) => s.shopId);
@@ -58,7 +60,7 @@ export function CartScreen() {
 
   return (
     <SafeAreaView style={styles.safe} edges={['top']}>
-      <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={styles.content}>
+      <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={[styles.content, { paddingBottom: tabBarSpace }]}>
         <Text style={styles.heading}>Your Cart</Text>
 
         {lines.map((line) => (

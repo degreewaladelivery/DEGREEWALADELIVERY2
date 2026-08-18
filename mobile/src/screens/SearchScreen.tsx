@@ -8,6 +8,7 @@ import {
   StyleSheet,
   ActivityIndicator,
 } from 'react-native';
+import { useTabBarSpace } from '../lib/tabBarSpace';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useNavigation, useRoute, type RouteProp } from '@react-navigation/native';
 import type { Product } from '@shared/types';
@@ -20,6 +21,7 @@ import { colors, spacing, radius, fontSizes, fontWeights } from '../theme';
 const SUGGESTIONS = ['Rice', 'Oil', 'Masala', 'Milk', 'Pen'];
 
 export function SearchScreen() {
+  const tabBarSpace = useTabBarSpace();
   const navigation = useNavigation<any>();
   const { params } = useRoute<RouteProp<HomeStackParamList, 'Search'>>();
 
@@ -79,7 +81,7 @@ export function SearchScreen() {
         </View>
       </View>
 
-      <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={styles.content}>
+      <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={[styles.content, { paddingBottom: tabBarSpace }]}>
         {tooShort ? (
           <>
             <Text style={styles.hint}>Type at least 2 letters to search.</Text>

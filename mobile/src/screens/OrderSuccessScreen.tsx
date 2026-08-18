@@ -1,4 +1,5 @@
 import { View, Text, ScrollView, TouchableOpacity, StyleSheet } from 'react-native';
+import { useTabBarSpace } from '../lib/tabBarSpace';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useNavigation, useRoute, type RouteProp } from '@react-navigation/native';
 import type { CartStackParamList } from '../navigation/types';
@@ -8,12 +9,13 @@ import { colors, spacing, radius, fontSizes, fontWeights, shadows } from '../the
 const STEPS = ['Pending', 'Confirmed', 'Preparing', 'Out for Delivery', 'Delivered'];
 
 export function OrderSuccessScreen() {
+  const tabBarSpace = useTabBarSpace();
   const navigation = useNavigation();
   const { params } = useRoute<RouteProp<CartStackParamList, 'OrderSuccess'>>();
 
   return (
     <SafeAreaView style={styles.safe} edges={['top']}>
-      <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={styles.content}>
+      <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={[styles.content, { paddingBottom: tabBarSpace }]}>
         <View style={styles.card}>
           <View style={styles.check}>
             <Text style={styles.checkMark}>✓</Text>
