@@ -97,6 +97,24 @@ export function RootNavigator() {
           name="Cart"
           component={CartStackNavigator}
           options={{ tabBarIcon: ({ color }) => <CartIcon size={22} color={color} /> }}
+          listeners={({ navigation }) => ({
+            tabPress: () => {
+              // A finished order stays on the stack, so tapping Cart would
+              // reopen the last order's success or tracking screen instead of
+              // the cart the customer just filled. Checkout is deliberately
+              // left alone — someone returning mid-order should resume it.
+              const cart = navigation
+                .getState()
+                .routes.find((route: { name: string }) => route.name === 'Cart') as
+                | { state?: { index?: number; routes?: { name: string }[] } }
+                | undefined;
+              const stack = cart?.state;
+              const current = stack?.routes?.[stack.index ?? 0]?.name;
+              if (current === 'OrderSuccess' || current === 'Track') {
+                navigation.navigate('Cart', { screen: 'CartMain' });
+              }
+            },
+          })}
         />
         <Tab.Screen
           name="Account"

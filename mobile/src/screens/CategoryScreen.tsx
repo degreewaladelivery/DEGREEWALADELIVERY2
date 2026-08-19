@@ -108,7 +108,13 @@ export function CategoryScreen() {
         <TouchableOpacity
           style={[styles.cartBar, { bottom: insets.bottom + 84 }]}
           activeOpacity={0.9}
-          onPress={() => navigation.getParent()?.navigate('Cart' as never)}
+          onPress={() =>
+            // Name the screen: without it we land wherever the Cart tab was left,
+            // which after an order is the previous order's tracking page.
+            (navigation.getParent() as unknown as {
+              navigate: (name: string, params?: object) => void;
+            } | undefined)?.navigate('Cart', { screen: 'CartMain' })
+          }
         >
           <Text style={styles.cartBarText}>{cartCount} item{cartCount > 1 ? 's' : ''} in cart</Text>
           <Text style={styles.cartBarCta}>View Cart →</Text>
