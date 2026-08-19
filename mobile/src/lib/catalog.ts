@@ -74,7 +74,12 @@ function mapShop(row: ShopRow): Shop {
   };
 }
 
-function mapProduct(row: ProdRow, shopId: string, section?: string): Product {
+function mapProduct(
+  row: ProdRow,
+  shopId: string,
+  section?: string,
+  isShopProduct = false
+): Product {
   return {
     id: row.id,
     shopId,
@@ -85,6 +90,7 @@ function mapProduct(row: ProdRow, shopId: string, section?: string): Product {
     unit: row.unit ?? undefined,
     isAvailable: true,
     section,
+    isShopProduct,
   };
 }
 
@@ -113,7 +119,12 @@ export async function searchProducts(term: string): Promise<Product[]> {
       const bStarts = b.name.toLowerCase().startsWith(lowered) ? 0 : 1;
       return aStarts !== bStarts ? aStarts - bStarts : a.name.localeCompare(b.name);
     })
-    .map((row) => mapProduct(row, row.category_id ?? row.shop_id ?? row.id));
+    .map((row) => {
+      // Same priority the shopId itself uses: a category product stays a
+      // category product even if it also happens to carry a shop_id.
+      const isShopProduct = row.category_id == null && row.shop_id != null;
+      return mapProduct(row, row.category_id ?? row.shop_id ?? row.id, undefined, isShopProduct);
+    });
 }
 
 export async function fetchCategories(): Promise<Category[]> {
@@ -187,7 +198,7 @@ export async function fetchCategoryPage(keyOrId: string): Promise<CategoryPage |
   const products = [...((prods ?? []) as ProdRow[]), ...extra]
     .filter((p) => (seen.has(p.id) ? false : (seen.add(p.id), true)))
     .sort((a, b) => a.serial_no - b.serial_no)
-    .map((p) => mapProduct(p, category.id, p.subcategory_id ? subName[p.subcategory_id] : undefined));
+    .map((p) => mapProduct(p, category.id, p.subcategory_id ? subName[p.subcategory_id] : undefined, false));
   return { category, products };
 }
 
@@ -225,7 +236,7 @@ export async function fetchShopPage(shopId: string): Promise<ShopPage | null> {
 
   const products = [...((own.data ?? []) as ProdRow[]), ...((linked.data ?? []) as ProdRow[])]
     .sort((a, b) => a.serial_no - b.serial_no)
-    .map((p) => mapProduct(p, shop.id, p.shop_category_id ? scName[p.shop_category_id] : undefined));
+    .map((p) => mapProduct(p, shop.id, p.shop_category_id ? scName[p.shop_category_id] : undefined, true));
 
   return { shop, products };
 }

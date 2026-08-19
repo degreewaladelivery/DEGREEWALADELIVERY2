@@ -28,9 +28,27 @@ export const useCartStore = create<CartState>()(
       items: {},
 
       addItem: (product) => {
-        const { shopId, items } = get();
+        const { items } = get();
+        const linesSoFar = Object.values(items);
 
-        if (shopId && shopId !== product.shopId && Object.keys(items).length > 0) {
+        // Two products conflict only when they'd have to ship from two
+        // physically different places. Every category-browsed product ships
+        // from the same shared default pickup point today regardless of
+        // which category it's in (see place-order's resolvePickup), so two
+        // categories are never a real conflict — only a genuine shop-to-shop
+        // (or shop-to-category) mismatch is. Comparing shopId directly
+        // treated "Grocery" and "Stationery" as different shops just because
+        // each category has its own id, which made it impossible to build one
+        // order out of more than one category.
+        const conflicts = linesSoFar.some((line) => {
+          const other = line.product;
+          if (other.isShopProduct || product.isShopProduct) {
+            return other.shopId !== product.shopId;
+          }
+          return false;
+        });
+
+        if (conflicts) {
           return 'needs-confirm';
         }
 

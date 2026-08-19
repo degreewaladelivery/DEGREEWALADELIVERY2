@@ -70,6 +70,17 @@ export interface Product {
   unit?: string;
 
   section?: string;
+
+  /**
+   * True when this product belongs to a real, physically distinct Shop.
+   * False (or absent) for products browsed by category, which today all ship
+   * from one shared default pickup point regardless of which category —
+   * see place-order's resolvePickup. The cart uses this to decide whether
+   * mixing two products is actually a conflict: two different categories
+   * share one pickup point and can merge into one order; two different
+   * shops do not.
+   */
+  isShopProduct?: boolean;
 }
 
 export interface OrderItem {
