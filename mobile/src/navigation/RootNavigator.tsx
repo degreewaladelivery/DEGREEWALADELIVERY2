@@ -81,6 +81,16 @@ export function RootNavigator() {
           name="Home"
           component={HomeStackNavigator}
           options={{ tabBarIcon: ({ color }) => <HomeIcon size={22} color={color} /> }}
+          listeners={({ navigation }) => ({
+            tabPress: (e) => {
+              // Switching into this tab from elsewhere preserves whatever screen
+              // was last open here — a category or shop page — because React
+              // Navigation only resets to the root when the tab is already
+              // focused. The home icon has to mean home, every time.
+              e.preventDefault();
+              navigation.navigate('Home', { screen: 'HomeMain' });
+            },
+          })}
         />
         <Tab.Screen
           name="Offers"
