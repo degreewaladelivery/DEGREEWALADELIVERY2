@@ -13,6 +13,7 @@ import { LoginScreen } from '../screens/LoginScreen';
 import { AgentGateScreen } from '../screens/AgentGateScreen';
 import { HomeIcon, TagIcon, CartIcon, UserIcon } from '../components/icons';
 import { OrderAlerts } from '../components/OrderAlerts';
+import { ActiveOrderBar } from '../components/ActiveOrderBar';
 import { TAB_BAR_HEIGHT, TAB_BAR_INSET } from '../lib/tabBarSpace';
 import { colors, fontWeights, shadows } from '../theme';
 import type { HomeStackParamList, CartStackParamList, AccountStackParamList } from './types';
@@ -132,6 +133,7 @@ export function RootNavigator() {
           options={{ tabBarIcon: ({ color }) => <UserIcon size={22} color={color} /> }}
         />
       </Tab.Navigator>
+      <ActiveOrderBar />
       <OrderAlerts />
     </NavigationContainer>
   );
