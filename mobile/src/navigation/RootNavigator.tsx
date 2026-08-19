@@ -11,7 +11,7 @@ import { OrderSuccessScreen } from '../screens/OrderSuccessScreen';
 import { TrackScreen } from '../screens/TrackScreen';
 import { LoginScreen } from '../screens/LoginScreen';
 import { AgentGateScreen } from '../screens/AgentGateScreen';
-import { HomeIcon, TagIcon, CartIcon, UserIcon } from '../components/icons';
+import { HomeIcon, CartIcon, UserIcon } from '../components/icons';
 import { OrderAlerts } from '../components/OrderAlerts';
 import { ActiveOrderBar } from '../components/ActiveOrderBar';
 import { TAB_BAR_HEIGHT, TAB_BAR_INSET } from '../lib/tabBarSpace';
@@ -94,17 +94,6 @@ export function RootNavigator() {
           })}
         />
         <Tab.Screen
-          name="Offers"
-          component={EmptyScreen}
-          options={{ tabBarIcon: ({ color }) => <TagIcon size={22} color={color} /> }}
-          listeners={({ navigation }) => ({
-            tabPress: (e) => {
-              e.preventDefault();
-              navigation.navigate('Home', { screen: 'HomeMain', params: { scrollTo: 'featured' } });
-            },
-          })}
-        />
-        <Tab.Screen
           name="Cart"
           component={CartStackNavigator}
           options={{ tabBarIcon: ({ color }) => <CartIcon size={22} color={color} /> }}
@@ -139,6 +128,3 @@ export function RootNavigator() {
   );
 }
 
-function EmptyScreen() {
-  return null;
-}
