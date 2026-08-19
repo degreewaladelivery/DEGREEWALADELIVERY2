@@ -354,8 +354,16 @@ function OrderCard({
 }) {
   const openMaps = () => {
     if (order.delivery_latitude == null || order.delivery_longitude == null) return;
-    const query = `${order.delivery_latitude},${order.delivery_longitude}`;
-    Linking.openURL(`https://www.google.com/maps/dir/?api=1&destination=${query}`).catch(
+    const destination = `${order.delivery_latitude},${order.delivery_longitude}`;
+    // Leaving origin out asks Maps to assume "current location", but that
+    // silently falls back to a manual pin-drop if Maps itself doesn't have
+    // its own location permission — a separate grant from ours. We already
+    // have the agent's live position on screen for the map, so pass it
+    // explicitly and route directly from where they actually are.
+    const params = myPosition
+      ? `origin=${myPosition.latitude},${myPosition.longitude}&destination=${destination}`
+      : `destination=${destination}`;
+    Linking.openURL(`https://www.google.com/maps/dir/?api=1&${params}&travelmode=driving`).catch(
       () => undefined
     );
   };
