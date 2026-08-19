@@ -1,5 +1,5 @@
 import { Text, TouchableOpacity, StyleSheet } from 'react-native';
-import { useNavigation, useNavigationState } from '@react-navigation/native';
+import { useNavigation } from '@react-navigation/native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useActiveOrders } from '../lib/useActiveOrders';
 import {
@@ -20,24 +20,18 @@ import { colors, spacing, radius, fontSizes, fontWeights, shadows } from '../the
  * way to check on it short of reordering from memory.
  */
 
-interface NavState {
-  index?: number;
-  routes: { name: string; state?: NavState }[];
-}
-
-function getActiveRouteName(state: NavState | undefined): string | undefined {
-  if (!state) return undefined;
-  const route = state.routes[state.index ?? 0];
-  return route?.state ? getActiveRouteName(route.state) : route?.name;
-}
-
-export function ActiveOrderBar() {
+export function ActiveOrderBar({ currentRouteName }: { currentRouteName?: string }) {
   const orders = useActiveOrders();
   const navigation = useNavigation<any>();
   const insets = useSafeAreaInsets();
   const tabBarSpace = useTabBarSpace();
   const cartCount = useCartStore((s) => selectCount(s.items));
-  const routeName = useNavigationState((state) => getActiveRouteName(state as NavState));
+  // The focused route name has to come in as a prop rather than from
+  // useNavigationState: that hook throws outside a navigator's own screen
+  // tree, and this bar is deliberately mounted as a sibling of the tab
+  // navigator so it can float over every tab. Getting this wrong crashed the
+  // app on every launch, release build included, with no on-screen error.
+  const routeName = currentRouteName;
 
   // Category and Shop float their own "View Cart" bar just above the tab bar
   // while something is in the cart. Sitting at the same fixed offset as that
