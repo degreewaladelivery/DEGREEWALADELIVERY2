@@ -167,7 +167,7 @@ function PastOrderRow({ order }: { order: TrackedOrder }) {
         <View style={styles.detail}>
           {order.items.map((item) => (
             <View key={item.id} style={styles.detailItem}>
-              <Thumb src={item.image_url ?? undefined} emoji="\ud83d\uded2" style={styles.detailThumb} fontSize={18} width={120} />
+              <Thumb src={item.image_url ?? undefined} emoji="🛒" style={styles.detailThumb} fontSize={18} width={120} />
               <Text style={styles.detailName} numberOfLines={2}>
                 {item.name}{item.unit ? ` (${item.unit})` : ''}
               </Text>
@@ -183,7 +183,7 @@ function PastOrderRow({ order }: { order: TrackedOrder }) {
             <BillRow label="Total" value={formatRupees(order.total)} bold />
           </View>
 
-          <Text style={styles.muted}>\ud83d\udccd {order.delivery_address}</Text>
+          <Text style={styles.muted}>📍 {order.delivery_address}</Text>
         </View>
       )}
     </View>
@@ -395,15 +395,17 @@ const styles = StyleSheet.create({
   },
   callBtnText: { fontSize: fontSizes.sm, fontWeight: fontWeights.bold, color: colors.text },
 
+  // Wraps pastHead (the tappable summary row) and, when expanded, the detail
+  // section below it. This has to stack them vertically — it used to carry the
+  // old flat single-row layout from before orders became expandable, which
+  // forced the detail section to sit beside the header as a second row item
+  // instead of below it, pushing item photos and the bill breakdown off the
+  // right edge of the screen the moment a past order was opened.
   past: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
     backgroundColor: '#fff',
     borderRadius: radius.md,
     padding: spacing.md,
     marginBottom: spacing.sm,
-    gap: spacing.sm,
   },
   pastRight: { alignItems: 'flex-end', gap: 2 },
   tag: { fontSize: 10, fontWeight: fontWeights.bold, color: '#2e7d32' },

@@ -300,7 +300,7 @@ function PastOrderRow({ order }: { order: TrackedOrder }) {
           {order.items.map((item) => (
             <div key={item.id} className="otrack__detail-item">
               <span className="otrack__detail-thumb">
-                <Thumb src={item.image_url ?? undefined} emoji="\ud83d\uded2" tint="#F4F6F9" alt={item.name} width={120} />
+                <Thumb src={item.image_url ?? undefined} emoji="🛒" tint="#F4F6F9" alt={item.name} width={120} />
               </span>
               <span className="otrack__detail-name">
                 {item.name}
@@ -318,7 +318,7 @@ function PastOrderRow({ order }: { order: TrackedOrder }) {
             <div className="is-total"><span>Total</span><span>{formatRupees(order.total)}</span></div>
           </div>
 
-          <p className="otrack__muted">\ud83d\udccd {order.delivery_address}</p>
+          <p className="otrack__muted">📍 {order.delivery_address}</p>
         </div>
       )}
     </div>
