@@ -1,4 +1,3 @@
-import { useRef, useState } from 'react';
 import { NavigationContainer } from '@react-navigation/native';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
@@ -18,23 +17,6 @@ import { ActiveOrderBar } from '../components/ActiveOrderBar';
 import { TAB_BAR_HEIGHT, TAB_BAR_INSET } from '../lib/tabBarSpace';
 import { colors, fontWeights, shadows } from '../theme';
 import type { HomeStackParamList, CartStackParamList, AccountStackParamList } from './types';
-
-/**
- * Deepest focused route name, found by walking down the nested stack/tab
- * state. Computed once here from NavigationContainer's onStateChange, which
- * is the only place this app-wide state is naturally reactive and available
- * without a hook that requires being inside a navigator's own screen tree.
- */
-interface NavState {
-  index?: number;
-  routes: { name: string; state?: NavState }[];
-}
-
-function getActiveRouteName(state: NavState | undefined): string | undefined {
-  if (!state) return undefined;
-  const route = state.routes[state.index ?? 0];
-  return route?.state ? getActiveRouteName(route.state) : route?.name;
-}
 
 const Tab = createBottomTabNavigator();
 const HomeStack = createNativeStackNavigator<HomeStackParamList>();
@@ -74,19 +56,8 @@ function AccountStackNavigator() {
 }
 
 export function RootNavigator() {
-  const routeNameRef = useRef<string | undefined>(undefined);
-  const [currentRouteName, setCurrentRouteName] = useState<string | undefined>(undefined);
-
   return (
-    <NavigationContainer
-      onStateChange={(state) => {
-        const name = getActiveRouteName(state as NavState | undefined);
-        if (name !== routeNameRef.current) {
-          routeNameRef.current = name;
-          setCurrentRouteName(name);
-        }
-      }}
-    >
+    <NavigationContainer>
       <Tab.Navigator
         screenOptions={{
           headerShown: false,
@@ -162,7 +133,7 @@ export function RootNavigator() {
           options={{ tabBarIcon: ({ color }) => <UserIcon size={22} color={color} /> }}
         />
       </Tab.Navigator>
-      <ActiveOrderBar currentRouteName={currentRouteName} />
+      <ActiveOrderBar />
       <OrderAlerts />
     </NavigationContainer>
   );

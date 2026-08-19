@@ -11,7 +11,8 @@ import { Thumb } from '../components/Thumb';
 import { ItemRow } from '../components/ItemRow';
 import { useCartStore, selectCount } from '../store/cartStore';
 import { colors, spacing, radius, fontSizes, fontWeights, shadows } from '../theme';
-import { VIEW_CART_BAR_BOTTOM_OFFSET } from '../lib/tabBarSpace';
+import { VIEW_CART_BAR_BOTTOM_OFFSET, ORDER_BAR_HEIGHT, ORDER_BAR_GAP } from '../lib/tabBarSpace';
+import { useActiveOrderCountStore } from '../store/activeOrderStore';
 
 const BRAND = '#FF6B00';
 type Nav = NativeStackNavigationProp<HomeStackParamList, 'Shop'>;
@@ -33,6 +34,9 @@ export function ShopScreen() {
   const [page, setPage] = useState<ShopPage | null>(null);
   const [loading, setLoading] = useState(true);
   const cartCount = useCartStore((s) => selectCount(s.items));
+  // The order-status bar always sits right above the tab bar, so this pill
+  // has to lift itself, not the other way round — see tabBarSpace.ts.
+  const hasActiveOrder = useActiveOrderCountStore((s) => s.count > 0);
 
   // Same reasoning as the category screen: show the last known shop instantly,
   // correct it behind the scenes.
@@ -113,7 +117,7 @@ export function ShopScreen() {
 
       {cartCount > 0 && (
         <TouchableOpacity
-          style={[styles.cartBar, { bottom: insets.bottom + VIEW_CART_BAR_BOTTOM_OFFSET }]}
+          style={[styles.cartBar, { bottom: insets.bottom + VIEW_CART_BAR_BOTTOM_OFFSET + (hasActiveOrder ? ORDER_BAR_HEIGHT + ORDER_BAR_GAP : 0) }]}
           activeOpacity={0.9}
           onPress={() =>
             // Name the screen: without it we land wherever the Cart tab was left,

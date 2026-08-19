@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import { getCustomer } from './auth';
 import { fetchMyOrders, SignedOutError, type TrackedOrder } from './tracking';
 import { isActiveOrder } from '@shared/agentOrders';
+import { useActiveOrderCountStore } from '../store/activeOrderStore';
 
 /**
  * The customer's in-flight orders, polled from anywhere in the app.
@@ -25,17 +26,27 @@ export function useActiveOrders(): TrackedOrder[] {
     const check = async () => {
       const customer = await getCustomer();
       if (!customer) {
-        if (!cancelled) setOrders([]);
+        if (!cancelled) {
+          setOrders([]);
+          useActiveOrderCountStore.getState().setCount(0);
+        }
         return;
       }
       try {
         const rows = await fetchMyOrders(customer.token);
-        if (!cancelled) setOrders(rows.filter(isActiveOrder));
+        const active = rows.filter(isActiveOrder);
+        if (!cancelled) setOrders(active);
+        // Kept in sync here rather than the caller, so anything that reads
+        // the shared count can't drift from what this hook actually found.
+        useActiveOrderCountStore.getState().setCount(active.length);
       } catch (err) {
         // A signed-out customer genuinely has no orders to show. Any other
         // failure is transient — keep showing whatever we last had rather
         // than flash the bar away on one bad request.
-        if (!cancelled && err instanceof SignedOutError) setOrders([]);
+        if (!cancelled && err instanceof SignedOutError) {
+          setOrders([]);
+          useActiveOrderCountStore.getState().setCount(0);
+        }
       }
     };
 
