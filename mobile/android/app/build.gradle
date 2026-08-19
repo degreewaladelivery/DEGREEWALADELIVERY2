@@ -135,6 +135,10 @@ dependencies {
     // The version of react-native is set by the React Native Gradle Plugin
     implementation("com.facebook.react:react-android")
 
+    // For the "turn on location" dialog. It arrives transitively via the
+    // geolocation package, but our own Kotlin needs it on the compile path.
+    implementation("com.google.android.gms:play-services-location:21.0.1")
+
     if (hermesEnabled.toBoolean()) {
         implementation("com.facebook.react:hermes-android")
     } else {

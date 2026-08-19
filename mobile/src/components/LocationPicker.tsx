@@ -2,7 +2,7 @@ import { useRef, useState, type ComponentType, type Ref } from 'react';
 import { View, Text, TouchableOpacity, StyleSheet } from 'react-native';
 import { WebView, type WebViewProps, type WebViewMessageEvent } from 'react-native-webview';
 import { MAPBOX_TOKEN, hasMapbox } from '../lib/mapbox';
-import { ensureLocationPermission } from '../lib/locationPermission';
+import { ensureLocationPermission, ensureLocationServicesOn } from '../lib/locationPermission';
 import { getBestPosition, lastLocationError } from '../lib/getPosition';
 import { BLOCK_ATTRIBUTION_LINKS_JS, allowMapOnly } from '../lib/mapHtml';
 import { colors, spacing, radius, fontSizes, fontWeights } from '../theme';
@@ -128,6 +128,11 @@ export function LocationPicker({ latitude, longitude, onChange }: LocationPicker
       );
       return;
     }
+
+    // Permission granted is not the same as Location switched on. Ask Android
+    // to turn it on here rather than failing and telling them to go digging in
+    // Settings.
+    await ensureLocationServicesOn();
 
     const position = await getBestPosition((better) => {
       // A sharper fix arrived after we'd already drawn one — move the pin to it

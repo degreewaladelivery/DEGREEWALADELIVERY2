@@ -1,4 +1,4 @@
-import { Platform, PermissionsAndroid } from 'react-native';
+import { Platform, PermissionsAndroid, NativeModules } from 'react-native';
 
 /**
  * Android runtime location permission.
@@ -30,6 +30,32 @@ export async function ensureLocationPermission(): Promise<boolean> {
       }
     );
     return result === PermissionsAndroid.RESULTS.GRANTED;
+  } catch {
+    return false;
+  }
+}
+
+interface DeliveryTrackingNative {
+  promptEnableLocation(): Promise<boolean>;
+}
+
+const native = (NativeModules as { DeliveryTracking?: DeliveryTrackingNative }).DeliveryTracking;
+
+/**
+ * Ask Android to switch Location on, without leaving the app.
+ *
+ * App permission and the phone's Location switch are two different things: a
+ * customer can grant us permission and still have Location off system-wide,
+ * which is why "use my current location" could fail straight after they said
+ * yes. Play Services offers a dialog that flips the switch in place — sending
+ * someone into Settings to hunt for a toggle loses most of them.
+ *
+ * Returns true when location is usable afterwards.
+ */
+export async function ensureLocationServicesOn(): Promise<boolean> {
+  if (Platform.OS !== 'android') return true;
+  try {
+    return (await native?.promptEnableLocation()) ?? false;
   } catch {
     return false;
   }
