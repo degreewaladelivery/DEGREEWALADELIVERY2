@@ -19,3 +19,15 @@ export function useTabBarSpace(): number {
   const insets = useSafeAreaInsets();
   return TAB_BAR_HEIGHT + TAB_BAR_INSET + insets.bottom + 16;
 }
+
+/**
+ * Geometry of the floating "N items · View Cart" bar shown on Category and
+ * Shop screens while an item is in the cart. Centralized for the same reason
+ * as the tab bar constants above: the active-order status bar has to stack
+ * above this one rather than guess its height and risk covering it, which is
+ * exactly what happened when both bars floated at independent, uncoordinated
+ * positions.
+ */
+export const VIEW_CART_BAR_BOTTOM_OFFSET = 84; // added to insets.bottom
+export const VIEW_CART_BAR_HEIGHT = 56; // padding + one line at font size md
+export const VIEW_CART_BAR_GAP = 10; // breathing room above it

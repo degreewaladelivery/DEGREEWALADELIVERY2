@@ -9,6 +9,7 @@ import type { HomeStackParamList } from '../navigation/types';
 import { ItemRow } from '../components/ItemRow';
 import { useCartStore, selectCount } from '../store/cartStore';
 import { colors, spacing, radius, fontSizes, fontWeights, shadows } from '../theme';
+import { VIEW_CART_BAR_BOTTOM_OFFSET } from '../lib/tabBarSpace';
 
 const BRAND = '#FF6B00';
 type Nav = NativeStackNavigationProp<HomeStackParamList, 'Category'>;
@@ -106,7 +107,7 @@ export function CategoryScreen() {
 
       {cartCount > 0 && (
         <TouchableOpacity
-          style={[styles.cartBar, { bottom: insets.bottom + 84 }]}
+          style={[styles.cartBar, { bottom: insets.bottom + VIEW_CART_BAR_BOTTOM_OFFSET }]}
           activeOpacity={0.9}
           onPress={() =>
             // Name the screen: without it we land wherever the Cart tab was left,

@@ -1,7 +1,14 @@
 import { Text, TouchableOpacity, StyleSheet } from 'react-native';
-import { useNavigation } from '@react-navigation/native';
+import { useNavigation, useNavigationState } from '@react-navigation/native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useActiveOrders } from '../lib/useActiveOrders';
-import { useTabBarSpace } from '../lib/tabBarSpace';
+import {
+  useTabBarSpace,
+  VIEW_CART_BAR_BOTTOM_OFFSET,
+  VIEW_CART_BAR_HEIGHT,
+  VIEW_CART_BAR_GAP,
+} from '../lib/tabBarSpace';
+import { useCartStore, selectCount } from '../store/cartStore';
 import { orderStatusLabel } from '@shared/agentOrders';
 import { colors, spacing, radius, fontSizes, fontWeights, shadows } from '../theme';
 
@@ -12,10 +19,34 @@ import { colors, spacing, radius, fontSizes, fontWeights, shadows } from '../the
  * leaving the app for even a minute and coming back left a customer with no
  * way to check on it short of reordering from memory.
  */
+
+interface NavState {
+  index?: number;
+  routes: { name: string; state?: NavState }[];
+}
+
+function getActiveRouteName(state: NavState | undefined): string | undefined {
+  if (!state) return undefined;
+  const route = state.routes[state.index ?? 0];
+  return route?.state ? getActiveRouteName(route.state) : route?.name;
+}
+
 export function ActiveOrderBar() {
   const orders = useActiveOrders();
-  const navigation = useNavigation<any>(); // eslint-disable-line @typescript-eslint/no-explicit-any
-  const bottom = useTabBarSpace();
+  const navigation = useNavigation<any>();
+  const insets = useSafeAreaInsets();
+  const tabBarSpace = useTabBarSpace();
+  const cartCount = useCartStore((s) => selectCount(s.items));
+  const routeName = useNavigationState((state) => getActiveRouteName(state as NavState));
+
+  // Category and Shop float their own "View Cart" bar just above the tab bar
+  // while something is in the cart. Sitting at the same fixed offset as that
+  // bar covered it outright; stack above it instead of guessing whether it's
+  // there.
+  const showsCartBar = cartCount > 0 && (routeName === 'Category' || routeName === 'Shop');
+  const bottom = showsCartBar
+    ? insets.bottom + VIEW_CART_BAR_BOTTOM_OFFSET + VIEW_CART_BAR_HEIGHT + VIEW_CART_BAR_GAP
+    : tabBarSpace;
 
   if (orders.length === 0) return null;
 
