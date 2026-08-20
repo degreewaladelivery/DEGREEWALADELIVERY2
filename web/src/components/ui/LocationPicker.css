@@ -62,3 +62,31 @@
   border: 1px dashed var(--border-strong, #dfe3ea);
   border-radius: var(--radius-md, 12px);
 }
+
+.location-picker__paste {
+  display: flex;
+  gap: 8px;
+}
+
+.location-picker__paste-input {
+  flex: 1;
+  min-width: 0;
+  font: inherit;
+  font-size: 13px;
+  padding: 8px 10px;
+  border: 1px solid var(--border-strong, #dfe3ea);
+  border-radius: var(--radius-md, 12px);
+  background: #fff;
+}
+
+.location-picker__paste-go {
+  font: inherit;
+  font-size: 13px;
+  font-weight: 700;
+  color: #fff;
+  background: var(--brand, #ff6b00);
+  border: none;
+  border-radius: var(--radius-md, 12px);
+  padding: 0 16px;
+  cursor: pointer;
+}

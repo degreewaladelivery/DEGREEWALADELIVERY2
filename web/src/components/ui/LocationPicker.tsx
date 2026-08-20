@@ -10,15 +10,31 @@ interface LocationPickerProps {
   latitude: number | null;
   longitude: number | null;
   onChange: (lat: number, lng: number) => void;
+  /**
+   * Shows a "paste coordinates" field alongside the map. Off by default —
+   * customers picking a delivery address have no reason to paste raw
+   * lat/lng. Admins setting a shop or the default pickup point often do:
+   * dragging a pin by hand can't reliably hit 6 decimals of precision, and
+   * the coordinates are usually sitting right there in a Google Maps link
+   * or its search bar already.
+   */
+  allowManualEntry?: boolean;
 }
 
-export function LocationPicker({ latitude, longitude, onChange }: LocationPickerProps) {
+export function LocationPicker({
+  latitude,
+  longitude,
+  onChange,
+  allowManualEntry = false,
+}: LocationPickerProps) {
   const containerRef = useRef<HTMLDivElement>(null);
   const mapRef = useRef<mapboxgl.Map | null>(null);
   const markerRef = useRef<mapboxgl.Marker | null>(null);
   const onChangeRef = useRef(onChange);
   const [locating, setLocating] = useState(false);
   const [locateError, setLocateError] = useState<string | null>(null);
+  const [pasted, setPasted] = useState('');
+  const [pasteError, setPasteError] = useState<string | null>(null);
 
   useEffect(() => {
     onChangeRef.current = onChange;
@@ -67,6 +83,25 @@ export function LocationPicker({ latitude, longitude, onChange }: LocationPicker
     mapRef.current.flyTo({ center: [longitude, latitude], zoom: 16 });
   }, [latitude, longitude]);
 
+  const applyPasted = () => {
+    // Accepts exactly what you'd copy out of Google Maps: "13.351447,
+    // 75.466142", with or without the space, in either lat,lng order Google
+    // itself uses.
+    const match = pasted.trim().match(/^(-?\d+(?:\.\d+)?)\s*,\s*(-?\d+(?:\.\d+)?)$/);
+    if (!match) {
+      setPasteError('Paste as two numbers separated by a comma, e.g. 13.351447, 75.466142');
+      return;
+    }
+    const lat = Number(match[1]);
+    const lng = Number(match[2]);
+    if (Math.abs(lat) > 90 || Math.abs(lng) > 180) {
+      setPasteError('That doesn\u2019t look like a latitude, longitude pair.');
+      return;
+    }
+    setPasteError(null);
+    onChangeRef.current(lat, lng);
+  };
+
   const useCurrentLocation = () => {
     if (!('geolocation' in navigator)) {
       setLocateError('This browser cannot detect your location.');
@@ -110,6 +145,27 @@ export function LocationPicker({ latitude, longitude, onChange }: LocationPicker
         {locating ? 'Finding you…' : '📍 Use my current location'}
       </button>
       {locateError && <p className="location-picker__error">{locateError}</p>}
+      {allowManualEntry && (
+        <div className="location-picker__paste">
+          <input
+            type="text"
+            className="location-picker__paste-input"
+            placeholder="Paste coordinates, e.g. 13.351447, 75.466142"
+            value={pasted}
+            onChange={(e) => setPasted(e.target.value)}
+            onKeyDown={(e) => {
+              if (e.key === 'Enter') {
+                e.preventDefault();
+                applyPasted();
+              }
+            }}
+          />
+          <button type="button" className="location-picker__paste-go" onClick={applyPasted}>
+            Go
+          </button>
+        </div>
+      )}
+      {pasteError && <p className="location-picker__error">{pasteError}</p>}
       <div ref={containerRef} className="location-picker" />
       <p className="location-picker__hint">
         Drag the pin or tap the map to adjust the exact spot.

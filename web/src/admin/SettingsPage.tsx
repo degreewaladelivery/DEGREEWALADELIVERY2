@@ -56,6 +56,7 @@ export function SettingsPage() {
               setLatitude(lat);
               setLongitude(lng);
             }}
+            allowManualEntry
           />
         </label>
       )}

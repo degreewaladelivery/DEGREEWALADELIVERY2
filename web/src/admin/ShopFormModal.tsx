@@ -128,6 +128,7 @@ export function ShopFormModal({
               setLatitude(lat);
               setLongitude(lng);
             }}
+            allowManualEntry
           />
         </label>
 
