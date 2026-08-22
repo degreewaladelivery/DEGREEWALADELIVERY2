@@ -1,14 +1,10 @@
-import { createClient, type SupabaseClient } from 'jsr:@supabase/supabase-js@2';
+import { createClient } from 'jsr:@supabase/supabase-js@2';
 import { corsHeaders, json, resolveSession } from '../_shared/session.ts';
-import {
-  calculateDeliveryFare,
-  haversineDistanceKm,
-  MAX_DELIVERY_RADIUS_KM,
-} from '../../../shared/deliveryFare.ts';
+import { resolvePickup, routeDistanceKm } from '../_shared/pickup.ts';
+import { calculateDeliveryFare, MAX_DELIVERY_RADIUS_KM } from '../../../shared/deliveryFare.ts';
 
 const SUPABASE_URL = Deno.env.get('SUPABASE_URL') ?? '';
 const SERVICE_ROLE_KEY = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? '';
-const MAPBOX_TOKEN = Deno.env.get('MAPBOX_TOKEN') ?? '';
 
 const NOTIFY_AGENTS_SECRET = Deno.env.get('NOTIFY_AGENTS_SECRET') ?? '';
 
@@ -32,69 +28,6 @@ async function notifyAgents(): Promise<void> {
   });
 }
 
-interface PickupPoint {
-  latitude: number;
-  longitude: number;
-  label: string;
-}
-
-async function resolvePickup(
-  admin: SupabaseClient,
-  shopId: string | null
-): Promise<PickupPoint | null> {
-  if (shopId) {
-    const { data: shop } = await admin
-      .from('shops')
-      .select('name, latitude, longitude')
-      .eq('id', shopId)
-      .maybeSingle();
-    if (shop?.latitude != null && shop?.longitude != null) {
-      return { latitude: shop.latitude, longitude: shop.longitude, label: shop.name };
-    }
-  }
-
-  const { data: settings } = await admin
-    .from('app_settings')
-    .select('pickup_latitude, pickup_longitude')
-    .single();
-  if (settings?.pickup_latitude == null || settings?.pickup_longitude == null) return null;
-
-  let label = 'DegreeWala pickup point';
-  if (shopId) {
-    const { data: category } = await admin
-      .from('categories')
-      .select('name')
-      .eq('id', shopId)
-      .maybeSingle();
-    if (category?.name) label = category.name;
-  }
-
-  return {
-    latitude: settings.pickup_latitude,
-    longitude: settings.pickup_longitude,
-    label,
-  };
-}
-
-async function routeDistanceKm(
-  from: PickupPoint,
-  toLatitude: number,
-  toLongitude: number
-): Promise<number> {
-  if (MAPBOX_TOKEN) {
-    try {
-      const url =
-        `https://api.mapbox.com/directions/v5/mapbox/driving/` +
-        `${from.longitude},${from.latitude};${toLongitude},${toLatitude}` +
-        `?overview=false&access_token=${MAPBOX_TOKEN}`;
-      const res = await fetch(url);
-      const data = await res.json();
-      const meters = data?.routes?.[0]?.distance;
-      if (typeof meters === 'number') return meters / 1000;
-    } catch {}
-  }
-  return haversineDistanceKm(from.latitude, from.longitude, toLatitude, toLongitude);
-}
 
 Deno.serve(async (req) => {
   if (req.method === 'OPTIONS') {
@@ -176,7 +109,7 @@ Deno.serve(async (req) => {
       return json({ ok: false, error: 'Delivery is not set up for this shop yet' });
     }
 
-    const distanceKm = await routeDistanceKm(pickup, latitude, longitude);
+    const { km: distanceKm } = await routeDistanceKm(pickup, latitude, longitude);
     if (distanceKm > MAX_DELIVERY_RADIUS_KM) {
       return json({
         ok: false,

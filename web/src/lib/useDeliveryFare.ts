@@ -1,47 +1,58 @@
 import { useEffect, useState } from 'react';
 import { useLocationStore } from '../store/locationStore';
-import { getPickupPoint, type PickupPoint } from './deliveryPickup';
-import { MAPBOX_TOKEN, hasMapbox } from './mapbox';
+import { supabase } from './supabase';
+import { hasMapbox } from './mapbox';
 import {
   calculateDeliveryFare,
-  haversineDistanceKm,
   MAX_DELIVERY_RADIUS_KM,
   type DeliveryFare,
 } from '@shared/deliveryFare';
-import { getRouteDistanceKm } from '@shared/mapbox';
 
 interface Measured {
   latitude: number;
   longitude: number;
-  pickupKey: string;
+  shopKey: string;
   km: number;
 }
 
 export interface DeliveryFareState {
-  pickup: PickupPoint | null;
-  pickupError: boolean;
   distanceKm: number | null;
   fare: DeliveryFare | null;
   loading: boolean;
   outOfRange: boolean;
+  pickupError: boolean;
   hasLocation: boolean;
 }
 
+/**
+ * The delivery distance and fare, measured by the same server code that
+ * place-order charges on — so the quote in the cart and the amount actually
+ * billed are the same number by construction, not by two copies of the maths
+ * happening to agree.
+ */
 export function useDeliveryFare(shopId: string | null): DeliveryFareState {
   const location = useLocationStore((s) => s.location);
-  const [pickup, setPickup] = useState<PickupPoint | null>(null);
   const [pickupError, setPickupError] = useState(false);
   const [measured, setMeasured] = useState<Measured | null>(null);
 
+  const latitude = location?.latitude ?? null;
+  const longitude = location?.longitude ?? null;
+  const shopKey = shopId ?? '';
+
   useEffect(() => {
-    if (!hasMapbox()) return;
+    if (latitude == null || longitude == null) return;
     let cancelled = false;
 
-    getPickupPoint(shopId)
-      .then((point) => {
+    supabase.functions
+      .invoke('route-distance', { body: { shopId, latitude, longitude } })
+      .then(({ data, error }) => {
         if (cancelled) return;
-        if (point) setPickup(point);
-        else setPickupError(true);
+        if (error || !data?.ok || typeof data.distanceKm !== 'number') {
+          setPickupError(true);
+          return;
+        }
+        setPickupError(false);
+        setMeasured({ latitude, longitude, shopKey, km: data.distanceKm });
       })
       .catch(() => {
         if (!cancelled) setPickupError(true);
@@ -50,44 +61,13 @@ export function useDeliveryFare(shopId: string | null): DeliveryFareState {
     return () => {
       cancelled = true;
     };
-  }, [shopId]);
-
-  const latitude = location?.latitude ?? null;
-  const longitude = location?.longitude ?? null;
-  const pickupKey = pickup ? `${pickup.latitude},${pickup.longitude}` : null;
-
-  useEffect(() => {
-    if (!hasMapbox() || !pickup || latitude == null || longitude == null) return;
-    let cancelled = false;
-
-    const target = { latitude, longitude };
-    const run = MAPBOX_TOKEN
-      ? getRouteDistanceKm(MAPBOX_TOKEN, pickup, target)
-      : Promise.resolve(
-          haversineDistanceKm(pickup.latitude, pickup.longitude, latitude, longitude)
-        );
-
-    run.then((km) => {
-      if (!cancelled) {
-        setMeasured({
-          latitude,
-          longitude,
-          pickupKey: `${pickup.latitude},${pickup.longitude}`,
-          km,
-        });
-      }
-    });
-
-    return () => {
-      cancelled = true;
-    };
-  }, [pickup, latitude, longitude]);
+  }, [shopId, shopKey, latitude, longitude]);
 
   const distanceKm =
     measured &&
     measured.latitude === latitude &&
     measured.longitude === longitude &&
-    measured.pickupKey === pickupKey
+    measured.shopKey === shopKey
       ? measured.km
       : null;
 
@@ -98,13 +78,11 @@ export function useDeliveryFare(shopId: string | null): DeliveryFareState {
     : calculateDeliveryFare(0);
 
   return {
-    pickup,
-    pickupError,
     distanceKm,
     fare,
-    loading:
-      hasMapbox() && pickup != null && latitude != null && distanceKm == null && !pickupError,
+    loading: hasMapbox() && latitude != null && distanceKm == null && !pickupError,
     outOfRange: distanceKm != null && distanceKm > MAX_DELIVERY_RADIUS_KM,
+    pickupError,
     hasLocation: latitude != null && longitude != null,
   };
 }

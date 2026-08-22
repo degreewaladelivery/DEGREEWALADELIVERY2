@@ -5,8 +5,14 @@ export interface LatLng {
   longitude: number;
 }
 
+/**
+ * Kept for callers that only need a rough on-screen figure. Delivery distance
+ * is not one of them: that is measured by the route-distance edge function, so
+ * the quote and the charge come from one place and the routing key stays off
+ * the client.
+ */
 export async function getRouteDistanceKm(
-  token: string,
+  mapboxToken: string,
   from: LatLng,
   to: LatLng
 ): Promise<number> {
@@ -14,7 +20,7 @@ export async function getRouteDistanceKm(
     const url =
       `https://api.mapbox.com/directions/v5/mapbox/driving/` +
       `${from.longitude},${from.latitude};${to.longitude},${to.latitude}` +
-      `?overview=false&access_token=${token}`;
+      `?overview=false&access_token=${mapboxToken}`;
     const res = await fetch(url);
     const data = await res.json();
     const meters = data?.routes?.[0]?.distance;
