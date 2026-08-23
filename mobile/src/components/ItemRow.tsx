@@ -13,9 +13,10 @@ export function ItemRow({ product }: { product: Product }) {
   const decrement = useCartStore((s) => s.decrement);
 
   const onAdd = () => addItem(product);
+  const unavailable = !product.isAvailable;
 
   return (
-    <View style={styles.row}>
+    <View style={[styles.row, unavailable && styles.rowUnavailable]}>
       {/* Tapping the row opens the full item — the description here is clipped
           to two lines, and there was previously no way to read the rest. */}
       <View style={styles.thumb}>
@@ -37,7 +38,12 @@ export function ItemRow({ product }: { product: Product }) {
         <Text style={styles.more}>More details ›</Text>
       </TouchableOpacity>
 
-      {qty === 0 ? (
+      {/* Say so here rather than letting the customer discover it at checkout,
+          where the failure names no item and by then they have built a whole
+          order around something they cannot have. */}
+      {unavailable ? (
+        <Text style={styles.soldOut}>Unavailable</Text>
+      ) : qty === 0 ? (
         <TouchableOpacity style={styles.addBtn} activeOpacity={0.8} onPress={onAdd}>
           <Text style={styles.addText}>Add +</Text>
         </TouchableOpacity>
@@ -79,6 +85,12 @@ const styles = StyleSheet.create({
   name: { fontSize: fontSizes.md + 0.5, fontWeight: fontWeights.bold, color: colors.text },
   unit: { fontSize: fontSizes.xs + 0.5, fontWeight: fontWeights.semibold, color: colors.textMuted, marginTop: 2 },
   desc: { fontSize: fontSizes.sm, color: colors.textMuted, marginTop: 2 },
+  rowUnavailable: { opacity: 0.55 },
+  soldOut: {
+    fontSize: fontSizes.sm,
+    fontWeight: fontWeights.bold,
+    color: colors.textMuted,
+  },
   more: { fontSize: fontSizes.xs, fontWeight: fontWeights.bold, color: colors.brand, marginTop: 2 },
   price: { fontSize: fontSizes.md, fontWeight: fontWeights.heading, color: colors.text, marginTop: 6 },
 

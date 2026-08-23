@@ -86,7 +86,27 @@ Deno.serve(async (req) => {
 
     const available = [...(fromCategories.data ?? []), ...(fromShops.data ?? [])];
     if (available.length !== ids.length) {
-      return json({ ok: false, error: 'Some items are no longer available' });
+      // Name them. The catalogue views hide anything inactive, so a missing row
+      // is exactly an item that has been withdrawn — and telling someone "some
+      // items are no longer available" leaves them deleting things one at a
+      // time to find out which. The base tables still hold the names.
+      const found = new Set(available.map((product) => product.id));
+      const missingIds = ids.filter((id) => !found.has(id));
+      const [namedProducts, namedShopProducts] = await Promise.all([
+        admin.from('products').select('name').in('id', missingIds),
+        admin.from('shop_products').select('name').in('id', missingIds),
+      ]);
+      const names = [...(namedProducts.data ?? []), ...(namedShopProducts.data ?? [])]
+        .map((row) => row.name)
+        .filter(Boolean);
+
+      return json({
+        ok: false,
+        error: names.length
+          ? `${names.join(', ')} ${names.length === 1 ? 'is' : 'are'} no longer available. Please remove ${names.length === 1 ? 'it' : 'them'} from your cart.`
+          : 'Some items are no longer available',
+        unavailableIds: missingIds,
+      });
     }
 
     const items = available.map((product) => ({
