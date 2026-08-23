@@ -55,6 +55,8 @@ export async function verifyOtp(phone: string, otp: string): Promise<Customer> {
 
 export interface CustomerProfile {
   name: string;
+  /** Optional. Empty string when the customer hasn't given one. */
+  email: string;
   phone: string;
   memberSince: string;
   orderCount: number;
@@ -73,6 +75,11 @@ export function fetchProfile(token: string): Promise<CustomerProfile> {
   return profileRequest({ token });
 }
 
-export function saveProfileName(token: string, name: string): Promise<CustomerProfile> {
-  return profileRequest({ token, action: 'update', name });
+/** Only the fields passed are written, so a caller updating one cannot blank
+ *  the other. */
+export function saveProfile(
+  token: string,
+  changes: { name?: string; email?: string }
+): Promise<CustomerProfile> {
+  return profileRequest({ token, action: 'update', ...changes });
 }

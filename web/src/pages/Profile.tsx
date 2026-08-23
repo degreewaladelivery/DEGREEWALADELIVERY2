@@ -4,7 +4,7 @@ import {
   getCustomer,
   logoutCustomer,
   fetchProfile,
-  saveProfileName,
+  saveProfile,
   type CustomerProfile,
 } from '../lib/auth';
 import { SignedOutError } from '../lib/tracking';
@@ -24,6 +24,7 @@ export function Profile() {
   const [loading, setLoading] = useState(true);
   const [editing, setEditing] = useState(false);
   const [draft, setDraft] = useState('');
+  const [emailDraft, setEmailDraft] = useState('');
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -64,7 +65,7 @@ export function Profile() {
     setSaving(true);
     setError(null);
     try {
-      const next = await saveProfileName(customer.token, draft);
+      const next = await saveProfile(customer.token, { name: draft, email: emailDraft });
       setProfile(next);
       setEditing(false);
     } catch (err) {
@@ -72,7 +73,7 @@ export function Profile() {
         logoutCustomer().finally(() => navigate('/login?next=/profile', { replace: true }));
         return;
       }
-      setError(err instanceof Error ? err.message : 'Could not save your name.');
+      setError(err instanceof Error ? err.message : 'Could not save your details.');
     } finally {
       setSaving(false);
     }
@@ -105,6 +106,18 @@ export function Profile() {
                     if (e.key === 'Escape') setEditing(false);
                   }}
                 />
+                <input
+                  className="profile__input"
+                  type="email"
+                  value={emailDraft}
+                  onChange={(e) => setEmailDraft(e.target.value)}
+                  placeholder="Email (optional)"
+                  maxLength={254}
+                  onKeyDown={(e) => {
+                    if (e.key === 'Enter') save();
+                    if (e.key === 'Escape') setEditing(false);
+                  }}
+                />
                 <div className="profile__editRow">
                   <button
                     type="button"
@@ -125,16 +138,18 @@ export function Profile() {
                   {name || 'Add your name'}
                 </strong>
                 <p className="profile__phone">+91 {profile?.phone ?? customer.phone}</p>
+                {profile?.email && <p className="profile__phone">{profile.email}</p>}
                 <button
                   type="button"
                   className="profile__editLink"
                   onClick={() => {
                     setDraft(name);
+                    setEmailDraft(profile?.email ?? '');
                     setError(null);
                     setEditing(true);
                   }}
                 >
-                  {name ? 'Edit name' : 'Add name'}
+                  {name ? 'Edit details' : 'Add your details'}
                 </button>
               </>
             )}

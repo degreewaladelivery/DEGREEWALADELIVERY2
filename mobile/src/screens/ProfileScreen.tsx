@@ -10,7 +10,7 @@ import {
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useNavigation } from '@react-navigation/native';
-import { fetchProfile, saveProfileName, type Customer, type CustomerProfile } from '../lib/auth';
+import { fetchProfile, saveProfile, type Customer, type CustomerProfile } from '../lib/auth';
 import { SignedOutError } from '../lib/tracking';
 import { useTabBarSpace } from '../lib/tabBarSpace';
 import { colors, spacing, radius, fontSizes, fontWeights, shadows } from '../theme';
@@ -41,6 +41,7 @@ export function ProfileScreen({
   const [loading, setLoading] = useState(true);
   const [editing, setEditing] = useState(false);
   const [draft, setDraft] = useState('');
+  const [emailDraft, setEmailDraft] = useState('');
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -76,6 +77,7 @@ export function ProfileScreen({
 
   const startEditing = () => {
     setDraft(profile?.name ?? '');
+    setEmailDraft(profile?.email ?? '');
     setError(null);
     setEditing(true);
   };
@@ -84,7 +86,7 @@ export function ProfileScreen({
     setSaving(true);
     setError(null);
     try {
-      const next = await saveProfileName(customer.token, draft);
+      const next = await saveProfile(customer.token, { name: draft, email: emailDraft });
       setProfile(next);
       setEditing(false);
     } catch (err) {
@@ -92,7 +94,7 @@ export function ProfileScreen({
         onLogout();
         return;
       }
-      setError(err instanceof Error ? err.message : 'Could not save your name.');
+      setError(err instanceof Error ? err.message : 'Could not save your details.');
     } finally {
       setSaving(false);
     }
@@ -130,6 +132,18 @@ export function ProfileScreen({
                 placeholderTextColor={colors.textFaint}
                 autoFocus
                 maxLength={60}
+                returnKeyType="next"
+              />
+              <TextInput
+                style={[styles.input, styles.inputSpaced]}
+                value={emailDraft}
+                onChangeText={setEmailDraft}
+                placeholder="Email (optional)"
+                placeholderTextColor={colors.textFaint}
+                keyboardType="email-address"
+                autoCapitalize="none"
+                autoCorrect={false}
+                maxLength={254}
                 returnKeyType="done"
                 onSubmitEditing={save}
               />
@@ -158,8 +172,9 @@ export function ProfileScreen({
                 {name || 'Add your name'}
               </Text>
               <Text style={styles.phone}>+91 {profile?.phone ?? customer.phone}</Text>
+              {!!profile?.email && <Text style={styles.phone}>{profile.email}</Text>}
               <TouchableOpacity onPress={startEditing} activeOpacity={0.8}>
-                <Text style={styles.editLink}>{name ? 'Edit name' : 'Add name'}</Text>
+                <Text style={styles.editLink}>{name ? 'Edit details' : 'Add your details'}</Text>
               </TouchableOpacity>
             </>
           )}
@@ -266,6 +281,7 @@ const styles = StyleSheet.create({
     fontSize: fontSizes.md,
     color: colors.text,
   },
+  inputSpaced: { marginTop: spacing.sm },
   editRow: { flexDirection: 'row', gap: spacing.sm, width: '100%', marginTop: spacing.md },
   flex: { flex: 1 },
   primaryBtn: {
