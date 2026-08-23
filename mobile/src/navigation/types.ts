@@ -3,6 +3,7 @@ export type HomeStackParamList = {
   Category: { categoryKey: string };
   Shop: { shopId: string };
   Search: { query?: string } | undefined;
+  ItemDetail: { productId: string };
 };
 
 export type AccountStackParamList = {

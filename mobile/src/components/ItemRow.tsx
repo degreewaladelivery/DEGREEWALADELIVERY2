@@ -1,4 +1,5 @@
 import { View, Text, StyleSheet, TouchableOpacity } from 'react-native';
+import { useNavigation } from '@react-navigation/native';
 import type { Product } from '@shared/types';
 import { useCartStore } from '../store/cartStore';
 import { formatRupees } from '../lib/format';
@@ -6,6 +7,7 @@ import { Thumb } from './Thumb';
 import { colors, spacing, radius, fontSizes, fontWeights } from '../theme';
 
 export function ItemRow({ product }: { product: Product }) {
+  const navigation = useNavigation<any>();
   const qty = useCartStore((s) => s.items[product.id]?.quantity ?? 0);
   const addItem = useCartStore((s) => s.addItem);
   const decrement = useCartStore((s) => s.decrement);
@@ -14,10 +16,16 @@ export function ItemRow({ product }: { product: Product }) {
 
   return (
     <View style={styles.row}>
+      {/* Tapping the row opens the full item — the description here is clipped
+          to two lines, and there was previously no way to read the rest. */}
       <View style={styles.thumb}>
         <Thumb src={product.imageUrl} emoji="🛒" tint="#F4F6F9" fontSize={22} style={styles.thumbImg} />
       </View>
-      <View style={styles.info}>
+      <TouchableOpacity
+        style={styles.info}
+        activeOpacity={0.7}
+        onPress={() => navigation.navigate('ItemDetail', { productId: product.id })}
+      >
         <Text style={styles.name}>{product.name}</Text>
         {product.unit ? <Text style={styles.unit}>{product.unit}</Text> : null}
         {product.description ? (
@@ -26,7 +34,8 @@ export function ItemRow({ product }: { product: Product }) {
           </Text>
         ) : null}
         <Text style={styles.price}>{formatRupees(product.price)}</Text>
-      </View>
+        <Text style={styles.more}>More details ›</Text>
+      </TouchableOpacity>
 
       {qty === 0 ? (
         <TouchableOpacity style={styles.addBtn} activeOpacity={0.8} onPress={onAdd}>
@@ -70,6 +79,7 @@ const styles = StyleSheet.create({
   name: { fontSize: fontSizes.md + 0.5, fontWeight: fontWeights.bold, color: colors.text },
   unit: { fontSize: fontSizes.xs + 0.5, fontWeight: fontWeights.semibold, color: colors.textMuted, marginTop: 2 },
   desc: { fontSize: fontSizes.sm, color: colors.textMuted, marginTop: 2 },
+  more: { fontSize: fontSizes.xs, fontWeight: fontWeights.bold, color: colors.brand, marginTop: 2 },
   price: { fontSize: fontSizes.md, fontWeight: fontWeights.heading, color: colors.text, marginTop: 6 },
 
   addBtn: {

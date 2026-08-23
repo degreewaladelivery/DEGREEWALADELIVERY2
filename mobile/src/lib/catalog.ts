@@ -240,3 +240,36 @@ export async function fetchShopPage(shopId: string): Promise<ShopPage | null> {
 
   return { shop, products };
 }
+
+/**
+ * One product by id, wherever it lives.
+ *
+ * Category and shop products sit in separate tables with no shared view, so
+ * this asks the category catalogue first and falls back to the shop one. A
+ * miss in both is a null rather than a throw: the id comes from a screen the
+ * customer navigated to, and the honest answer to a product that no longer
+ * exists is "not found", not an error.
+ */
+export async function fetchProductById(id: string): Promise<Product | null> {
+  const catCols = 'id,name,description,unit,retail_price,image_url,category_id,shop_id';
+  const cat = await supabase.from('products_catalog').select(catCols).eq('id', id).maybeSingle();
+  if (cat.error) throw cat.error;
+  if (cat.data) {
+    const row = cat.data as ProdRow;
+    return mapProduct(row, row.category_id ?? row.shop_id ?? row.id, undefined, false);
+  }
+
+  const shopCols = 'id,name,description,unit,retail_price,image_url,shop_id';
+  const shop = await supabase
+    .from('shop_products_catalog')
+    .select(shopCols)
+    .eq('id', id)
+    .maybeSingle();
+  if (shop.error) throw shop.error;
+  if (shop.data) {
+    const row = shop.data as ProdRow;
+    return mapProduct(row, row.shop_id ?? row.id, undefined, true);
+  }
+
+  return null;
+}

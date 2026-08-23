@@ -5,6 +5,7 @@ import { HomeScreen } from '../screens/HomeScreen';
 import { CategoryScreen } from '../screens/CategoryScreen';
 import { ShopScreen } from '../screens/ShopScreen';
 import { SearchScreen } from '../screens/SearchScreen';
+import { ItemDetailScreen } from '../screens/ItemDetailScreen';
 import { CartScreen } from '../screens/CartScreen';
 import { CheckoutScreen } from '../screens/CheckoutScreen';
 import { OrderSuccessScreen } from '../screens/OrderSuccessScreen';
@@ -30,6 +31,7 @@ function HomeStackNavigator() {
       <HomeStack.Screen name="Category" component={CategoryScreen} />
       <HomeStack.Screen name="Shop" component={ShopScreen} />
       <HomeStack.Screen name="Search" component={SearchScreen} />
+      <HomeStack.Screen name="ItemDetail" component={ItemDetailScreen} />
     </HomeStack.Navigator>
   );
 }
