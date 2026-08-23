@@ -18,17 +18,18 @@ interface CartState {
 }
 
 /**
- * The pickup point this cart resolves to, or null when its items come from more
- * than one source.
+ * The label this cart's pickup should carry, or null when its items come from
+ * more than one shop or category.
  *
- * Today every item ships from the same shared point — no shop has its own
- * coordinates — so a mixed cart is a labelling question, not a routing one, and
- * null gets it labelled honestly ("DegreeWala pickup point") instead of naming
- * whichever item happened to go in last.
+ * Purely a naming question: everything DegreeWala delivers is collected from
+ * one fixed point, and shops and categories are how the catalogue is organised
+ * rather than places goods sit. So a mixed cart is labelled "DegreeWala pickup
+ * point" — which is where it genuinely ships from — instead of borrowing the
+ * name of whichever item happened to go in last.
  *
- * This stops being cosmetic the moment a shop is given real coordinates: a cart
- * spanning two pickups cannot be one delivery, and place-order resolves exactly
- * one. At that point this needs to become a real split, not a null.
+ * Were a shop ever given its own coordinates, this would stop being cosmetic:
+ * a cart spanning two pickups is two trips, and place-order resolves one. That
+ * would need a real split into separate orders, not a null.
  */
 function sharedPickupId(items: Record<string, CartLine>): string | null {
   const sources = new Set(Object.values(items).map((line) => line.product.shopId));
