@@ -3,6 +3,12 @@ import { Link, useSearchParams } from 'react-router-dom';
 import type { Product } from '@shared/types';
 import { searchProducts } from '../lib/catalog';
 import { ProductCard } from '../components/cards/ProductCard';
+import { ItemFilters } from '../components/ui/ItemFilters';
+import {
+  applyProductFilters,
+  DEFAULT_PRODUCT_FILTERS,
+  type ProductFilters,
+} from '@shared/productFilters';
 import { SearchIcon } from '../components/ui/icons';
 import { Button } from '../components/ui/Button';
 import './Search.css';
@@ -13,6 +19,7 @@ export function Search() {
   const [params, setParams] = useSearchParams();
   const query = params.get('q') ?? '';
   const [state, setState] = useState<{ query: string; items: Product[] } | null>(null);
+  const [filters, setFilters] = useState<ProductFilters>(DEFAULT_PRODUCT_FILTERS);
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
@@ -39,6 +46,7 @@ export function Search() {
   const tooShort = query.trim().length < 2;
   const loading = !tooShort && state?.query !== query && !error;
   const results = state?.query === query ? state.items : [];
+  const shown = applyProductFilters(results, filters);
 
   const onSubmit = (e: FormEvent<HTMLFormElement>) => {
     e.preventDefault();
@@ -79,7 +87,7 @@ export function Search() {
       ) : (
         <>
           <h1 className="search-page__heading">
-            {loading ? 'Searching…' : `${results.length} result${results.length === 1 ? '' : 's'} for “${query}”`}
+            {loading ? 'Searching…' : `${shown.length} result${shown.length === 1 ? '' : 's'} for “${query}”`}
           </h1>
 
           {error && <p className="search-page__error">{error}</p>}
@@ -94,11 +102,18 @@ export function Search() {
           )}
 
           {results.length > 0 && (
-            <div className="search-page__results">
-              {results.map((product) => (
-                <ProductCard key={product.id} product={product} />
-              ))}
-            </div>
+            <>
+              <ItemFilters filters={filters} onChange={setFilters} />
+              {shown.length === 0 ? (
+                <p className="search-page__hint">Nothing matches those filters.</p>
+              ) : (
+                <div className="search-page__results">
+                  {shown.map((product) => (
+                    <ProductCard key={product.id} product={product} />
+                  ))}
+                </div>
+              )}
+            </>
           )}
         </>
       )}

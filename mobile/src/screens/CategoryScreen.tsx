@@ -7,6 +7,12 @@ import { loadCached } from '../lib/cachedFetch';
 import { fetchCategoryPage, type CategoryPage } from '../lib/catalog';
 import type { HomeStackParamList } from '../navigation/types';
 import { ItemRow } from '../components/ItemRow';
+import { ItemFilters } from '../components/ItemFilters';
+import {
+  applyProductFilters,
+  DEFAULT_PRODUCT_FILTERS,
+  type ProductFilters,
+} from '@shared/productFilters';
 import { useCartStore, selectCount } from '../store/cartStore';
 import { colors, spacing, radius, fontSizes, fontWeights, shadows } from '../theme';
 import { VIEW_CART_BAR_BOTTOM_OFFSET, ORDER_BAR_HEIGHT, ORDER_BAR_GAP } from '../lib/tabBarSpace';
@@ -23,6 +29,7 @@ export function CategoryScreen() {
   const [page, setPage] = useState<CategoryPage | null>(null);
   const [loading, setLoading] = useState(true);
   const [activeSub, setActiveSub] = useState<string | null>(null);
+  const [filters, setFilters] = useState<ProductFilters>(DEFAULT_PRODUCT_FILTERS);
   const cartCount = useCartStore((s) => selectCount(s.items));
   // The order-status bar always sits right above the tab bar, so this pill
   // has to lift itself, not the other way round — see tabBarSpace.ts.
@@ -65,7 +72,8 @@ export function CategoryScreen() {
   }
 
   const { category, products } = page;
-  const items = activeSub ? products.filter((p) => p.section === activeSub) : products;
+  const withinSection = activeSub ? products.filter((p) => p.section === activeSub) : products;
+  const items = applyProductFilters(withinSection, filters);
 
   return (
     <View style={styles.screen}>
@@ -98,6 +106,8 @@ export function CategoryScreen() {
               ))}
             </ScrollView>
           )}
+
+          <ItemFilters filters={filters} onChange={setFilters} />
 
           {items.length === 0 ? (
             <Text style={styles.none}>No items here yet — check back soon!</Text>

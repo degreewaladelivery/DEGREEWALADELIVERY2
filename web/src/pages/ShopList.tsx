@@ -2,6 +2,12 @@ import { useEffect, useState } from 'react';
 import { Link, useParams } from 'react-router-dom';
 import { fetchCategoryPage, type CategoryPage } from '../lib/catalog';
 import { ProductCard } from '../components/cards/ProductCard';
+import { ItemFilters } from '../components/ui/ItemFilters';
+import {
+  applyProductFilters,
+  DEFAULT_PRODUCT_FILTERS,
+  type ProductFilters,
+} from '@shared/productFilters';
 import { SkeletonRows } from '../components/ui/Skeleton';
 import './ShopList.css';
 
@@ -10,6 +16,7 @@ const BRAND = '#FF6B00';
 export function ShopList() {
   const { key = '' } = useParams();
   const [loaded, setLoaded] = useState<{ key: string; page: CategoryPage | null } | null>(null);
+  const [filters, setFilters] = useState<ProductFilters>(DEFAULT_PRODUCT_FILTERS);
   const [activeSub, setActiveSub] = useState<string | null>(null);
 
   useEffect(() => {
@@ -44,7 +51,8 @@ export function ShopList() {
 
   const { category, products } = page;
   const currentSub = activeSub && category.subCategories.includes(activeSub) ? activeSub : null;
-  const items = currentSub ? products.filter((p) => p.section === currentSub) : products;
+  const withinSection = currentSub ? products.filter((p) => p.section === currentSub) : products;
+  const items = applyProductFilters(withinSection, filters);
 
   return (
     <div className="shoplist">
@@ -91,8 +99,14 @@ export function ShopList() {
           </div>
         )}
 
+        <ItemFilters filters={filters} onChange={setFilters} />
+
         {items.length === 0 ? (
-          <p className="shoplist__none">No items here yet — check back soon!</p>
+          <p className="shoplist__none">
+            {products.length === 0
+              ? 'No items here yet — check back soon!'
+              : 'Nothing matches those filters.'}
+          </p>
         ) : (
           <div className="shoplist__items">
             {items.map((p) => (

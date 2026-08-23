@@ -14,6 +14,12 @@ import { useNavigation, useRoute, type RouteProp } from '@react-navigation/nativ
 import type { Product } from '@shared/types';
 import { searchProducts } from '../lib/catalog';
 import { ItemRow } from '../components/ItemRow';
+import { ItemFilters } from '../components/ItemFilters';
+import {
+  applyProductFilters,
+  DEFAULT_PRODUCT_FILTERS,
+  type ProductFilters,
+} from '@shared/productFilters';
 import { SearchIcon } from '../components/icons';
 import type { HomeStackParamList } from '../navigation/types';
 import { colors, spacing, radius, fontSizes, fontWeights } from '../theme';
@@ -26,6 +32,7 @@ export function SearchScreen() {
   const { params } = useRoute<RouteProp<HomeStackParamList, 'Search'>>();
 
   const [term, setTerm] = useState(params?.query ?? '');
+  const [filters, setFilters] = useState<ProductFilters>(DEFAULT_PRODUCT_FILTERS);
   const [submitted, setSubmitted] = useState(params?.query ?? '');
   const [state, setState] = useState<{ query: string; items: Product[] } | null>(null);
   const [error, setError] = useState<string | null>(null);
@@ -54,6 +61,7 @@ export function SearchScreen() {
   const tooShort = submitted.trim().length < 2;
   const loading = !tooShort && state?.query !== submitted && !error;
   const results = state?.query === submitted ? state.items : [];
+  const shown = applyProductFilters(results, filters);
 
   const runSearch = (value: string) => {
     setTerm(value);
@@ -112,9 +120,10 @@ export function SearchScreen() {
         ) : (
           <>
             <Text style={styles.count}>
-              {results.length} result{results.length === 1 ? '' : 's'}
+              {shown.length} result{shown.length === 1 ? '' : 's'}
             </Text>
-            {results.map((product) => (
+            <ItemFilters filters={filters} onChange={setFilters} />
+            {shown.map((product) => (
               <ItemRow key={product.id} product={product} />
             ))}
           </>
