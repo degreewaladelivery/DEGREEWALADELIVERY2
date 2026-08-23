@@ -3,6 +3,7 @@ import { View, Text, TextInput, TouchableOpacity, StyleSheet, ActivityIndicator 
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useNavigation, useRoute } from '@react-navigation/native';
 import { sendOtp, verifyOtp, getCustomer, logoutCustomer, type Customer } from '../lib/auth';
+import { ProfileScreen } from './ProfileScreen';
 import { colors, spacing, radius, fontSizes, fontWeights, shadows } from '../theme';
 
 export function LoginScreen() {
@@ -78,29 +79,12 @@ export function LoginScreen() {
     );
   }
 
+  // The Account tab and the checkout gate are the same screen with different
+  // jobs. Gating a checkout, a signed-in customer is sent straight on; on the
+  // Account tab there is nowhere to send them, so this is where their profile
+  // lives.
   if (customer && !onSuccessRoute) {
-    return (
-      <SafeAreaView style={styles.safe}>
-        <View style={styles.center}>
-          <View style={styles.card}>
-            <Text style={styles.mark}>🛵</Text>
-            <Text style={styles.title}>You're logged in</Text>
-            <Text style={styles.sub}>+91 {customer.phone}</Text>
-            <TouchableOpacity
-              style={styles.submitBtn}
-              activeOpacity={0.9}
-              onPress={() => navigation.navigate('Cart', { screen: 'Track' })}
-            >
-              <Text style={styles.submitText}>My Orders</Text>
-            </TouchableOpacity>
-            <TouchableOpacity style={styles.logoutBtn} activeOpacity={0.9} onPress={onLogout}>
-              <Text style={styles.logoutText}>Log out</Text>
-            </TouchableOpacity>
-          </View>
-          <PartnerLink onPress={() => navigation.navigate('AgentArea')} />
-        </View>
-      </SafeAreaView>
-    );
+    return <ProfileScreen customer={customer} onLogout={onLogout} />;
   }
 
   return (

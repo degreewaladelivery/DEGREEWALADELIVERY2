@@ -1,4 +1,5 @@
 import { supabase } from './supabase';
+import { SignedOutError } from './tracking';
 
 export interface Customer {
   id: string;
@@ -50,4 +51,28 @@ export async function verifyOtp(phone: string, otp: string): Promise<Customer> {
   const customer: Customer = { id: data.customerId, phone: data.phone, token: data.token };
   setCustomer(customer);
   return customer;
+}
+
+export interface CustomerProfile {
+  name: string;
+  phone: string;
+  memberSince: string;
+  orderCount: number;
+}
+
+async function profileRequest(body: Record<string, unknown>): Promise<CustomerProfile> {
+  const { data, error } = await supabase.functions.invoke('customer-profile', { body });
+  if (data?.signedOut) throw new SignedOutError();
+  if (error || !data?.ok) {
+    throw new Error(data?.error ?? error?.message ?? 'Could not load your profile');
+  }
+  return data.profile as CustomerProfile;
+}
+
+export function fetchProfile(token: string): Promise<CustomerProfile> {
+  return profileRequest({ token });
+}
+
+export function saveProfileName(token: string, name: string): Promise<CustomerProfile> {
+  return profileRequest({ token, action: 'update', name });
 }

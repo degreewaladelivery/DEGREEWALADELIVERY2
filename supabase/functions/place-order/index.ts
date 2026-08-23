@@ -45,7 +45,7 @@ Deno.serve(async (req) => {
 
     const { data: customer } = await admin
       .from('customers')
-      .select('id, phone')
+      .select('id, phone, name')
       .eq('id', customerId)
       .single();
     if (!customer) {
@@ -126,6 +126,7 @@ Deno.serve(async (req) => {
       .insert({
         customer_id: customer.id,
         customer_phone: customer.phone,
+        customer_name: customer.name ?? null,
         pickup_label: pickup.label,
         pickup_latitude: pickup.latitude,
         pickup_longitude: pickup.longitude,

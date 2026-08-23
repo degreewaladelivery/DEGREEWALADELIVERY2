@@ -1,10 +1,15 @@
 import { Link, NavLink } from 'react-router-dom';
 import { useCartStore, selectCount } from '../../store/cartStore';
+import { getCustomer } from '../../lib/auth';
 import { HomeIcon, TagIcon, CartIcon, UserIcon } from '../ui/icons';
 import './BottomNav.css';
 
 export function BottomNav() {
   const count = useCartStore((s) => selectCount(s.items));
+  // Read per render rather than cached: NavLink re-renders this on every
+  // navigation, so signing in or out updates where Account points without any
+  // extra wiring.
+  const accountPath = getCustomer() ? '/profile' : '/login';
 
   return (
     <nav className="bottom-nav" aria-label="Primary">
@@ -26,7 +31,7 @@ export function BottomNav() {
         <span className="bottom-nav__label">Cart</span>
       </NavLink>
 
-      <NavLink to="/login" className={({ isActive }) => 'bottom-nav__tab' + (isActive ? ' is-active' : '')}>
+      <NavLink to={accountPath} className={({ isActive }) => 'bottom-nav__tab' + (isActive ? ' is-active' : '')}>
         <span className="bottom-nav__icon"><UserIcon size={22} /></span>
         <span className="bottom-nav__label">Account</span>
       </NavLink>

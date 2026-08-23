@@ -12,6 +12,7 @@ import { Search } from './pages/Search';
 import { Help } from './pages/Help';
 import { Terms } from './pages/Terms';
 import { Login } from './pages/Login';
+import { Profile } from './pages/Profile';
 import { ComingSoon, RouteError } from './pages/ComingSoon';
 import { AdminAuthProvider } from './admin/AdminAuthContext';
 import { AdminLogin } from './admin/AdminLogin';
@@ -45,6 +46,7 @@ const router = createBrowserRouter([
       { path: '/order-success', element: <OrderSuccess /> },
       { path: '/search', element: <Search /> },
       { path: '/track', element: <Track /> },
+      { path: '/profile', element: <Profile /> },
       { path: '/help', element: <Help /> },
       { path: '/terms', element: <Terms /> },
       { path: '*', element: <ComingSoon title="Page not found" /> },
