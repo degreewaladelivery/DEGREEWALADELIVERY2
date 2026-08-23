@@ -4,7 +4,6 @@ import { fetchProductById } from '../lib/catalog';
 import type { Product } from '@shared/types';
 import { useCartStore } from '../store/cartStore';
 import { formatRupees } from '../lib/format';
-import { ConfirmDialog } from '../components/ui/ConfirmDialog';
 import './ItemDetailPage.css';
 
 export function ItemDetailPage() {
@@ -14,9 +13,7 @@ export function ItemDetailPage() {
 
   const qty = useCartStore((s) => (product ? s.items[product.id]?.quantity ?? 0 : 0));
   const addItem = useCartStore((s) => s.addItem);
-  const replaceCartWith = useCartStore((s) => s.replaceCartWith);
   const decrement = useCartStore((s) => s.decrement);
-  const [askReplace, setAskReplace] = useState(false);
 
   useEffect(() => {
     let active = true;
@@ -72,7 +69,7 @@ export function ItemDetailPage() {
                 <button
                   className="itemdetail__addbtn"
                   onClick={() => {
-                    if (addItem(product) === 'needs-confirm') setAskReplace(true);
+                    addItem(product);
                   }}
                 >
                   Add to Cart
@@ -96,19 +93,6 @@ export function ItemDetailPage() {
         </div>
       </div>
 
-      {askReplace && (
-        <ConfirmDialog
-          title="Start a new cart?"
-          message="Your cart has items from another shop. Adding this will empty your current cart."
-          confirmLabel="Empty cart & add"
-          cancelLabel="Keep my cart"
-          onConfirm={() => {
-            replaceCartWith(product);
-            setAskReplace(false);
-          }}
-          onCancel={() => setAskReplace(false)}
-        />
-      )}
     </div>
   );
 }

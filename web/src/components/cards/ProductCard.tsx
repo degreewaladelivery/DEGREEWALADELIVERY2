@@ -1,25 +1,19 @@
-import { useState } from 'react';
 import { Link } from 'react-router-dom';
 import type { Product } from '@shared/types';
 import { useCartStore } from '../../store/cartStore';
 import { formatRupees } from '../../lib/format';
 import { Thumb } from '../ui/Thumb';
-import { ConfirmDialog } from '../ui/ConfirmDialog';
 import './ProductCard.css';
 
 export function ProductCard({ product }: { product: Product }) {
 
   const qty = useCartStore((s) => s.items[product.id]?.quantity ?? 0);
   const addItem = useCartStore((s) => s.addItem);
-  const replaceCartWith = useCartStore((s) => s.replaceCartWith);
   const decrement = useCartStore((s) => s.decrement);
-  const [askReplace, setAskReplace] = useState(false);
 
   const unavailable = !product.isAvailable;
 
-  const onAdd = () => {
-    if (addItem(product) === 'needs-confirm') setAskReplace(true);
-  };
+  const onAdd = () => addItem(product);
 
   return (
     <div className={`product-card${unavailable ? ' is-unavailable' : ''}`}>
@@ -56,19 +50,6 @@ export function ProductCard({ product }: { product: Product }) {
         )}
       </div>
 
-      {askReplace && (
-        <ConfirmDialog
-          title="Start a new cart?"
-          message="Your cart has items from another shop. Adding this will empty your current cart."
-          confirmLabel="Empty cart & add"
-          cancelLabel="Keep my cart"
-          onConfirm={() => {
-            replaceCartWith(product);
-            setAskReplace(false);
-          }}
-          onCancel={() => setAskReplace(false)}
-        />
-      )}
     </div>
   );
 }
