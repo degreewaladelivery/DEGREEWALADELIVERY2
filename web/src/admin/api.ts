@@ -653,6 +653,7 @@ export async function markOrderDelivered(orderId: string): Promise<void> {
 
 export interface HomeBannerRow {
   image_url: string | null;
+  desktop_hero_url: string | null;
   cta_category_id: string | null;
   is_active: boolean;
 }
@@ -660,7 +661,7 @@ export interface HomeBannerRow {
 export async function getHomeBanner(): Promise<HomeBannerRow> {
   const { data, error } = await supabase
     .from('home_banner')
-    .select('image_url, cta_category_id, is_active')
+    .select('image_url, desktop_hero_url, cta_category_id, is_active')
     .single();
   if (error) throw error;
   return data;

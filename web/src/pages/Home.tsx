@@ -97,6 +97,7 @@ export function Home() {
   const bundledHero = getBrandImage('hero');
   const heroArt = banner?.imageUrl ?? bundledHero;
   const heroVisible = banner ? banner.isActive && Boolean(heroArt) : Boolean(heroArt);
+  const desktopHero = banner?.desktopHeroUrl ?? bundledHero;
   const heroCategory = banner?.ctaCategoryId
     ? categories.find((c) => c.id === banner.ctaCategoryId)
     : undefined;
@@ -267,10 +268,10 @@ export function Home() {
           </div>
 
           <div className="hero__right">
-            {/* The desktop marketing illustration, not the banner — it sits in a
-                tall slot a wide uploaded banner would distort. */}
-            {bundledHero ? (
-              <img className="hero__img" src={bundledHero} alt="Degreewala delivery" />
+            {/* The desktop marketing illustration, uploaded separately from the
+                banner — this slot is tall where the banner is wide. */}
+            {desktopHero ? (
+              <img className="hero__img" src={desktopHero} alt="Degreewala delivery" />
             ) : (
               <div className="hero__art">
                 <span className="hero__art-scooter">🛵</span>

@@ -12,6 +12,7 @@ import type { CategoryRow } from './types';
  */
 export function HomeBannerSection() {
   const [imageUrl, setImageUrl] = useState<string | null>(null);
+  const [desktopHeroUrl, setDesktopHeroUrl] = useState<string | null>(null);
   const [ctaCategoryId, setCtaCategoryId] = useState<string>('');
   const [isActive, setIsActive] = useState(true);
   const [categories, setCategories] = useState<CategoryRow[]>([]);
@@ -24,6 +25,7 @@ export function HomeBannerSection() {
     Promise.all([getHomeBanner(), listCategories()])
       .then(([banner, cats]) => {
         setImageUrl(banner.image_url);
+        setDesktopHeroUrl(banner.desktop_hero_url);
         setCtaCategoryId(banner.cta_category_id ?? '');
         setIsActive(banner.is_active);
         setCategories(cats);
@@ -45,13 +47,17 @@ export function HomeBannerSection() {
     }
   };
 
-  const onPick = async (file: File) => {
+  const upload = async (
+    file: File,
+    apply: (url: string) => void,
+    column: 'image_url' | 'desktop_hero_url'
+  ) => {
     setBusy(true);
     setError(null);
     try {
       const url = await uploadCatalogImage(file, 'banners');
-      setImageUrl(url);
-      await saveHomeBanner({ image_url: url });
+      apply(url);
+      await saveHomeBanner({ [column]: url });
       setSavedAt(Date.now());
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Could not upload that image');
@@ -87,12 +93,27 @@ export function HomeBannerSection() {
       {error && <p className="admin-login__error">{error}</p>}
 
       <ImagePicker
-        label="Banner image"
+        label="Banner image (wide strip)"
         preview={imageUrl ?? ''}
-        onPick={onPick}
+        onPick={(file) => upload(file, setImageUrl, 'image_url')}
         onRemove={() => {
           setImageUrl(null);
           persist({ image_url: null });
+        }}
+      />
+
+      <p className="admin-empty" style={{ textAlign: 'left' }}>
+        A separate, taller picture sits beside the headline on the wide-screen website. The app has
+        no such slot, so this one is website-only.
+      </p>
+
+      <ImagePicker
+        label="Desktop hero image (tall, website only)"
+        preview={desktopHeroUrl ?? ''}
+        onPick={(file) => upload(file, setDesktopHeroUrl, 'desktop_hero_url')}
+        onRemove={() => {
+          setDesktopHeroUrl(null);
+          persist({ desktop_hero_url: null });
         }}
       />
 
