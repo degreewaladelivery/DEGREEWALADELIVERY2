@@ -16,6 +16,8 @@ import {
 } from '../components/ui/icons';
 import { getBrandImage, getCategoryImage, getShopImage } from '../lib/images';
 import { useLocationStore } from '../store/locationStore';
+import { fetchHomeBanner, type HomeBanner } from '@shared/homeBanner';
+import { supabase } from '../lib/supabase';
 import { LocationModal } from '../components/ui/LocationModal';
 import './Home.css';
 
@@ -77,6 +79,7 @@ export function Home() {
   const [categories, setCategories] = useState<Category[]>([]);
   const [shops, setShops] = useState<Shop[]>([]);
   const [itemCounts, setItemCounts] = useState<Record<string, number>>({});
+  const [banner, setBanner] = useState<HomeBanner | null>(null);
   const navigate = useNavigate();
   const railRef = useRef<HTMLDivElement>(null);
 
@@ -84,11 +87,19 @@ export function Home() {
     fetchCategories().then(setCategories).catch(() => {});
     fetchShops().then(setShops).catch(() => {});
     fetchCategoryItemCounts().then(setItemCounts).catch(() => {});
+    fetchHomeBanner(supabase).then(setBanner).catch(() => {});
   }, []);
 
   const featuredShops = shops.filter((s) => s.isFeatured);
 
-  const heroArt = getBrandImage('hero');
+  // An uploaded banner wins; otherwise the picture bundled with the build, so
+  // the page is never blank before anyone has set one.
+  const bundledHero = getBrandImage('hero');
+  const heroArt = banner?.imageUrl ?? bundledHero;
+  const heroVisible = banner ? banner.isActive && Boolean(heroArt) : Boolean(heroArt);
+  const heroCategory = banner?.ctaCategoryId
+    ? categories.find((c) => c.id === banner.ctaCategoryId)
+    : undefined;
   const appPhone = getBrandImage('app-phone');
 
   const scrollRail = (dir: number) => {
@@ -132,10 +143,14 @@ export function Home() {
           </div>
         </div>
 
-        {heroArt && (
+        {heroVisible && (
           <div className="mx-banner">
-            <img src={heroArt} alt="Degreewala delivery" />
-            <Link to="/category/food" className="mx-banner__cta">ORDER NOW ›</Link>
+            <img src={heroArt} alt="" />
+            {heroCategory && (
+              <Link to={`/category/${heroCategory.key}`} className="mx-banner__cta">
+                ORDER NOW ›
+              </Link>
+            )}
           </div>
         )}
 
@@ -252,8 +267,10 @@ export function Home() {
           </div>
 
           <div className="hero__right">
-            {heroArt ? (
-              <img className="hero__img" src={heroArt} alt="Degreewala delivery" />
+            {/* The desktop marketing illustration, not the banner — it sits in a
+                tall slot a wide uploaded banner would distort. */}
+            {bundledHero ? (
+              <img className="hero__img" src={bundledHero} alt="Degreewala delivery" />
             ) : (
               <div className="hero__art">
                 <span className="hero__art-scooter">🛵</span>

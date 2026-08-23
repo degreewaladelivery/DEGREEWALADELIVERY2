@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import { LocationPicker } from '../components/ui/LocationPicker';
 import { getAppSettings, updateAppSettings } from './api';
+import { HomeBannerSection } from './HomeBannerSection';
 
 export function SettingsPage() {
   const [latitude, setLatitude] = useState<number | null>(null);
@@ -67,6 +68,8 @@ export function SettingsPage() {
         </button>
         {savedAt && <span className="admin-tag admin-tag--muted">Saved</span>}
       </div>
+
+      <HomeBannerSection />
     </div>
   );
 }

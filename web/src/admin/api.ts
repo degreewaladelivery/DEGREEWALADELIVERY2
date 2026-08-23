@@ -528,7 +528,14 @@ export async function deleteAgent(userId: string): Promise<void> {
 
 export async function uploadCatalogImage(
   file: File,
-  folder: 'categories' | 'subcategories' | 'products' | 'shops' | 'shop-categories' | 'shop-products'
+  folder:
+    | 'categories'
+    | 'subcategories'
+    | 'products'
+    | 'shops'
+    | 'shop-categories'
+    | 'shop-products'
+    | 'banners'
 ): Promise<string> {
   // Shrink before storing: photos arrive at full camera resolution and nothing
   // ever draws them that large.
@@ -638,4 +645,29 @@ export async function markOrderDelivered(orderId: string): Promise<void> {
     .eq('id', orderId);
   if (error) throw error;
   notifyCustomer(supabase, orderId);
+}
+
+// ---------------------------------------------------------------------------
+// Home banner
+// ---------------------------------------------------------------------------
+
+export interface HomeBannerRow {
+  image_url: string | null;
+  cta_category_id: string | null;
+  is_active: boolean;
+}
+
+export async function getHomeBanner(): Promise<HomeBannerRow> {
+  const { data, error } = await supabase
+    .from('home_banner')
+    .select('image_url, cta_category_id, is_active')
+    .single();
+  if (error) throw error;
+  return data;
+}
+
+export async function saveHomeBanner(patch: Partial<HomeBannerRow>): Promise<void> {
+  // The table holds exactly one row, keyed on a constant.
+  const { error } = await supabase.from('home_banner').update(patch).eq('id', true);
+  if (error) throw error;
 }

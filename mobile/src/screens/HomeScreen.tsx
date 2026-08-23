@@ -22,6 +22,8 @@ import { getBrandImage, getCategoryImage, getShopImage } from '../lib/images';
 import { Thumb } from '../components/Thumb';
 import { LocationSheet } from '../components/LocationSheet';
 import { useLocationStore } from '../store/locationStore';
+import { fetchHomeBanner, type HomeBanner } from '@shared/homeBanner';
+import { supabase } from '../lib/supabase';
 import { MapPinIcon, SearchIcon, MicIcon, SlidersIcon, ZapIcon, BookmarkIcon, PercentCircleIcon } from '../components/icons';
 
 const { width: SCREEN_W } = Dimensions.get('window');
@@ -45,7 +47,15 @@ export function HomeScreen() {
   const [categories, setCategories] = useState<Category[]>([]);
   const [shops, setShops] = useState<Shop[]>([]);
   const [itemCounts, setItemCounts] = useState<Record<string, number>>({});
-  const heroArt = getBrandImage('hero');
+  const [banner, setBanner] = useState<HomeBanner | null>(null);
+  // An uploaded banner wins; otherwise the picture bundled with the build, so
+  // the screen is never blank before anyone has set one.
+  const bundledHero = getBrandImage('hero');
+  const heroSource = banner?.imageUrl ? { uri: banner.imageUrl } : bundledHero;
+  const heroVisible = banner ? banner.isActive && Boolean(heroSource) : Boolean(heroSource);
+  const heroCategory = banner?.ctaCategoryId
+    ? categories.find((c) => c.id === banner.ctaCategoryId)
+    : undefined;
   const insets = useSafeAreaInsets();
   const location = useLocationStore((s) => s.location);
   const prompted = useLocationStore((s) => s.prompted);
@@ -65,6 +75,7 @@ export function HomeScreen() {
     loadCached('categories', fetchCategories, setCategories);
     loadCached('shops', fetchShops, setShops);
     loadCached('itemCounts', fetchCategoryItemCounts, setItemCounts);
+    loadCached('homeBanner', () => fetchHomeBanner(supabase), setBanner);
   }, []);
 
   useEffect(() => {
@@ -125,12 +136,18 @@ export function HomeScreen() {
           </View>
         </View>
 
-        {heroArt && (
+        {heroVisible && (
           <View style={styles.banner}>
-            <Image source={heroArt} style={styles.bannerImg} resizeMode="cover" />
-            <TouchableOpacity style={styles.bannerCta} activeOpacity={0.85}>
-              <Text style={styles.bannerCtaText}>ORDER NOW ›</Text>
-            </TouchableOpacity>
+            <Image source={heroSource} style={styles.bannerImg} resizeMode="cover" />
+            {heroCategory && (
+              <TouchableOpacity
+                style={styles.bannerCta}
+                activeOpacity={0.85}
+                onPress={() => navigation.navigate('Category', { categoryKey: heroCategory.key })}
+              >
+                <Text style={styles.bannerCtaText}>ORDER NOW ›</Text>
+              </TouchableOpacity>
+            )}
           </View>
         )}
 
