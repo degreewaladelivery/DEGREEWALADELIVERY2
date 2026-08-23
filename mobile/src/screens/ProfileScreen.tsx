@@ -13,6 +13,7 @@ import { useNavigation } from '@react-navigation/native';
 import { fetchProfile, saveProfile, type Customer, type CustomerProfile } from '../lib/auth';
 import { SignedOutError } from '../lib/tracking';
 import { useTabBarSpace } from '../lib/tabBarSpace';
+import { APP_VERSION } from '../lib/appVersion';
 import { colors, spacing, radius, fontSizes, fontWeights, shadows } from '../theme';
 
 function initialFor(profile: CustomerProfile | null): string {
@@ -226,6 +227,8 @@ export function ProfileScreen({
         <TouchableOpacity style={styles.logoutBtn} activeOpacity={0.9} onPress={onLogout}>
           <Text style={styles.logoutText}>Log out</Text>
         </TouchableOpacity>
+
+        <Text style={styles.version}>Version {APP_VERSION}</Text>
       </ScrollView>
     </SafeAreaView>
   );
@@ -349,6 +352,12 @@ const styles = StyleSheet.create({
     paddingVertical: spacing.md,
     alignItems: 'center',
     marginTop: spacing.xs,
+  },
+  version: {
+    fontSize: fontSizes.xs,
+    color: colors.textFaint,
+    textAlign: 'center',
+    marginTop: spacing.sm,
   },
   logoutText: { color: colors.danger, fontWeight: fontWeights.heading, fontSize: fontSizes.md },
 });

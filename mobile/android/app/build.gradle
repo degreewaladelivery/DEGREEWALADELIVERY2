@@ -83,8 +83,13 @@ android {
         applicationId "com.degreewalamobile"
         minSdkVersion rootProject.ext.minSdkVersion
         targetSdkVersion rootProject.ext.targetSdkVersion
-        versionCode 1
-        versionName "1.0"
+        // Bump both on every build handed over for testing. They were pinned
+        // at 1/"1.0" for months, which made it impossible to tell whether a
+        // phone was running the latest APK or a stale one — and a fix that is
+        // already shipped looks like a fix that does not work.
+        // Keep versionName in step with APP_VERSION in src/lib/appVersion.ts.
+        versionCode 2
+        versionName "1.1"
 
         ndk {
             // x86 and x86_64 exist only for emulators and were 34 MB of an
