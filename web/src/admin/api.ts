@@ -3,6 +3,7 @@ import { notifyCustomer } from '@shared/notifyCustomer';
 import { resizeForUpload } from './resizeImage';
 import type {
   CategoryRow,
+  CustomerRow,
   SubcategoryRow,
   ProductRow,
   ShopRow,
@@ -471,6 +472,25 @@ export async function listAgents(): Promise<DeliveryAgentRow[]> {
   const { data, error } = await supabase.from('delivery_agents').select('*').order('created_at', { ascending: false });
   if (error) throw error;
   return data;
+}
+
+/**
+ * Customers, newest first, with how many orders each has placed.
+ *
+ * The count comes back as a nested aggregate rather than a second query, so a
+ * list of a few thousand customers stays one round trip.
+ */
+export async function listCustomers(): Promise<CustomerRow[]> {
+  const { data, error } = await supabase
+    .from('customers')
+    .select('id, name, email, phone, created_at, orders(count)')
+    .order('created_at', { ascending: false });
+  if (error) throw error;
+  type Raw = Omit<CustomerRow, 'orderCount'> & { orders?: { count: number }[] };
+  return ((data ?? []) as Raw[]).map(({ orders, ...customer }) => ({
+    ...customer,
+    orderCount: orders?.[0]?.count ?? 0,
+  }));
 }
 
 export interface CreateAgentInput {

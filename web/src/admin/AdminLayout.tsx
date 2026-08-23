@@ -31,6 +31,12 @@ export function AdminLayout() {
             Agents
           </NavLink>
           <NavLink
+            to="/admin/customers"
+            className={({ isActive }) => 'admin-header__link' + (isActive ? ' is-active' : '')}
+          >
+            Customers
+          </NavLink>
+          <NavLink
             to="/admin/attention"
             className={({ isActive }) => 'admin-header__link' + (isActive ? ' is-active' : '')}
           >

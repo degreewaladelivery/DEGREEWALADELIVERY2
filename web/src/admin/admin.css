@@ -385,3 +385,25 @@
 }
 .admin-check { display: flex; align-items: center; gap: 6px; font-weight: 400; cursor: pointer; }
 .admin-check input[type='checkbox'] { width: 15px; height: 15px; }
+
+/* Customers ------------------------------------------------------------- */
+
+.admin-customers__count {
+  font-size: 13px;
+  color: var(--text-muted, #6b7280);
+}
+
+.admin-customers__search {
+  max-width: 320px;
+  margin-bottom: 16px;
+}
+
+/* The table has five columns and an email address is long; on a phone it has
+   to scroll sideways inside its own box rather than pushing the page wide. */
+.admin-customers__scroll {
+  overflow-x: auto;
+}
+
+.admin-customers__blank {
+  color: var(--text-faint, #9aa0ac);
+}

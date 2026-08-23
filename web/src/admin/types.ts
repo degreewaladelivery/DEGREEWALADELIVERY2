@@ -78,6 +78,15 @@ export interface DeliveryAgentRow {
   created_at: string;
 }
 
+export interface CustomerRow {
+  id: string;
+  name: string | null;
+  email: string | null;
+  phone: string;
+  created_at: string;
+  orderCount: number;
+}
+
 export interface ShopCategoryRow {
   id: string;
   shop_id: string;
