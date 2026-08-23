@@ -5,12 +5,6 @@ import { categoryPalette } from '@shared/tokens';
 import type { Product } from '@shared/types';
 import { Thumb } from '../components/ui/Thumb';
 import { ProductCard } from '../components/cards/ProductCard';
-import { ItemFilters } from '../components/ui/ItemFilters';
-import {
-  applyProductFilters,
-  DEFAULT_PRODUCT_FILTERS,
-  type ProductFilters,
-} from '@shared/productFilters';
 import { useCartStore, selectCount, selectSubtotal } from '../store/cartStore';
 import { getShopImage } from '../lib/images';
 import { formatRupees } from '../lib/format';
@@ -28,7 +22,6 @@ function groupBySection(products: Product[]): Record<string, Product[]> {
 export function ShopItems() {
   const { shopId = '' } = useParams();
   const [page, setPage] = useState<ShopPage | null>(null);
-  const [filters, setFilters] = useState<ProductFilters>(DEFAULT_PRODUCT_FILTERS);
   const [loading, setLoading] = useState(true);
 
   const count = useCartStore((s) => selectCount(s.items));
@@ -61,9 +54,7 @@ export function ShopItems() {
 
   const { shop, products } = page;
   const pal = categoryPalette[shop.categoryKey];
-  // Filtered before grouping, so a section that empties out disappears with its
-  // heading rather than leaving a title over nothing.
-  const sections = groupBySection(applyProductFilters(products, filters));
+  const sections = groupBySection(products);
 
   return (
     <div className="shopitems">
@@ -94,12 +85,8 @@ export function ShopItems() {
       </div>
 
       <div className="container shopitems__menu">
-        <ItemFilters filters={filters} onChange={setFilters} />
-
         {products.length === 0 ? (
           <p className="shopitems__none">No items here yet — check back soon!</p>
-        ) : Object.keys(sections).length === 0 ? (
-          <p className="shopitems__none">Nothing matches those filters.</p>
         ) : (
           Object.entries(sections).map(([section, items]) => (
             <div key={section} className="menu-section">

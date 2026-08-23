@@ -9,12 +9,6 @@ import { fetchShopPage, type ShopPage } from '../lib/catalog';
 import type { HomeStackParamList } from '../navigation/types';
 import { Thumb } from '../components/Thumb';
 import { ItemRow } from '../components/ItemRow';
-import { ItemFilters } from '../components/ItemFilters';
-import {
-  applyProductFilters,
-  DEFAULT_PRODUCT_FILTERS,
-  type ProductFilters,
-} from '@shared/productFilters';
 import { useCartStore, selectCount } from '../store/cartStore';
 import { colors, spacing, radius, fontSizes, fontWeights, shadows } from '../theme';
 import { VIEW_CART_BAR_BOTTOM_OFFSET, ORDER_BAR_HEIGHT, ORDER_BAR_GAP } from '../lib/tabBarSpace';
@@ -36,7 +30,6 @@ export function ShopScreen() {
   const navigation = useNavigation<Nav>();
   const { params } = useRoute<RouteProp<HomeStackParamList, 'Shop'>>();
   const insets = useSafeAreaInsets();
-  const [filters, setFilters] = useState<ProductFilters>(DEFAULT_PRODUCT_FILTERS);
 
   const [page, setPage] = useState<ShopPage | null>(null);
   const [loading, setLoading] = useState(true);
@@ -81,9 +74,7 @@ export function ShopScreen() {
   }
 
   const { shop, products } = page;
-  // Filtered before grouping, so a section that empties out disappears with its
-  // heading rather than leaving a title over nothing.
-  const sections = groupBySection(applyProductFilters(products, filters));
+  const sections = groupBySection(products);
 
   return (
     <View style={styles.screen}>
@@ -107,12 +98,8 @@ export function ShopScreen() {
             </View>
           </View>
 
-          <ItemFilters filters={filters} onChange={setFilters} />
-
           {products.length === 0 ? (
             <Text style={styles.none}>No items here yet — check back soon!</Text>
-          ) : Object.keys(sections).length === 0 ? (
-            <Text style={styles.none}>Nothing matches those filters.</Text>
           ) : (
             Object.entries(sections).map(([section, list]) => (
               <View key={section} style={styles.section}>
