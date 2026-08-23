@@ -81,8 +81,12 @@ export function ItemDetailScreen() {
             <Text style={styles.back}>← Back</Text>
           </TouchableOpacity>
 
+          {/* "contain", not "cover": this is the screen someone opens to look at
+              the product, so the whole photo has to be visible. Cover fills the
+              box by cropping, which on a tall photo shows a band from the middle
+              and hides what the customer came to see. */}
           {product.imageUrl ? (
-            <Image source={{ uri: product.imageUrl }} style={styles.image} resizeMode="cover" />
+            <Image source={{ uri: product.imageUrl }} style={styles.image} resizeMode="contain" />
           ) : (
             <View style={[styles.image, styles.imageFallback]}>
               <Text style={styles.imageEmoji}>🛒</Text>
@@ -150,8 +154,10 @@ const styles = StyleSheet.create({
   back: { fontSize: fontSizes.md, fontWeight: fontWeights.semibold, color: colors.text },
   image: {
     marginHorizontal: spacing.lg,
-    height: 240,
+    height: 280,
     borderRadius: radius.lg,
+    // A plain backdrop behind the letterboxing, so a photo that does not fill
+    // the box reads as deliberate rather than broken.
     backgroundColor: '#fff',
   },
   imageFallback: { alignItems: 'center', justifyContent: 'center' },
