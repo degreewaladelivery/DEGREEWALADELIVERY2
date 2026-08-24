@@ -1,6 +1,7 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { supabase } from './supabase';
 import { SignedOutError } from './tracking';
+import { registerCustomerForPush, unregisterCustomerFromPush } from './customerPush';
 
 export interface Customer {
   id: string;
@@ -30,6 +31,8 @@ export async function logoutCustomer(): Promise<void> {
   const customer = await getCustomer();
   await AsyncStorage.removeItem(STORAGE_KEY);
   if (!customer) return;
+  // Before the session is revoked, while the token is still accepted.
+  await unregisterCustomerFromPush(customer.token).catch(() => undefined);
   await supabase.functions
     .invoke('logout', { body: { token: customer.token } })
     .catch(() => undefined);
@@ -51,6 +54,9 @@ export async function verifyOtp(phone: string, otp: string): Promise<Customer> {
   }
   const customer: Customer = { id: data.customerId, phone: data.phone, token: data.token };
   await setCustomer(customer);
+  // Not awaited: a customer who declines notifications, or a phone without Play
+  // Services, must still finish signing in.
+  registerCustomerForPush(customer.token).catch(() => undefined);
   return customer;
 }
 
