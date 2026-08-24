@@ -282,3 +282,34 @@
 .otrack__updates strong { display: block; font-size: 15px; }
 .otrack__updates p { margin: 4px 0 0; font-size: 13px; color: var(--text-muted, #6b7280); line-height: 1.5; }
 .otrack__updates-error { color: var(--danger, #f44336) !important; }
+
+/* Rider identification ---------------------------------------------------- */
+
+.otrack__agentAvatar {
+  width: 48px;
+  height: 48px;
+  flex-shrink: 0;
+  border-radius: 50%;
+  overflow: hidden;
+  background: var(--brand-tint, #fff3e0);
+  color: var(--brand, #ff6b00);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 20px;
+  font-weight: 800;
+}
+
+.otrack__agentAvatar img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.otrack__agentVehicle {
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--text, #101828);
+  letter-spacing: 0.5px;
+  margin: 2px 0 0;
+}

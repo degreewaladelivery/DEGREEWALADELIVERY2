@@ -38,7 +38,13 @@ export interface TrackedOrder {
   claimed_at: string | null;
   picked_up_at: string | null;
   delivered_at: string | null;
-  agent: { name: string; phone: string } | null;
+  agent: {
+    name: string;
+    phone: string;
+    /** Null until an admin records it — shown only when present. */
+    vehicle_number: string | null;
+    photo_url: string | null;
+  } | null;
 }
 
 export class SignedOutError extends Error {

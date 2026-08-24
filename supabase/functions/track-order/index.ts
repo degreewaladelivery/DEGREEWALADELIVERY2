@@ -61,14 +61,22 @@ Deno.serve(async (req) => {
       ...new Set((orders ?? []).map((order) => order.claimed_by).filter(Boolean)),
     ] as string[];
 
-    const agents = new Map<string, { name: string; phone: string }>();
+    const agents = new Map<
+      string,
+      { name: string; phone: string; vehicle_number: string | null; photo_url: string | null }
+    >();
     if (agentIds.length > 0) {
       const { data: agentRows } = await admin
         .from('delivery_agents')
-        .select('user_id, name, phone')
+        .select('user_id, name, phone, vehicle_number, photo_url')
         .in('user_id', agentIds);
       for (const agent of agentRows ?? []) {
-        agents.set(agent.user_id, { name: agent.name, phone: agent.phone });
+        agents.set(agent.user_id, {
+          name: agent.name,
+          phone: agent.phone,
+          vehicle_number: agent.vehicle_number ?? null,
+          photo_url: agent.photo_url ?? null,
+        });
       }
     }
 

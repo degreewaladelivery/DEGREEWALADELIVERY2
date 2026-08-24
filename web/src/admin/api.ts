@@ -509,7 +509,9 @@ export async function createAgent(input: CreateAgentInput): Promise<void> {
 
 export async function updateAgent(
   userId: string,
-  input: Partial<Pick<DeliveryAgentRow, 'name' | 'phone' | 'is_active'>>
+  input: Partial<
+    Pick<DeliveryAgentRow, 'name' | 'phone' | 'is_active' | 'vehicle_number' | 'photo_url'>
+  >
 ): Promise<DeliveryAgentRow> {
   const { data, error } = await supabase
     .from('delivery_agents')
@@ -536,6 +538,7 @@ export async function uploadCatalogImage(
     | 'shop-categories'
     | 'shop-products'
     | 'banners'
+    | 'agents'
 ): Promise<string> {
   // Shrink before storing: photos arrive at full camera resolution and nothing
   // ever draws them that large.

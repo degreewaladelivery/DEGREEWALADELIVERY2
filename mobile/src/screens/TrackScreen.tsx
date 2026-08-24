@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import {
   View,
   Text,
+  Image,
   ScrollView,
   TouchableOpacity,
   StyleSheet,
@@ -280,8 +281,23 @@ function ActiveOrderCard({ order }: { order: TrackedOrder }) {
 
       {order.agent ? (
         <View style={styles.agentRow}>
+          {/* A face and a plate, not just a name: at a gate or a shared entrance
+              the customer has to recognise who is arriving. Both are optional —
+              an agent without either still shows their initial. */}
+          <View style={styles.agentAvatar}>
+            {order.agent.photo_url ? (
+              <Image source={{ uri: order.agent.photo_url }} style={styles.agentPhoto} />
+            ) : (
+              <Text style={styles.agentInitial}>
+                {order.agent.name.trim().charAt(0).toUpperCase() || '🛵'}
+              </Text>
+            )}
+          </View>
           <View style={styles.agentInfo}>
             <Text style={styles.agentName}>{order.agent.name}</Text>
+            {order.agent.vehicle_number ? (
+              <Text style={styles.agentVehicle}>{order.agent.vehicle_number}</Text>
+            ) : null}
             <Text style={styles.muted}>
               {agentDistanceKm == null
                 ? 'Location not shared yet'
@@ -396,6 +412,23 @@ const styles = StyleSheet.create({
     gap: spacing.sm,
   },
   agentInfo: { flex: 1 },
+  agentAvatar: {
+    width: 48,
+    height: 48,
+    borderRadius: 24,
+    overflow: 'hidden',
+    backgroundColor: colors.brandTint,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  agentPhoto: { width: 48, height: 48 },
+  agentInitial: { fontSize: 20, fontWeight: fontWeights.heading, color: colors.brand },
+  agentVehicle: {
+    fontSize: fontSizes.sm,
+    fontWeight: fontWeights.bold,
+    color: colors.text,
+    letterSpacing: 0.5,
+  },
   agentName: { fontSize: fontSizes.sm, fontWeight: fontWeights.bold, color: colors.text },
   callBtn: {
     backgroundColor: '#fff',

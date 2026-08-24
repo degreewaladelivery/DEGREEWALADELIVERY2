@@ -2,11 +2,13 @@ import { useEffect, useState } from 'react';
 import { listAgents, updateAgent, deleteAgent } from './api';
 import type { DeliveryAgentRow } from './types';
 import { AgentFormModal } from './AgentFormModal';
+import { AgentDetailsModal } from './AgentDetailsModal';
 
 export function AgentsPage() {
   const [agents, setAgents] = useState<DeliveryAgentRow[] | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [adding, setAdding] = useState(false);
+  const [editing, setEditing] = useState<DeliveryAgentRow | null>(null);
 
   const load = () => {
     listAgents()
@@ -52,6 +54,7 @@ export function AgentsPage() {
             <tr>
               <th>Name</th>
               <th>Phone</th>
+              <th>Vehicle</th>
               <th>Status</th>
               <th></th>
             </tr>
@@ -61,10 +64,16 @@ export function AgentsPage() {
               <tr key={agent.user_id} className={agent.is_active ? '' : 'is-inactive'}>
                 <td data-label="Name">{agent.name}</td>
                 <td data-label="Phone">{agent.phone}</td>
+                <td data-label="Vehicle">
+                  {agent.vehicle_number || <span className="admin-customers__blank">—</span>}
+                </td>
                 <td data-label="Status">
                   {agent.is_active ? 'Active' : <span className="admin-tag admin-tag--muted">Inactive</span>}
                 </td>
                 <td className="admin-table__actions">
+                  <button className="admin-btn admin-btn--sm admin-btn--ghost" onClick={() => setEditing(agent)}>
+                    Details
+                  </button>
                   <button className="admin-btn admin-btn--sm admin-btn--ghost" onClick={() => onToggleActive(agent)}>
                     {agent.is_active ? 'Deactivate' : 'Activate'}
                   </button>
@@ -76,6 +85,17 @@ export function AgentsPage() {
             ))}
           </tbody>
         </table>
+      )}
+
+      {editing && (
+        <AgentDetailsModal
+          agent={editing}
+          onClose={() => setEditing(null)}
+          onSaved={() => {
+            setEditing(null);
+            load();
+          }}
+        />
       )}
 
       {adding && (

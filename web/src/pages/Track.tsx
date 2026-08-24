@@ -244,8 +244,21 @@ function ActiveOrderCard({ order }: { order: TrackedOrder }) {
 
       {order.agent ? (
         <div className="otrack__agent">
+          {/* A face and a plate, not just a name: at a gate or a shared entrance
+              the customer has to recognise who is arriving. Both are optional —
+              an agent without either still shows their initial. */}
+          <span className="otrack__agentAvatar" aria-hidden="true">
+            {order.agent.photo_url ? (
+              <img src={order.agent.photo_url} alt="" />
+            ) : (
+              order.agent.name.trim().charAt(0).toUpperCase() || '🛵'
+            )}
+          </span>
           <div>
             <strong>{order.agent.name}</strong>
+            {order.agent.vehicle_number && (
+              <p className="otrack__agentVehicle">{order.agent.vehicle_number}</p>
+            )}
             <p className="otrack__muted">
               {agentDistanceKm == null
                 ? 'Location not shared yet'

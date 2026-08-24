@@ -76,6 +76,9 @@ export interface DeliveryAgentRow {
   phone: string;
   is_active: boolean;
   created_at: string;
+  /** Shown to the customer waiting for this agent. Null until recorded. */
+  vehicle_number: string | null;
+  photo_url: string | null;
 }
 
 export interface CustomerRow {
