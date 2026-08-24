@@ -1,0 +1,89 @@
+.repeat {
+  background: #fff;
+  border: 1px solid var(--border, #eceef2);
+  border-radius: var(--radius-lg, 16px);
+  padding: 18px;
+  margin-bottom: 16px;
+}
+
+.repeat__head {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  cursor: pointer;
+}
+
+.repeat__head input {
+  margin-top: 3px;
+  flex-shrink: 0;
+}
+
+.repeat__head strong {
+  display: block;
+  font-size: 15px;
+  color: var(--text, #101828);
+}
+
+.repeat__head small {
+  display: block;
+  font-size: 12px;
+  color: var(--text-muted, #6b7280);
+  margin-top: 2px;
+}
+
+.repeat__body {
+  margin-top: 14px;
+}
+
+.repeat__label {
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--text-muted, #6b7280);
+  margin: 12px 0 6px;
+}
+
+/* Thirty-one buttons is a lot of row; wrapping into a grid keeps them reachable
+   without a horizontal scroll nobody notices on a desktop. */
+.repeat__days {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(44px, 1fr));
+  gap: 6px;
+}
+
+.repeat__counts {
+  display: flex;
+  gap: 8px;
+}
+
+.repeat__chip {
+  font: inherit;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--text-muted, #6b7280);
+  background: #fff;
+  border: 1.5px solid var(--border, #eceef2);
+  border-radius: 999px;
+  padding: 8px 10px;
+  cursor: pointer;
+  transition: border-color 0.15s ease, background 0.15s ease, color 0.15s ease;
+}
+
+.repeat__chip:hover {
+  border-color: var(--border-strong, #dfe3ea);
+}
+
+.repeat__chip.is-active {
+  color: var(--brand, #ff6b00);
+  border-color: var(--brand, #ff6b00);
+  background: var(--brand-tint, #fff3e0);
+}
+
+.repeat__summary {
+  font-size: 13px;
+  color: var(--text, #101828);
+  background: var(--surface, #f4f6f9);
+  border-radius: var(--radius-md, 12px);
+  padding: 12px;
+  margin: 14px 0 0;
+  line-height: 1.5;
+}

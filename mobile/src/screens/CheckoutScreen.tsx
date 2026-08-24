@@ -7,6 +7,8 @@ import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { useCartStore, selectCount, selectSubtotal } from '../store/cartStore';
 import { useLocationStore } from '../store/locationStore';
 import { useDeliveryFare } from '../lib/useDeliveryFare';
+import { RepeatPicker, type RepeatChoice } from '../components/RepeatPicker';
+import { createSchedule } from '../lib/scheduledOrders';
 import { formatRupees } from '../lib/format';
 import { getCustomer, logoutCustomer } from '../lib/auth';
 import { supabase } from '../lib/supabase';
@@ -29,6 +31,11 @@ export function CheckoutScreen() {
 
   const [address, setAddress] = useState(location?.address ?? '');
   const [placing, setPlacing] = useState(false);
+  const [repeat, setRepeat] = useState<RepeatChoice>({
+    enabled: false,
+    dayOfMonth: new Date().getDate(),
+    occurrences: 3,
+  });
   const [placeError, setPlaceError] = useState<string | null>(null);
   const [locationOpen, setLocationOpen] = useState(false);
 
@@ -77,6 +84,30 @@ export function CheckoutScreen() {
       }
       if (error || !data?.ok) {
         throw new Error(data?.error ?? error?.message ?? 'Could not place order');
+      }
+
+      // Only once the order itself is placed. A repeat is an extra, and a
+      // failure to save it must not lose the order the customer just paid
+      // attention to — so it is awaited but its error is swallowed, and the
+      // schedule can be set up again from Orders.
+      if (repeat.enabled) {
+        try {
+          await createSchedule(customer.token, {
+            items: Object.values(items).map((line) => ({
+              id: line.product.id,
+              quantity: line.quantity,
+              name: line.product.name,
+            })),
+            shopId,
+            address: address.trim(),
+            latitude: location.latitude,
+            longitude: location.longitude,
+            dayOfMonth: repeat.dayOfMonth,
+            occurrences: repeat.occurrences,
+          });
+        } catch {
+          // Swallowed on purpose — see above.
+        }
       }
 
       clear();
@@ -173,6 +204,8 @@ export function CheckoutScreen() {
             <View style={styles.radioOff} />
           </View>
         </View>
+
+        <RepeatPicker value={repeat} onChange={setRepeat} />
 
         <View style={styles.card}>
           <Text style={styles.cardTitle}>Order Summary</Text>

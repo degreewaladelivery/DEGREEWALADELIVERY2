@@ -5,6 +5,7 @@ import { fetchMyOrders, SignedOutError, type TrackedOrder } from '../lib/trackin
 import { formatRupees } from '../lib/format';
 import { Thumb } from '../components/ui/Thumb';
 import { TrackingMap } from '../components/ui/TrackingMap';
+import { ScheduledSection } from '../components/ui/ScheduledSection';
 import { haversineDistanceKm } from '@shared/deliveryFare';
 import { isActiveOrder, isAgentLocationFresh, orderStatusLabel } from '@shared/agentOrders';
 import { customerPushSupported, enableOrderUpdates, orderUpdatesEnabled } from '../lib/customerPush';
@@ -41,6 +42,9 @@ export function Track() {
   const [error, setError] = useState<string | null>(null);
   const [updatesOn, setUpdatesOn] = useState(false);
   const [updatesFailed, setUpdatesFailed] = useState(false);
+  // Bumped after a repeat is confirmed, so the new order appears without waiting
+  // out the poll interval.
+  const [refreshKey, setRefreshKey] = useState(0);
 
   useEffect(() => {
     if (!customer) navigate('/login?next=/track', { replace: true });
@@ -81,7 +85,7 @@ export function Track() {
       cancelled = true;
       window.clearInterval(timer);
     };
-  }, [customer, navigate]);
+  }, [customer, navigate, refreshKey]);
 
   // Every in-flight order gets its own card. Showing only the first one hid the
   // others, and they then appeared under "Past Orders" — a live delivery
@@ -122,6 +126,8 @@ export function Track() {
   return (
     <div className="container otrack">
       <h1 className="otrack__heading">Track Your Order</h1>
+
+      <ScheduledSection token={customer.token} onConfirmed={() => setRefreshKey((n) => n + 1)} />
 
       {customerPushSupported() && !updatesOn && active.length > 0 && (
         <div className="otrack__updates">

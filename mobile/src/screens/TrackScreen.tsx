@@ -9,6 +9,7 @@ import {
   Linking,
 } from 'react-native';
 import { useTabBarSpace } from '../lib/tabBarSpace';
+import { ScheduledSection } from '../components/ScheduledSection';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useNavigation } from '@react-navigation/native';
 import { getCustomer, logoutCustomer } from '../lib/auth';
@@ -48,6 +49,10 @@ export function TrackScreen() {
   const navigation = useNavigation<any>();
   const [orders, setOrders] = useState<TrackedOrder[] | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const [token, setToken] = useState<string | null>(null);
+  // Bumped after a repeat is confirmed, so the new order appears above without
+  // waiting out the poll interval.
+  const [refreshKey, setRefreshKey] = useState(0);
 
   useEffect(() => {
     let cancelled = false;
@@ -59,6 +64,7 @@ export function TrackScreen() {
         if (!cancelled) navigation.replace('Login');
         return;
       }
+      if (!cancelled) setToken(customer.token);
       try {
         const rows = await fetchMyOrders(customer.token);
         if (!cancelled) {
@@ -82,7 +88,7 @@ export function TrackScreen() {
       cancelled = true;
       if (timer) clearInterval(timer);
     };
-  }, [navigation]);
+  }, [navigation, refreshKey]);
 
   // Every in-flight order gets its own card. Showing only the first hid the
   // others, and they then appeared under "Past Orders" — a live delivery
@@ -97,6 +103,10 @@ export function TrackScreen() {
           <Text style={styles.back}>← Back</Text>
         </TouchableOpacity>
         <Text style={styles.heading}>Track Your Order</Text>
+
+        {token && (
+          <ScheduledSection token={token} onConfirmed={() => setRefreshKey((n) => n + 1)} />
+        )}
 
         {!orders && !error && (
           <View style={styles.center}>

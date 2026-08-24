@@ -3,6 +3,8 @@ import { Link, useNavigate } from 'react-router-dom';
 import { useCartStore, selectCount, selectSubtotal } from '../store/cartStore';
 import { useLocationStore } from '../store/locationStore';
 import { useDeliveryFare } from '../lib/useDeliveryFare';
+import { RepeatPicker, type RepeatChoice } from '../components/ui/RepeatPicker';
+import { createSchedule } from '../lib/scheduledOrders';
 import { formatRupees } from '../lib/format';
 import { getCustomer, logoutCustomer } from '../lib/auth';
 import { supabase } from '../lib/supabase';
@@ -22,6 +24,11 @@ export function Payment() {
   const [address, setAddress] = useState(location?.address ?? '');
   const [method, setMethod] = useState<'cod' | 'razorpay'>('cod');
   const [placing, setPlacing] = useState(false);
+  const [repeat, setRepeat] = useState<RepeatChoice>({
+    enabled: false,
+    dayOfMonth: new Date().getDate(),
+    occurrences: 3,
+  });
   const [placeError, setPlaceError] = useState<string | null>(null);
   const [locationOpen, setLocationOpen] = useState(false);
 
@@ -76,6 +83,29 @@ export function Payment() {
       }
       if (error || !data?.ok) {
         throw new Error(data?.error ?? error?.message ?? 'Could not place order');
+      }
+
+      // Only once the order itself is placed. A repeat is an extra, and failing
+      // to save it must not lose the order the customer just completed — so its
+      // error is swallowed and the repeat can be set up again later.
+      if (repeat.enabled) {
+        try {
+          await createSchedule(customer.token, {
+            items: Object.values(items).map((line) => ({
+              id: line.product.id,
+              quantity: line.quantity,
+              name: line.product.name,
+            })),
+            shopId,
+            address: address.trim(),
+            latitude: location.latitude,
+            longitude: location.longitude,
+            dayOfMonth: repeat.dayOfMonth,
+            occurrences: repeat.occurrences,
+          });
+        } catch {
+          // Swallowed on purpose — see above.
+        }
       }
 
       clear();
@@ -184,6 +214,8 @@ export function Payment() {
               </span>
             </label>
           </section>
+
+          <RepeatPicker value={repeat} onChange={setRepeat} />
         </div>
 
         <aside className="payment__summary">
