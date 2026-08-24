@@ -36,7 +36,7 @@ export function RepeatPicker({
         />
         <span>
           <strong>Repeat this order monthly</strong>
-          <small>We'll ask you to confirm each time — nothing is sent without you.</small>
+          <small>We'll ask you to confirm on each date — a month you miss is skipped, not repaid.</small>
         </span>
       </label>
 

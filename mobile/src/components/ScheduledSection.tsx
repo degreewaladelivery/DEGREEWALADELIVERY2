@@ -76,9 +76,9 @@ export function ScheduledSection({
   const onCancel = (schedule: ScheduledOrder) => {
     Alert.alert(
       'Cancel this repeat?',
-      `No more monthly deliveries will be scheduled. ${
-        schedule.occurrences_total - schedule.occurrences_done
-      } remaining will be cancelled.`,
+      `The ${schedule.occurrences_total - schedule.occurrences_done} remaining monthly ${
+        schedule.occurrences_total - schedule.occurrences_done === 1 ? 'delivery' : 'deliveries'
+      } will not be scheduled.`,
       [
         { text: 'Keep it', style: 'cancel' },
         {
@@ -148,7 +148,8 @@ export function ScheduledSection({
             Every month on {describeSchedule(schedule.day_of_month)}
           </Text>
           <Text style={styles.cardMeta}>
-            {schedule.occurrences_done} of {schedule.occurrences_total} delivered
+            {schedule.occurrences_total - schedule.occurrences_done} of{' '}
+            {schedule.occurrences_total} left
             {schedule.next_run_on ? ` · next ${formatRunDate(schedule.next_run_on)}` : ''}
           </Text>
           <TouchableOpacity

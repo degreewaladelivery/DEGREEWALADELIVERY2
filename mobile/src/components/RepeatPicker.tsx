@@ -33,7 +33,7 @@ export function RepeatPicker({
         <View style={styles.headText}>
           <Text style={styles.title}>Repeat this order monthly</Text>
           <Text style={styles.sub}>
-            We'll ask you to confirm each time — nothing is sent without you.
+            We'll ask you to confirm on each date — a month you miss is skipped, not repaid.
           </Text>
         </View>
         <Switch

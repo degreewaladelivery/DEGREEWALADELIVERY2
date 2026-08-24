@@ -197,7 +197,7 @@ Deno.serve(async (req) => {
       const { data: schedule } = await admin
         .from('scheduled_orders')
         .select(
-          'id, customer_id, items, shop_id, delivery_address, delivery_latitude, delivery_longitude, occurrences_done, occurrences_total'
+          'id, customer_id, items, shop_id, delivery_address, delivery_latitude, delivery_longitude'
         )
         .eq('id', run.scheduled_order_id)
         .eq('customer_id', customerId)
@@ -243,14 +243,10 @@ Deno.serve(async (req) => {
         })
         .eq('id', runId);
 
-      const done = (schedule.occurrences_done ?? 0) + 1;
-      await admin
-        .from('scheduled_orders')
-        .update({
-          occurrences_done: done,
-          status: done >= schedule.occurrences_total ? 'finished' : 'active',
-        })
-        .eq('id', schedule.id);
+      // The count is not touched here. A schedule counts dates, not deliveries,
+      // and open_due_scheduled_orders already counted this one when it opened
+      // the run — otherwise a skipped month would be repaid with an extra one
+      // and a customer who never answered would be asked forever.
 
       notifyAgents().catch(() => undefined);
       admin.rpc('release_stalled_orders').then(

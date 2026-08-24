@@ -125,7 +125,8 @@ export function ScheduledSection({
           <strong>{itemsOf(schedule)}</strong>
           <p className="sched__meta">Every month on {describeSchedule(schedule.day_of_month)}</p>
           <p className="sched__meta">
-            {schedule.occurrences_done} of {schedule.occurrences_total} delivered
+            {schedule.occurrences_total - schedule.occurrences_done} of{' '}
+            {schedule.occurrences_total} left
             {schedule.next_run_on ? ` · next ${formatRunDate(schedule.next_run_on)}` : ''}
           </p>
           <button
