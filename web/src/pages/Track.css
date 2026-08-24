@@ -313,3 +313,19 @@
   letter-spacing: 0.5px;
   margin: 2px 0 0;
 }
+
+.otrack__reorder {
+  width: 100%;
+  margin-top: 12px;
+}
+
+/* Kept next to the button rather than in a dialog: the customer is about to
+   look at the cart, and needs to know what will not be in it. */
+.otrack__reorderNote {
+  font-size: 13px;
+  color: var(--text-muted, #6b7280);
+  background: var(--surface, #f4f6f9);
+  border-radius: var(--radius-sm, 8px);
+  padding: 8px 10px;
+  margin: 12px 0 0;
+}

@@ -13,6 +13,7 @@ interface CartState {
   items: Record<string, CartLine>;
 
   addItem: (product: Product) => void;
+  replaceWith: (lines: CartLine[]) => void;
   decrement: (productId: string) => void;
   removeLine: (productId: string) => void;
   clear: () => void;
@@ -55,6 +56,21 @@ export const useCartStore = create<CartState>()(
           [product.id]: { product, quantity: (existing?.quantity ?? 0) + 1 },
         };
         set({ items: next, shopId: sharedPickupId(next) });
+      },
+
+      /**
+       * Replaces the cart with a whole basket at once.
+       *
+       * Used by reorder, where adding items one at a time would rerender the
+       * cart for every unit of every line and briefly show a half-built order.
+       */
+      replaceWith: (lines) => {
+        const items: Record<string, CartLine> = {};
+        for (const line of lines) {
+          if (line.quantity < 1) continue;
+          items[line.product.id] = { product: line.product, quantity: line.quantity };
+        }
+        set({ items, shopId: sharedPickupId(items) });
       },
 
       decrement: (productId) => {

@@ -8,9 +8,12 @@ import {
   StyleSheet,
   ActivityIndicator,
   Linking,
+  Alert,
 } from 'react-native';
 import { useTabBarSpace } from '../lib/tabBarSpace';
 import { ScheduledSection } from '../components/ScheduledSection';
+import { useCartStore } from '../store/cartStore';
+import { rebuildOrder, describeMissing } from '../lib/reorder';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useNavigation } from '@react-navigation/native';
 import { getCustomer, logoutCustomer } from '../lib/auth';
@@ -148,7 +151,35 @@ export function TrackScreen() {
  * wants from order history.
  */
 function PastOrderRow({ order }: { order: TrackedOrder }) {
+  const navigation = useNavigation<any>();
+  const replaceWith = useCartStore((s) => s.replaceWith);
   const [open, setOpen] = useState(false);
+  const [reordering, setReordering] = useState(false);
+
+  const orderAgain = async () => {
+    setReordering(true);
+    try {
+      const { lines, missing } = await rebuildOrder(order.items);
+      if (lines.length === 0) {
+        Alert.alert(
+          'Nothing to reorder',
+          'None of these items are available any more.'
+        );
+        return;
+      }
+      // Replaces rather than merges. "Order again" means this order, and
+      // quietly folding it into whatever was already in the cart produces a
+      // basket the customer never asked for.
+      replaceWith(lines);
+      const note = describeMissing(missing);
+      if (note) Alert.alert('Some items are gone', note);
+      navigation.navigate('CartMain');
+    } catch {
+      Alert.alert('Could not reorder', 'Please try again in a moment.');
+    } finally {
+      setReordering(false);
+    }
+  };
 
   return (
     <View style={styles.past}>
@@ -195,6 +226,17 @@ function PastOrderRow({ order }: { order: TrackedOrder }) {
           </View>
 
           <Text style={styles.muted}>📍 {order.delivery_address}</Text>
+
+          <TouchableOpacity
+            style={[styles.reorderBtn, reordering && styles.reorderBtnBusy]}
+            activeOpacity={0.9}
+            disabled={reordering}
+            onPress={orderAgain}
+          >
+            <Text style={styles.reorderText}>
+              {reordering ? 'Adding to cart…' : 'Order again'}
+            </Text>
+          </TouchableOpacity>
         </View>
       )}
     </View>
@@ -333,6 +375,16 @@ const styles = StyleSheet.create({
   detailQty: { fontSize: fontSizes.xs, color: colors.textMuted },
   detailPrice: { fontSize: fontSizes.sm, fontWeight: fontWeights.bold, color: colors.text, minWidth: 60, textAlign: 'right' },
   detailBill: { marginTop: spacing.sm, paddingTop: spacing.sm, borderTopWidth: 1, borderTopColor: colors.borderStrong },
+  reorderBtn: {
+    backgroundColor: colors.brand,
+    borderRadius: radius.md,
+    paddingVertical: spacing.md,
+    alignItems: 'center',
+    marginTop: spacing.md,
+  },
+  reorderBtnBusy: { opacity: 0.6 },
+  reorderText: { color: '#fff', fontWeight: fontWeights.heading, fontSize: fontSizes.md },
+
   billRow: { flexDirection: 'row', justifyContent: 'space-between', paddingVertical: 2 },
   billLabel: { fontSize: fontSizes.xs, color: colors.textMuted },
   billBold: { fontSize: fontSizes.sm, fontWeight: fontWeights.heading, color: colors.text },

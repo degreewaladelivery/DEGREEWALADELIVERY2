@@ -6,6 +6,8 @@ import { formatRupees } from '../lib/format';
 import { Thumb } from '../components/ui/Thumb';
 import { TrackingMap } from '../components/ui/TrackingMap';
 import { ScheduledSection } from '../components/ui/ScheduledSection';
+import { useCartStore } from '../store/cartStore';
+import { rebuildOrder, describeMissing } from '../lib/reorder';
 import { haversineDistanceKm } from '@shared/deliveryFare';
 import { isActiveOrder, isAgentLocationFresh, orderStatusLabel } from '@shared/agentOrders';
 import { customerPushSupported, enableOrderUpdates, orderUpdatesEnabled } from '../lib/customerPush';
@@ -287,7 +289,37 @@ function ActiveOrderCard({ order }: { order: TrackedOrder }) {
  * bought — the first thing anyone wants from order history.
  */
 function PastOrderRow({ order }: { order: TrackedOrder }) {
+  const navigate = useNavigate();
+  const replaceWith = useCartStore((s) => s.replaceWith);
   const [open, setOpen] = useState(false);
+  const [reordering, setReordering] = useState(false);
+  const [note, setNote] = useState<string | null>(null);
+
+  const orderAgain = async () => {
+    setReordering(true);
+    setNote(null);
+    try {
+      const { lines, missing } = await rebuildOrder(order.items);
+      if (lines.length === 0) {
+        setNote('None of these items are available any more.');
+        return;
+      }
+      // Replaces rather than merges. "Order again" means this order, and
+      // quietly folding it into whatever was already in the cart produces a
+      // basket the customer never asked for.
+      replaceWith(lines);
+      const missingNote = describeMissing(missing);
+      if (missingNote) {
+        setNote(missingNote);
+        return;
+      }
+      navigate('/cart');
+    } catch {
+      setNote('Could not reorder — please try again in a moment.');
+    } finally {
+      setReordering(false);
+    }
+  };
 
   return (
     <div className={'otrack__past-wrap' + (open ? ' is-open' : '')}>
@@ -338,6 +370,17 @@ function PastOrderRow({ order }: { order: TrackedOrder }) {
           </div>
 
           <p className="otrack__muted">📍 {order.delivery_address}</p>
+
+          {note && <p className="otrack__reorderNote">{note}</p>}
+
+          <button
+            type="button"
+            className="btn btn-primary otrack__reorder"
+            disabled={reordering}
+            onClick={orderAgain}
+          >
+            {reordering ? 'Adding to cart…' : 'Order again'}
+          </button>
         </div>
       )}
     </div>
