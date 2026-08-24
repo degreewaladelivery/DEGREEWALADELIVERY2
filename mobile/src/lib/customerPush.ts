@@ -1,4 +1,5 @@
 import { Platform, PermissionsAndroid } from 'react-native';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 import {
   AuthorizationStatus,
   getMessaging,
@@ -22,14 +23,57 @@ import { supabase } from './supabase';
  */
 
 /**
- * Android 13+ needs an explicit runtime permission, and iOS always does. Asked
- * after sign-in rather than on first launch — a permission prompt before anyone
- * knows what the app is gets denied.
+ * Set once we have shown the permission prompt, so it is never shown twice.
+ *
+ * Android re-prompts a decline on every request until it decides to suppress
+ * them itself, which would mean asking at every launch. Storage is wiped by a
+ * reinstall, which is the one case where asking again is right — a fresh
+ * install is a fresh decision.
  */
-export async function requestCustomerPushPermission(): Promise<boolean> {
+const ASKED_KEY = 'dw_push_asked';
+
+async function alreadyAsked(): Promise<boolean> {
+  try {
+    return (await AsyncStorage.getItem(ASKED_KEY)) === '1';
+  } catch {
+    // Unreadable storage should not cause repeated prompting.
+    return true;
+  }
+}
+
+/** Whether notifications are permitted, without prompting for them. */
+async function hasPermission(): Promise<boolean> {
   if (Platform.OS === 'android') {
     // POST_NOTIFICATIONS only exists on API 33+. Below that it is granted at
     // install time and the constant is undefined.
+    const permission = PermissionsAndroid.PERMISSIONS.POST_NOTIFICATIONS;
+    if (!permission) return true;
+    try {
+      return await PermissionsAndroid.check(permission);
+    } catch {
+      return false;
+    }
+  }
+  return false;
+}
+
+/**
+ * Shows the system prompt, once ever.
+ *
+ * Called after sign-in, which is the moment it makes sense to a customer —
+ * asking on first launch, before they know what the app is, is how you get
+ * denied.
+ */
+async function askOnce(): Promise<boolean> {
+  if (await alreadyAsked()) return hasPermission();
+
+  try {
+    await AsyncStorage.setItem(ASKED_KEY, '1');
+  } catch {
+    // If the flag cannot be stored, still ask this once rather than never.
+  }
+
+  if (Platform.OS === 'android') {
     const permission = PermissionsAndroid.PERMISSIONS.POST_NOTIFICATIONS;
     if (!permission) return true;
     const result = await PermissionsAndroid.request(permission);
@@ -51,15 +95,24 @@ async function store(sessionToken: string, deviceToken: string): Promise<void> {
 }
 
 /**
- * Asks permission, stores the current token, and follows refreshes.
+ * Stores the current token and follows refreshes.
  *
- * Returns an unsubscribe for the refresh listener. Tokens rotate — on
- * reinstall, on restore to a new phone, sometimes on their own — and a stale
- * token fails silently, so a customer would simply stop being reachable with
- * nothing to show for it.
+ * `ask` is true only at sign-in. Every other call — each app launch — checks
+ * the permission silently and does nothing if it was refused, so declining is
+ * respected instead of being asked again tomorrow.
+ *
+ * Launch still re-registers when permission is held, because tokens rotate on
+ * reinstall and on restore to a new phone, and a stale one fails silently: the
+ * customer would simply stop being reachable with nothing to show for it. That
+ * refresh needs no prompt.
+ *
+ * Returns an unsubscribe for the refresh listener.
  */
-export async function registerCustomerForPush(sessionToken: string): Promise<() => void> {
-  const granted = await requestCustomerPushPermission();
+export async function registerCustomerForPush(
+  sessionToken: string,
+  { ask = false }: { ask?: boolean } = {}
+): Promise<() => void> {
+  const granted = ask ? await askOnce() : await hasPermission();
   if (!granted) return () => undefined;
 
   try {

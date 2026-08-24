@@ -56,7 +56,7 @@ export async function verifyOtp(phone: string, otp: string): Promise<Customer> {
   await setCustomer(customer);
   // Not awaited: a customer who declines notifications, or a phone without Play
   // Services, must still finish signing in.
-  registerCustomerForPush(customer.token).catch(() => undefined);
+  registerCustomerForPush(customer.token, { ask: true }).catch(() => undefined);
   return customer;
 }
 

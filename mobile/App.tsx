@@ -11,10 +11,11 @@ import { registerCustomerForPush } from './src/lib/customerPush';
 function App() {
   const isDarkMode = useColorScheme() === 'dark';
 
-  // Sign-in registers the device, but someone already signed in when this
-  // version arrives never signs in again — and FCM tokens rotate on reinstall
-  // and on restore to a new phone. Re-registering each launch keeps them
-  // reachable; the upsert makes it a no-op when nothing has changed.
+  // Sign-in is where permission is asked. This only refreshes the token, and
+  // never prompts: someone already signed in when this version arrives would
+  // otherwise never register, and FCM tokens rotate on reinstall and on restore
+  // to a new phone, failing silently when stale. If notifications were refused,
+  // this does nothing rather than asking again tomorrow.
   useEffect(() => {
     let stop: (() => void) | undefined;
     let cancelled = false;
