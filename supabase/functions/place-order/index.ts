@@ -1,14 +1,11 @@
 import { createClient } from 'jsr:@supabase/supabase-js@2';
 import { corsHeaders, json, resolveSession } from '../_shared/session.ts';
-import { resolvePickup, routeDistanceKm } from '../_shared/pickup.ts';
-import { calculateDeliveryFare, MAX_DELIVERY_RADIUS_KM } from '../../../shared/deliveryFare.ts';
+import { createOrder } from '../_shared/createOrder.ts';
 
 const SUPABASE_URL = Deno.env.get('SUPABASE_URL') ?? '';
 const SERVICE_ROLE_KEY = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? '';
 
 const NOTIFY_AGENTS_SECRET = Deno.env.get('NOTIFY_AGENTS_SECRET') ?? '';
-
-const TAX_RATE = 0.05;
 
 /**
  * Ask notify-agents to push every agent's registered browser. Fails quietly:
@@ -27,7 +24,6 @@ async function notifyAgents(): Promise<void> {
     body: '{}',
   });
 }
-
 
 Deno.serve(async (req) => {
   if (req.method === 'OPTIONS') {
@@ -52,122 +48,18 @@ Deno.serve(async (req) => {
       return json({ ok: false, error: 'Please sign in again', signedOut: true });
     }
 
-    const address = String(body.address ?? '').trim();
-    if (address.length < 6) {
-      return json({ ok: false, error: 'Please enter a delivery address' });
-    }
+    const result = await createOrder(admin, {
+      customerId: customer.id,
+      customerPhone: customer.phone,
+      customerName: customer.name ?? null,
+      items: Array.isArray(body.items) ? body.items : [],
+      address: String(body.address ?? ''),
+      latitude: Number(body.latitude),
+      longitude: Number(body.longitude),
+      shopId: body.shopId ? String(body.shopId) : null,
+    });
 
-    const latitude = Number(body.latitude);
-    const longitude = Number(body.longitude);
-    if (!Number.isFinite(latitude) || !Number.isFinite(longitude)) {
-      return json({ ok: false, error: 'Please pick your delivery location on the map' });
-    }
-
-    const requested = Array.isArray(body.items) ? body.items : [];
-    if (requested.length === 0) {
-      return json({ ok: false, error: 'Your cart is empty' });
-    }
-
-    const quantities = new Map<string, number>();
-    for (const entry of requested) {
-      const id = String(entry?.id ?? '');
-      const quantity = Math.floor(Number(entry?.quantity));
-      if (!id || !Number.isFinite(quantity) || quantity < 1) {
-        return json({ ok: false, error: 'Your cart has an invalid item' });
-      }
-      quantities.set(id, quantity);
-    }
-
-    const ids = [...quantities.keys()];
-    const [fromCategories, fromShops] = await Promise.all([
-      admin.from('products_catalog').select('id, name, unit, retail_price, image_url').in('id', ids),
-      admin.from('shop_products_catalog').select('id, name, unit, retail_price, image_url').in('id', ids),
-    ]);
-
-    const available = [...(fromCategories.data ?? []), ...(fromShops.data ?? [])];
-    if (available.length !== ids.length) {
-      // Name them. The catalogue views hide anything inactive, so a missing row
-      // is exactly an item that has been withdrawn — and telling someone "some
-      // items are no longer available" leaves them deleting things one at a
-      // time to find out which. The base tables still hold the names.
-      const found = new Set(available.map((product) => product.id));
-      const missingIds = ids.filter((id) => !found.has(id));
-      const [namedProducts, namedShopProducts] = await Promise.all([
-        admin.from('products').select('name').in('id', missingIds),
-        admin.from('shop_products').select('name').in('id', missingIds),
-      ]);
-      const names = [...(namedProducts.data ?? []), ...(namedShopProducts.data ?? [])]
-        .map((row) => row.name)
-        .filter(Boolean);
-
-      return json({
-        ok: false,
-        error: names.length
-          ? `${names.join(', ')} ${names.length === 1 ? 'is' : 'are'} no longer available. Please remove ${names.length === 1 ? 'it' : 'them'} from your cart.`
-          : 'Some items are no longer available',
-        unavailableIds: missingIds,
-      });
-    }
-
-    const items = available.map((product) => ({
-      id: product.id,
-      name: product.name,
-      price: Number(product.retail_price),
-      quantity: quantities.get(product.id) ?? 1,
-      unit: product.unit ?? null,
-      // Snapshot the picture alongside the name and price. An order is a record
-      // of what was bought; if the catalogue photo changes later, the receipt
-      // should still show what the customer actually chose.
-      image_url: product.image_url ?? null,
-    }));
-
-    const subtotal = items.reduce((sum, item) => sum + item.price * item.quantity, 0);
-
-    const shopId = body.shopId ? String(body.shopId) : null;
-    const pickup = await resolvePickup(admin, shopId);
-    if (!pickup) {
-      return json({ ok: false, error: 'Delivery is not set up for this shop yet' });
-    }
-
-    const { km: distanceKm } = await routeDistanceKm(pickup, latitude, longitude);
-    if (distanceKm > MAX_DELIVERY_RADIUS_KM) {
-      return json({
-        ok: false,
-        error: `That address is ${distanceKm.toFixed(1)} km away — we deliver within ${MAX_DELIVERY_RADIUS_KM} km.`,
-      });
-    }
-
-    const fare = calculateDeliveryFare(distanceKm);
-    const taxes = Math.round(subtotal * TAX_RATE);
-    const total = subtotal + fare.customerFare + taxes;
-
-    const { data: order, error } = await admin
-      .from('orders')
-      .insert({
-        customer_id: customer.id,
-        customer_phone: customer.phone,
-        customer_name: customer.name ?? null,
-        pickup_label: pickup.label,
-        pickup_latitude: pickup.latitude,
-        pickup_longitude: pickup.longitude,
-        delivery_address: address,
-        delivery_latitude: latitude,
-        delivery_longitude: longitude,
-        distance_km: distanceKm,
-        items,
-        subtotal,
-        delivery_fee: fare.customerFare,
-        taxes,
-        total,
-        agent_payout: fare.agentPayout,
-        payment_method: 'cod',
-      })
-      .select('id')
-      .single();
-
-    if (error || !order) {
-      return json({ ok: false, error: 'Could not place your order' });
-    }
+    if (!result.ok) return json(result);
 
     // Wake the agents. Deliberately not awaited and deliberately swallowed: the
     // customer's order is already placed, and a push service having a bad day
@@ -182,7 +74,13 @@ Deno.serve(async (req) => {
       () => undefined
     );
 
-    return json({ ok: true, orderId: order.id, total, deliveryFee: fare.customerFare, distanceKm });
+    return json({
+      ok: true,
+      orderId: result.orderId,
+      total: result.total,
+      deliveryFee: result.deliveryFee,
+      distanceKm: result.distanceKm,
+    });
   } catch {
     return json({ ok: false, error: 'Something went wrong' });
   }
