@@ -1,6 +1,6 @@
 import { useState, type FormEvent } from 'react';
 import { Link, useNavigate, useSearchParams } from 'react-router-dom';
-import { sendOtp, verifyOtp, getCustomer, logoutCustomer } from '../lib/auth';
+import { sendOtp, verifyOtp, getCustomer, logoutCustomer, saveProfile, type Customer } from '../lib/auth';
 import './Login.css';
 
 export function Login() {
@@ -9,7 +9,10 @@ export function Login() {
   const next = searchParams.get('next') ?? '/';
 
   const [customer, setCustomerState] = useState(getCustomer());
-  const [step, setStep] = useState<'phone' | 'otp'>('phone');
+  const [step, setStep] = useState<'phone' | 'otp' | 'profile'>('phone');
+  const [pending, setPending] = useState<Customer | null>(null);
+  const [name, setName] = useState('');
+  const [email, setEmail] = useState('');
   const [phone, setPhone] = useState('');
   const [otp, setOtp] = useState('');
   const [loading, setLoading] = useState(false);
@@ -39,10 +42,33 @@ export function Login() {
     setLoading(true);
     setError(null);
     try {
-      await verifyOtp(phone, otp);
+      const { customer: signedIn, needsProfile } = await verifyOtp(phone, otp);
+      if (needsProfile) {
+        // Asked once, immediately after the number is proved. An agent at the
+        // door has nothing to ask for without a name, and someone who gets past
+        // sign-in rarely goes looking for a profile page afterwards.
+        setPending(signedIn);
+        setStep('profile');
+        return;
+      }
       navigate(next, { replace: true });
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Incorrect OTP');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const onSaveProfile = async (e: FormEvent) => {
+    e.preventDefault();
+    if (!pending || !name.trim()) return;
+    setLoading(true);
+    setError(null);
+    try {
+      await saveProfile(pending.token, { name: name.trim(), email: email.trim() });
+      navigate(next, { replace: true });
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Could not save your details');
     } finally {
       setLoading(false);
     }
@@ -52,6 +78,49 @@ export function Login() {
     await logoutCustomer();
     setCustomerState(null);
   };
+
+  if (step === 'profile') {
+    return (
+      <div className="container login">
+        <div className="login__card">
+          <span className="login__mark">👋</span>
+          <h1 className="login__title">Almost there</h1>
+          <p className="login__sub">Tell us who to hand your deliveries to.</p>
+
+          <form className="login__form" onSubmit={onSaveProfile}>
+            <div className="login__field">
+              <input
+                value={name}
+                onChange={(e) => setName(e.target.value)}
+                placeholder="Your name"
+                aria-label="Your name"
+                maxLength={60}
+                autoFocus
+              />
+            </div>
+            <div className="login__field">
+              <input
+                type="email"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                placeholder="Email (optional)"
+                aria-label="Email, optional"
+                maxLength={254}
+              />
+            </div>
+            {error && <p className="login__error">{error}</p>}
+            <button
+              type="submit"
+              className="btn btn-primary btn-lg btn-block"
+              disabled={!name.trim() || loading}
+            >
+              {loading ? 'Saving…' : 'Continue'}
+            </button>
+          </form>
+        </div>
+      </div>
+    );
+  }
 
   if (customer) {
     return (

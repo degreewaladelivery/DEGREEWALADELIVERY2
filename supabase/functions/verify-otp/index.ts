@@ -68,7 +68,7 @@ Deno.serve(async (req) => {
     const { data: customer, error } = await admin
       .from('customers')
       .upsert({ phone: digits }, { onConflict: 'phone' })
-      .select('id, phone')
+      .select('id, phone, name')
       .single();
 
     if (error || !customer) {
@@ -80,7 +80,15 @@ Deno.serve(async (req) => {
       return json({ ok: false, error: 'Could not start your session' });
     }
 
-    return json({ ok: true, customerId: customer.id, phone: customer.phone, token });
+    return json({
+      ok: true,
+      customerId: customer.id,
+      phone: customer.phone,
+      token,
+      // Lets the app ask for a name straight after sign-in without a second
+      // round trip, and only when there is nothing there yet.
+      hasName: Boolean(customer.name && String(customer.name).trim()),
+    });
   } catch {
     return json({ ok: false, error: 'Something went wrong' });
   }

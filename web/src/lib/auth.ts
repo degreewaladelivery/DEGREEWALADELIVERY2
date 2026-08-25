@@ -41,7 +41,13 @@ export async function sendOtp(phone: string): Promise<void> {
   }
 }
 
-export async function verifyOtp(phone: string, otp: string): Promise<Customer> {
+export interface VerifiedSignIn {
+  customer: Customer;
+  /** True when this account has no name yet, so sign-in should ask for one. */
+  needsProfile: boolean;
+}
+
+export async function verifyOtp(phone: string, otp: string): Promise<VerifiedSignIn> {
   const { data, error } = await supabase.functions.invoke('verify-otp', {
     body: { phone, otp },
   });
@@ -50,7 +56,7 @@ export async function verifyOtp(phone: string, otp: string): Promise<Customer> {
   }
   const customer: Customer = { id: data.customerId, phone: data.phone, token: data.token };
   setCustomer(customer);
-  return customer;
+  return { customer, needsProfile: !data.hasName };
 }
 
 export interface CustomerProfile {
