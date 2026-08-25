@@ -11,7 +11,6 @@ import { CheckoutScreen } from '../screens/CheckoutScreen';
 import { OrderSuccessScreen } from '../screens/OrderSuccessScreen';
 import { TrackScreen } from '../screens/TrackScreen';
 import { LoginScreen } from '../screens/LoginScreen';
-import { AgentGateScreen } from '../screens/AgentGateScreen';
 import { HomeIcon, CartIcon, UserIcon } from '../components/icons';
 import { OrderAlerts } from '../components/OrderAlerts';
 import { ActiveOrderBar } from '../components/ActiveOrderBar';
@@ -52,7 +51,6 @@ function AccountStackNavigator() {
   return (
     <AccountStack.Navigator screenOptions={{ headerShown: false }}>
       <AccountStack.Screen name="AccountMain" component={LoginScreen} />
-      <AccountStack.Screen name="AgentArea" component={AgentGateScreen} />
     </AccountStack.Navigator>
   );
 }

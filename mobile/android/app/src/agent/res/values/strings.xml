@@ -1,0 +1,5 @@
+<resources>
+    <!-- Overrides the customer name for the partner build, so the two apps are
+         told apart on a phone that has both. -->
+    <string name="app_name">DegreeWala Partner</string>
+</resources>

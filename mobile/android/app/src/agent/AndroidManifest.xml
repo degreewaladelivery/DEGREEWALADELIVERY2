@@ -1,0 +1,25 @@
+<manifest xmlns:android="http://schemas.android.com/apk/res/android">
+
+    <!--
+      A delivery agent switches to Maps to navigate, or pockets the phone.
+      Without a foreground service the OS stops location updates the moment that
+      happens — the middle of every delivery. The service keeps them running
+      behind a visible notification.
+
+      Deliberately a foreground service rather than ACCESS_BACKGROUND_LOCATION:
+      the same result for this case, and it avoids the Play Store
+      background-location declaration entirely.
+
+      Only merged into the partner build, so the customer app never asks Play to
+      justify a location service it does not use.
+    -->
+    <uses-permission android:name="android.permission.FOREGROUND_SERVICE" />
+    <uses-permission android:name="android.permission.FOREGROUND_SERVICE_LOCATION" />
+
+    <application>
+      <service
+        android:name=".DeliveryLocationService"
+        android:foregroundServiceType="location"
+        android:exported="false" />
+    </application>
+</manifest>

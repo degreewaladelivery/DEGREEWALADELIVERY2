@@ -79,6 +79,30 @@ android {
     compileSdk rootProject.ext.compileSdkVersion
 
     namespace "com.degreewalamobile"
+    // The customer app and the delivery partner app are one codebase built
+    // twice. They must be separate listings on Play: only the partner build
+    // runs a location foreground service, and a shopping app that tracks
+    // location invites a review it cannot justify.
+    flavorDimensions "app"
+    productFlavors {
+        customer {
+            dimension "app"
+            applicationId "com.degreewalamobile"
+            buildConfigField "boolean", "IS_AGENT_APP", "false"
+        }
+        agent {
+            dimension "app"
+            // A different package name, so Play treats it as its own app and
+            // an agent can have both installed.
+            applicationId "com.degreewalamobile.agent"
+            buildConfigField "boolean", "IS_AGENT_APP", "true"
+        }
+    }
+
+    buildFeatures {
+        buildConfig true
+    }
+
     defaultConfig {
         applicationId "com.degreewalamobile"
         minSdkVersion rootProject.ext.minSdkVersion

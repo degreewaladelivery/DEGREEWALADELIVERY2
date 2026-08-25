@@ -214,15 +214,6 @@ export function ProfileScreen({
           <Text style={styles.rowChevron}>›</Text>
         </TouchableOpacity>
 
-        <TouchableOpacity
-          style={styles.row}
-          activeOpacity={0.85}
-          onPress={() => navigation.navigate('AgentArea')}
-        >
-          <Text style={styles.rowIcon}>🛵</Text>
-          <Text style={styles.rowLabel}>Delivery partner sign in</Text>
-          <Text style={styles.rowChevron}>›</Text>
-        </TouchableOpacity>
 
         <TouchableOpacity style={styles.logoutBtn} activeOpacity={0.9} onPress={onLogout}>
           <Text style={styles.logoutText}>Log out</Text>

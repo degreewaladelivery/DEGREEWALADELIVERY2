@@ -14,7 +14,15 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { signInAgent } from '../agent/supabaseAgent';
 import { colors, spacing, radius, fontSizes, fontWeights, shadows } from '../theme';
 
-export function AgentLoginScreen({ onSignedIn, onBack }: { onSignedIn: () => void; onBack: () => void }) {
+export function AgentLoginScreen({
+  onSignedIn,
+  onBack,
+}: {
+  onSignedIn: () => void;
+  /** Omitted in the standalone partner app, where this is the front door and
+   *  there is nowhere to go back to. */
+  onBack?: () => void;
+}) {
   const tabBarSpace = useTabBarSpace();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -39,9 +47,11 @@ export function AgentLoginScreen({ onSignedIn, onBack }: { onSignedIn: () => voi
         behavior={Platform.OS === 'ios' ? 'padding' : undefined}
       >
         <ScrollView contentContainerStyle={[styles.content, { paddingBottom: tabBarSpace }]} keyboardShouldPersistTaps="handled">
-          <TouchableOpacity onPress={onBack} hitSlop={10}>
-            <Text style={styles.back}>← Back</Text>
-          </TouchableOpacity>
+          {onBack && (
+            <TouchableOpacity onPress={onBack} hitSlop={10}>
+              <Text style={styles.back}>← Back</Text>
+            </TouchableOpacity>
+          )}
 
           <View style={styles.card}>
             <Text style={styles.emoji}>🛵</Text>

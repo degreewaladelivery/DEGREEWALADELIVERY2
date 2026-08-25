@@ -49,6 +49,18 @@ class DeliveryTrackingModule(reactContext: ReactApplicationContext) :
 
   override fun getName() = "DeliveryTracking"
 
+  /**
+   * Which of the two apps this build is.
+   *
+   * The customer app and the delivery partner app share one codebase and are
+   * separated by a Gradle flavour; JavaScript needs to know which one it is
+   * running inside to choose a root screen. Exposed as a constant rather than a
+   * method so it is available before the first render, with no async gap where
+   * the wrong app could flash on screen.
+   */
+  override fun getConstants(): MutableMap<String, Any> =
+    hashMapOf("isAgentApp" to BuildConfig.IS_AGENT_APP)
+
   @ReactMethod
   fun start(promise: Promise) {
     try {

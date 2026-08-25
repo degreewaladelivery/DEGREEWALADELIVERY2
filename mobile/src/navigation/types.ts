@@ -8,7 +8,6 @@ export type HomeStackParamList = {
 
 export type AccountStackParamList = {
   AccountMain: undefined;
-  AgentArea: undefined;
 };
 
 export type CartStackParamList = {

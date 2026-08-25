@@ -6,17 +6,13 @@
     <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
 
     <!--
-      A delivery agent switches to Maps to navigate, or pockets the phone. Without
-      a foreground service the OS stops our location updates the moment that
-      happens — which is the middle of every delivery. The service keeps them
-      running behind a visible notification.
+      Location tracking lives in the delivery partner build only — see
+      src/agent/AndroidManifest.xml. A customer app that runs a location
+      foreground service has to justify it in Play review, and cannot.
 
-      Deliberately a foreground service rather than ACCESS_BACKGROUND_LOCATION:
-      same result for our case, and it avoids the Play Store background-location
-      declaration entirely.
+      Fine and coarse location stay here: customers use them to drop a pin on
+      their delivery address, which is a foreground, one-shot use.
     -->
-    <uses-permission android:name="android.permission.FOREGROUND_SERVICE" />
-    <uses-permission android:name="android.permission.FOREGROUND_SERVICE_LOCATION" />
 
     <application
       android:name=".MainApplication"
@@ -39,10 +35,5 @@
             <category android:name="android.intent.category.LAUNCHER" />
         </intent-filter>
       </activity>
-
-      <service
-        android:name=".DeliveryLocationService"
-        android:foregroundServiceType="location"
-        android:exported="false" />
     </application>
 </manifest>

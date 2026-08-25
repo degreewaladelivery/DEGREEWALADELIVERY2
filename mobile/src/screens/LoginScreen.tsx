@@ -241,22 +241,11 @@ export function LoginScreen() {
 
           <Text style={styles.terms}>By continuing you agree to our Terms & Privacy Policy.</Text>
         </View>
-        {/* Only on the Account tab — not when this screen is gating checkout. */}
-        {!onSuccessRoute && <PartnerLink onPress={() => navigation.navigate('AgentArea')} />}
       </View>
     </SafeAreaView>
   );
 }
 
-/** Way in for delivery partners, who sign in with an email and password issued
- *  by the office rather than a customer OTP. */
-function PartnerLink({ onPress }: { onPress: () => void }) {
-  return (
-    <TouchableOpacity style={styles.partner} onPress={onPress} activeOpacity={0.8}>
-      <Text style={styles.partnerText}>🛵 Delivery partner? Sign in here</Text>
-    </TouchableOpacity>
-  );
-}
 
 const styles = StyleSheet.create({
   safe: { flex: 1, backgroundColor: colors.bgSoft },
