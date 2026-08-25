@@ -9,6 +9,9 @@ import {
   Linking,
   Alert,
   AppState,
+  Modal,
+  TextInput,
+  Switch,
 } from 'react-native';
 import { useTabBarSpace } from '../lib/tabBarSpace';
 import { SafeAreaView } from 'react-native-safe-area-context';
@@ -23,6 +26,10 @@ import {
   subscribeToPool,
   announceClaim,
   updateAgentLocation,
+  verifyDeliveryOtp,
+  reportFailedDelivery,
+  setAgentOnline,
+  getEarnings,
 } from '../agent/api';
 import { getMessaging, onMessage } from '@react-native-firebase/messaging';
 import { signOutAgent } from '../agent/supabaseAgent';
@@ -32,7 +39,7 @@ import {
   startBackgroundTracking,
   stopBackgroundTracking,
 } from '../agent/backgroundTracking';
-import type { AgentProfile, OrderRow } from '@shared/agentOrders';
+import type { AgentProfile, OrderRow, EarningsSummary } from '@shared/agentOrders';
 import { formatRupees } from '../lib/format';
 import { Thumb } from '../components/Thumb';
 import { TrackingMap } from '../components/TrackingMap';
@@ -51,6 +58,13 @@ export function AgentOrdersScreen({ agentId, onSignedOut }: { agentId: string; o
   const [myOrders, setMyOrders] = useState<OrderRow[] | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [busyId, setBusyId] = useState<string | null>(null);
+  const [earnings, setEarnings] = useState<EarningsSummary | null>(null);
+  const [online, setOnline] = useState(true);
+  // The order being closed, its code, and whether the cash was taken.
+  const [closing, setClosing] = useState<OrderRow | null>(null);
+  const [code, setCode] = useState('');
+  const [cashTaken, setCashTaken] = useState(true);
+  const [closeError, setCloseError] = useState<string | null>(null);
   const [refreshing, setRefreshing] = useState(false);
   // Location is a condition of working, not a preference — a customer watching a
   // stationary pin can't tell the agent simply switched it off.
@@ -64,9 +78,14 @@ export function AgentOrdersScreen({ agentId, onSignedOut }: { agentId: string; o
 
   const load = useCallback(async () => {
     try {
-      const [open, mine] = await Promise.all([listOpenOrders(), listMyDeliveries(agentId)]);
+      const [open, mine, earned] = await Promise.all([
+        listOpenOrders(),
+        listMyDeliveries(agentId),
+        getEarnings(agentId).catch(() => null),
+      ]);
       setOpenOrders(open);
       setMyOrders(mine);
+      if (earned) setEarnings(earned);
       setError(null);
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Could not load orders');
@@ -75,7 +94,10 @@ export function AgentOrdersScreen({ agentId, onSignedOut }: { agentId: string; o
 
   useEffect(() => {
     getMyProfile()
-      .then(setProfile)
+      .then((p) => {
+        setProfile(p);
+        setOnline(p.is_online);
+      })
       .catch(() => undefined);
   }, []);
 
@@ -219,15 +241,77 @@ export function AgentOrdersScreen({ agentId, onSignedOut }: { agentId: string; o
   };
 
   const onAdvance = async (order: OrderRow) => {
+    // Picking up is still one tap. Delivering is not: it needs the customer's
+    // code, and for a cash order, confirmation that the money changed hands.
+    if (order.status !== 'claimed') {
+      setClosing(order);
+      setCode('');
+      setCashTaken(order.payment_method === 'cod');
+      setCloseError(null);
+      return;
+    }
     setBusyId(order.id);
     try {
-      if (order.status === 'claimed') await markPickedUp(order.id);
-      else await markDelivered(order.id);
+      await markPickedUp(order.id);
       await load();
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Could not update the order');
     } finally {
       setBusyId(null);
+    }
+  };
+
+  const onConfirmDelivery = async () => {
+    if (!closing) return;
+    setBusyId(closing.id);
+    setCloseError(null);
+    try {
+      const matched = await verifyDeliveryOtp(closing.id, code);
+      if (!matched) {
+        setCloseError('That code does not match. Ask the customer to read it again.');
+        return;
+      }
+      await markDelivered(closing.id, closing.payment_method === 'cod' && cashTaken);
+      setClosing(null);
+      await load();
+    } catch (err) {
+      setCloseError(err instanceof Error ? err.message : 'Could not close the delivery');
+    } finally {
+      setBusyId(null);
+    }
+  };
+
+  const onReportFailure = () => {
+    if (!closing) return;
+    const order = closing;
+    const reasons = ['Nobody at the address', 'Customer refused', 'Address is wrong', 'Cannot reach the customer'];
+    Alert.alert('Why could it not be delivered?', undefined, [
+      ...reasons.map((reason) => ({
+        text: reason,
+        onPress: async () => {
+          setBusyId(order.id);
+          try {
+            await reportFailedDelivery(order.id, reason);
+            setClosing(null);
+            await load();
+          } catch (err) {
+            setCloseError(err instanceof Error ? err.message : 'Could not report that');
+          } finally {
+            setBusyId(null);
+          }
+        },
+      })),
+      { text: 'Cancel', style: 'cancel' as const },
+    ]);
+  };
+
+  const onToggleOnline = async (next: boolean) => {
+    if (!profile) return;
+    setOnline(next);
+    try {
+      await setAgentOnline(profile.user_id, next);
+    } catch {
+      setOnline(!next);
     }
   };
 
@@ -275,6 +359,34 @@ export function AgentOrdersScreen({ agentId, onSignedOut }: { agentId: string; o
             <Text style={styles.signOut}>Sign out</Text>
           </TouchableOpacity>
         </View>
+
+        {/* Off duty keeps the account but stops new orders being pushed, so an
+            agent can finish for the day without uninstalling anything. */}
+        <View style={styles.dutyRow}>
+          <View style={styles.headCol}>
+            <Text style={styles.dutyTitle}>{online ? 'On duty' : 'Off duty'}</Text>
+            <Text style={styles.dutySub}>
+              {online
+                ? "You'll be alerted about new orders."
+                : 'No new order alerts until you switch back on.'}
+            </Text>
+          </View>
+          <Switch
+            value={online}
+            onValueChange={onToggleOnline}
+            trackColor={{ true: colors.brand, false: colors.borderStrong }}
+            thumbColor="#fff"
+          />
+        </View>
+
+        {earnings && (
+          <View style={styles.earnRow}>
+            <Earn label="Today" value={formatRupees(earnings.today)} />
+            <Earn label="7 days" value={formatRupees(earnings.week)} />
+            <Earn label="Deliveries" value={String(earnings.deliveredToday)} />
+            <Earn label="Cash held" value={formatRupees(earnings.cashInHand)} />
+          </View>
+        )}
 
         {error && <Text style={styles.error}>{error}</Text>}
 
@@ -330,7 +442,73 @@ export function AgentOrdersScreen({ agentId, onSignedOut }: { agentId: string; o
           />
         ))}
       </ScrollView>
+
+      <Modal visible={closing !== null} transparent animationType="fade" onRequestClose={() => setClosing(null)}>
+        <View style={styles.modalBack}>
+          <View style={styles.modalCard}>
+            <Text style={styles.modalTitle}>Confirm delivery</Text>
+            <Text style={styles.modalSub}>
+              Ask the customer for the 4-digit code shown in their app.
+            </Text>
+
+            <TextInput
+              style={styles.codeInput}
+              value={code}
+              onChangeText={(t) => setCode(t.replace(/\D/g, ''))}
+              placeholder="0000"
+              placeholderTextColor={colors.textFaint}
+              keyboardType="number-pad"
+              maxLength={4}
+              autoFocus
+            />
+
+            {closing?.payment_method === 'cod' && (
+              <TouchableOpacity
+                style={styles.cashRow}
+                activeOpacity={0.8}
+                onPress={() => setCashTaken((v) => !v)}
+              >
+                <View style={[styles.checkbox, cashTaken && styles.checkboxOn]}>
+                  {cashTaken && <Text style={styles.checkboxTick}>✓</Text>}
+                </View>
+                <Text style={styles.cashText}>
+                  I collected {formatRupees(closing.total)} in cash
+                </Text>
+              </TouchableOpacity>
+            )}
+
+            {closeError && <Text style={styles.error}>{closeError}</Text>}
+
+            <TouchableOpacity
+              style={[styles.modalBtn, (code.length !== 4 || busyId !== null) && styles.modalBtnOff]}
+              activeOpacity={0.9}
+              disabled={code.length !== 4 || busyId !== null}
+              onPress={onConfirmDelivery}
+            >
+              <Text style={styles.modalBtnText}>
+                {busyId !== null ? 'Confirming…' : 'Confirm delivered'}
+              </Text>
+            </TouchableOpacity>
+
+            <TouchableOpacity onPress={onReportFailure} activeOpacity={0.8}>
+              <Text style={styles.failLink}>Could not deliver</Text>
+            </TouchableOpacity>
+            <TouchableOpacity onPress={() => setClosing(null)} activeOpacity={0.8}>
+              <Text style={styles.cancelLink}>Cancel</Text>
+            </TouchableOpacity>
+          </View>
+        </View>
+      </Modal>
     </SafeAreaView>
+  );
+}
+
+function Earn({ label, value }: { label: string; value: string }) {
+  return (
+    <View style={styles.earnCell}>
+      <Text style={styles.earnValue}>{value}</Text>
+      <Text style={styles.earnLabel}>{label}</Text>
+    </View>
   );
 }
 
@@ -445,6 +623,109 @@ function OrderCard({
 }
 
 const styles = StyleSheet.create({
+  dutyRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: spacing.md,
+    backgroundColor: '#fff',
+    borderRadius: radius.lg,
+    padding: spacing.lg,
+    marginBottom: spacing.md,
+    ...shadows.sm,
+  },
+  dutyTitle: { fontSize: fontSizes.md, fontWeight: fontWeights.heading, color: colors.text },
+  dutySub: { fontSize: fontSizes.xs, color: colors.textMuted, marginTop: 2 },
+
+  earnRow: { flexDirection: 'row', gap: spacing.sm, marginBottom: spacing.md },
+  earnCell: {
+    flex: 1,
+    backgroundColor: '#fff',
+    borderRadius: radius.md,
+    paddingVertical: spacing.md,
+    alignItems: 'center',
+    ...shadows.sm,
+  },
+  earnValue: { fontSize: fontSizes.md, fontWeight: fontWeights.heading, color: colors.text },
+  earnLabel: { fontSize: 10, color: colors.textMuted, marginTop: 2 },
+
+  modalBack: {
+    flex: 1,
+    backgroundColor: 'rgba(16,24,40,0.55)',
+    alignItems: 'center',
+    justifyContent: 'center',
+    padding: spacing.lg,
+  },
+  modalCard: {
+    width: '100%',
+    maxWidth: 380,
+    backgroundColor: '#fff',
+    borderRadius: radius.lg,
+    padding: spacing.xl,
+    alignItems: 'center',
+  },
+  modalTitle: { fontSize: fontSizes.lg, fontWeight: fontWeights.heading, color: colors.text },
+  modalSub: {
+    fontSize: fontSizes.sm,
+    color: colors.textMuted,
+    textAlign: 'center',
+    marginTop: spacing.xs,
+  },
+  codeInput: {
+    width: '100%',
+    borderWidth: 1.5,
+    borderColor: colors.borderStrong,
+    borderRadius: radius.md,
+    paddingVertical: spacing.md,
+    marginTop: spacing.lg,
+    fontSize: 30,
+    fontWeight: fontWeights.heading,
+    letterSpacing: 12,
+    textAlign: 'center',
+    color: colors.text,
+  },
+  cashRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: spacing.sm,
+    width: '100%',
+    marginTop: spacing.md,
+  },
+  checkbox: {
+    width: 22,
+    height: 22,
+    borderRadius: 6,
+    borderWidth: 1.5,
+    borderColor: colors.borderStrong,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  checkboxOn: { backgroundColor: colors.brand, borderColor: colors.brand },
+  checkboxTick: { color: '#fff', fontSize: 14, fontWeight: fontWeights.heading },
+  cashText: { flex: 1, fontSize: fontSizes.sm, color: colors.text },
+
+  modalBtn: {
+    width: '100%',
+    backgroundColor: colors.brand,
+    borderRadius: radius.md,
+    paddingVertical: spacing.md,
+    alignItems: 'center',
+    marginTop: spacing.lg,
+  },
+  modalBtnOff: { opacity: 0.45 },
+  modalBtnText: { color: '#fff', fontWeight: fontWeights.heading, fontSize: fontSizes.md },
+  failLink: {
+    fontSize: fontSizes.sm,
+    fontWeight: fontWeights.bold,
+    color: colors.danger,
+    marginTop: spacing.lg,
+  },
+  cancelLink: {
+    fontSize: fontSizes.sm,
+    fontWeight: fontWeights.semibold,
+    color: colors.textMuted,
+    marginTop: spacing.md,
+  },
+
   safe: { flex: 1, backgroundColor: colors.bgSoft },
   content: { padding: spacing.lg, paddingBottom: 60 },
 

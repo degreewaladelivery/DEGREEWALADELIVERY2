@@ -26,8 +26,11 @@ async function pushToBrowsers(
   // Only agents who are still active should be woken up.
   const { data: subscriptions } = await admin
     .from('agent_push_subscriptions')
-    .select('endpoint, delivery_agents!inner(is_active)')
-    .eq('delivery_agents.is_active', true);
+    .select('endpoint, delivery_agents!inner(is_active, is_online)')
+    .eq('delivery_agents.is_active', true)
+    // Off duty means off duty: an agent who has finished for the day should not
+    // be woken by every order that comes in.
+    .eq('delivery_agents.is_online', true);
 
   if (!subscriptions || subscriptions.length === 0) return { sent: 0, removed: 0, tried: 0 };
 
@@ -70,8 +73,9 @@ async function pushToPhones(
 
   const { data: devices } = await admin
     .from('agent_device_tokens')
-    .select('token, delivery_agents!inner(is_active)')
-    .eq('delivery_agents.is_active', true);
+    .select('token, delivery_agents!inner(is_active, is_online)')
+    .eq('delivery_agents.is_active', true)
+    .eq('delivery_agents.is_online', true);
 
   if (!devices || devices.length === 0) return { sent: 0, removed: 0, tried: 0 };
 

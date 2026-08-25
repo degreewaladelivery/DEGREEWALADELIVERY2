@@ -321,6 +321,15 @@ function ActiveOrderCard({ order }: { order: TrackedOrder }) {
         )}
       </View>
 
+      {/* The code proves the parcel reached the right person, so it sits above
+          the agent rather than buried under the map. */}
+      {order.delivery_code && order.status !== 'delivered' && (
+        <View style={styles.codeBox}>
+          <Text style={styles.codeLabel}>Give this code to your agent</Text>
+          <Text style={styles.codeValue}>{order.delivery_code}</Text>
+        </View>
+      )}
+
       {order.agent ? (
         <View style={styles.agentRow}>
           {/* A face and a plate, not just a name: at a gate or a shared entrance
@@ -454,6 +463,23 @@ const styles = StyleSheet.create({
   stepLabel: { fontSize: 10, color: colors.textFaint, textAlign: 'center' },
   stepLabelDone: { color: colors.text, fontWeight: fontWeights.semibold },
 
+  codeBox: {
+    backgroundColor: colors.brandTint,
+    borderRadius: radius.md,
+    borderWidth: 1.5,
+    borderColor: colors.brand,
+    padding: spacing.md,
+    alignItems: 'center',
+    marginBottom: spacing.sm,
+  },
+  codeLabel: { fontSize: fontSizes.xs, fontWeight: fontWeights.bold, color: colors.textMuted },
+  codeValue: {
+    fontSize: 30,
+    fontWeight: fontWeights.heading,
+    color: colors.brand,
+    letterSpacing: 6,
+    marginTop: 2,
+  },
   agentRow: {
     flexDirection: 'row',
     alignItems: 'center',

@@ -34,10 +34,27 @@ export const markPickedUp = async (orderId: string): Promise<void> => {
   notifyCustomer(supabase, orderId);
 };
 
-export const markDelivered = async (orderId: string): Promise<void> => {
-  await agentOrders.markDelivered(supabase, orderId);
+export const markDelivered = async (orderId: string, cashCollected: boolean): Promise<void> => {
+  await agentOrders.markDelivered(supabase, orderId, cashCollected);
   notifyCustomer(supabase, orderId);
 };
+
+export const verifyDeliveryOtp = (orderId: string, otp: string): Promise<boolean> =>
+  agentOrders.verifyDeliveryOtp(supabase, orderId, otp);
+
+export const reportFailedDelivery = async (orderId: string, reason: string): Promise<void> => {
+  await agentOrders.reportFailedDelivery(supabase, orderId, reason);
+  notifyCustomer(supabase, orderId);
+};
+
+export const setAgentOnline = (agentId: string, online: boolean): Promise<void> =>
+  agentOrders.setAgentOnline(supabase, agentId, online);
+
+export const getEarnings = (agentId: string): Promise<agentOrders.EarningsSummary> =>
+  agentOrders.getEarnings(supabase, agentId);
+
+export const listDeliveryHistory = (agentId: string): Promise<OrderRow[]> =>
+  agentOrders.listDeliveryHistory(supabase, agentId);
 
 export const subscribeToPool = (handlers: agentPool.AgentPoolHandlers): (() => void) =>
   agentPool.subscribeToAgentPool(supabase, handlers);

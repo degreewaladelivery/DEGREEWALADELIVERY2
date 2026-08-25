@@ -244,6 +244,15 @@ function ActiveOrderCard({ order }: { order: TrackedOrder }) {
         )}
       </ul>
 
+      {/* The code proves the parcel reached the right person, so it sits above
+          the agent rather than buried under the map. */}
+      {order.delivery_code && order.status !== 'delivered' && (
+        <div className="otrack__code">
+          <span className="otrack__codeLabel">Give this code to your agent</span>
+          <strong className="otrack__codeValue">{order.delivery_code}</strong>
+        </div>
+      )}
+
       {order.agent ? (
         <div className="otrack__agent">
           {/* A face and a plate, not just a name: at a gate or a shared entrance

@@ -57,6 +57,20 @@ Deno.serve(async (req) => {
       return json({ ok: false, error: 'Could not load your orders' });
     }
 
+    const codes = new Map<string, string>();
+    {
+      const ids = (orders ?? []).map((o: { id: string }) => o.id);
+      if (ids.length > 0) {
+        const { data: codeRows } = await admin
+          .from('order_delivery_codes')
+          .select('order_id, code')
+          .in('order_id', ids);
+        for (const row of codeRows ?? []) {
+          codes.set(row.order_id as string, row.code as string);
+        }
+      }
+    }
+
     const agentIds = [
       ...new Set((orders ?? []).map((order) => order.claimed_by).filter(Boolean)),
     ] as string[];
@@ -82,7 +96,13 @@ Deno.serve(async (req) => {
 
     const withAgents = (orders ?? []).map((order) => {
       const { claimed_by, ...rest } = order;
-      return { ...rest, agent: claimed_by ? agents.get(claimed_by) ?? null : null };
+      return {
+        ...rest,
+        agent: claimed_by ? agents.get(claimed_by) ?? null : null,
+        // Read out at the door to prove the delivery reached the right person.
+        // Only while it is still coming — once delivered it is spent.
+        delivery_code: codes.get(rest.id) ?? null,
+      };
     });
 
     return json({ ok: true, orders: withAgents, serverTime: new Date().toISOString() });

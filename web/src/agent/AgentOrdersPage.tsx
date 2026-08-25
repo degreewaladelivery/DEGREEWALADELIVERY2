@@ -10,8 +10,13 @@ import {
   subscribeToPool,
   announceClaim,
   updateAgentLocation,
+  verifyDeliveryOtp,
+  reportFailedDelivery,
+  setAgentOnline,
+  getEarnings,
 } from './api';
 import type { AgentProfile, OrderRow } from './types';
+import type { EarningsSummary } from '@shared/agentOrders';
 import {
   alertsSupported,
   enableAlerts,
@@ -61,6 +66,12 @@ export function AgentOrdersPage() {
   const [myOrders, setMyOrders] = useState<OrderRow[] | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [busyId, setBusyId] = useState<string | null>(null);
+  const [earnings, setEarnings] = useState<EarningsSummary | null>(null);
+  const [online, setOnline] = useState(true);
+  const [closing, setClosing] = useState<OrderRow | null>(null);
+  const [code, setCode] = useState('');
+  const [cashTaken, setCashTaken] = useState(true);
+  const [closeError, setCloseError] = useState<string | null>(null);
   // Location is a condition of working, not a preference — a customer watching
   // a stationary pin has no way to know the agent simply switched it off.
   // 'unknown' until the browser answers.
@@ -144,11 +155,16 @@ export function AgentOrdersPage() {
 
   const load = useCallback(() => {
     if (!agentId) return;
-    Promise.all([listOpenOrders(), listMyDeliveries(agentId)])
-      .then(([open, mine]) => {
+    Promise.all([
+      listOpenOrders(),
+      listMyDeliveries(agentId),
+      getEarnings(agentId).catch(() => null),
+    ])
+      .then(([open, mine, earned]) => {
         announceNewOrders(open, seenOpenIdsRef, alertsOnRef);
         setOpenOrders(open);
         setMyOrders(mine);
+        if (earned) setEarnings(earned);
         setError(null);
       })
       .catch((err) => setError(err instanceof Error ? err.message : 'Failed to load orders'));
@@ -255,16 +271,57 @@ export function AgentOrdersPage() {
     }
   };
 
-  const onDelivered = async (order: OrderRow) => {
-    setBusyId(order.id);
-    setError(null);
+  // Delivering needs the customer's code, and for a cash order, confirmation
+  // that the money changed hands. Opening a dialog rather than acting at once.
+  const onDelivered = (order: OrderRow) => {
+    setClosing(order);
+    setCode('');
+    setCashTaken(order.payment_method === 'cod');
+    setCloseError(null);
+  };
+
+  const onConfirmDelivery = async () => {
+    if (!closing) return;
+    setBusyId(closing.id);
+    setCloseError(null);
     try {
-      await markDelivered(order.id);
+      const matched = await verifyDeliveryOtp(closing.id, code);
+      if (!matched) {
+        setCloseError('That code does not match. Ask the customer to read it again.');
+        return;
+      }
+      await markDelivered(closing.id, closing.payment_method === 'cod' && cashTaken);
+      setClosing(null);
       load();
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Could not update order');
+      setCloseError(err instanceof Error ? err.message : 'Could not close the delivery');
     } finally {
       setBusyId(null);
+    }
+  };
+
+  const onReportFailure = async (reason: string) => {
+    if (!closing) return;
+    setBusyId(closing.id);
+    setCloseError(null);
+    try {
+      await reportFailedDelivery(closing.id, reason);
+      setClosing(null);
+      load();
+    } catch (err) {
+      setCloseError(err instanceof Error ? err.message : 'Could not report that');
+    } finally {
+      setBusyId(null);
+    }
+  };
+
+  const onToggleOnline = async (next: boolean) => {
+    if (!profile) return;
+    setOnline(next);
+    try {
+      await setAgentOnline(profile.user_id, next);
+    } catch {
+      setOnline(!next);
     }
   };
 
@@ -273,6 +330,29 @@ export function AgentOrdersPage() {
       <div className="admin-page__head">
         <h1>{profile ? `Hi, ${profile.name}` : 'Deliveries'}</h1>
       </div>
+
+      {/* Off duty keeps the account but stops new order alerts, so an agent can
+          finish for the day without signing out. */}
+      <label className="agent-duty">
+        <input type="checkbox" checked={online} onChange={(e) => onToggleOnline(e.target.checked)} />
+        <span>
+          <strong>{online ? 'On duty' : 'Off duty'}</strong>
+          <small>
+            {online
+              ? "You'll be alerted about new orders."
+              : 'No new order alerts until you switch back on.'}
+          </small>
+        </span>
+      </label>
+
+      {earnings && (
+        <div className="agent-earn">
+          <div><strong>{formatRupees(earnings.today)}</strong><span>Today</span></div>
+          <div><strong>{formatRupees(earnings.week)}</strong><span>7 days</span></div>
+          <div><strong>{earnings.deliveredToday}</strong><span>Deliveries</span></div>
+          <div><strong>{formatRupees(earnings.cashInHand)}</strong><span>Cash held</span></div>
+        </div>
+      )}
 
       {error && <p className="admin-login__error">{error}</p>}
 
@@ -392,6 +472,68 @@ export function AgentOrdersPage() {
           ))}
         </div>
       </section>
+
+      {closing && (
+        <div className="agent-modal__backdrop" role="dialog" aria-modal="true">
+          <div className="agent-modal">
+            <h2>Confirm delivery</h2>
+            <p className="agent-modal__sub">
+              Ask the customer for the 4-digit code shown in their app.
+            </p>
+
+            <input
+              className="agent-modal__code"
+              value={code}
+              onChange={(e) => setCode(e.target.value.replace(/\D/g, ''))}
+              placeholder="0000"
+              inputMode="numeric"
+              maxLength={4}
+              autoFocus
+            />
+
+            {closing.payment_method === 'cod' && (
+              <label className="agent-modal__cash">
+                <input
+                  type="checkbox"
+                  checked={cashTaken}
+                  onChange={(e) => setCashTaken(e.target.checked)}
+                />
+                <span>I collected {formatRupees(closing.total)} in cash</span>
+              </label>
+            )}
+
+            {closeError && <p className="admin-login__error">{closeError}</p>}
+
+            <button
+              className="admin-btn admin-btn--primary"
+              disabled={code.length !== 4 || busyId !== null}
+              onClick={onConfirmDelivery}
+            >
+              {busyId !== null ? 'Confirming…' : 'Confirm delivered'}
+            </button>
+
+            <div className="agent-modal__fail">
+              <span>Could not deliver?</span>
+              {['Nobody at the address', 'Customer refused', 'Address is wrong', 'Cannot reach the customer'].map(
+                (reason) => (
+                  <button
+                    key={reason}
+                    className="admin-btn admin-btn--sm admin-btn--ghost"
+                    disabled={busyId !== null}
+                    onClick={() => onReportFailure(reason)}
+                  >
+                    {reason}
+                  </button>
+                )
+              )}
+            </div>
+
+            <button className="admin-btn admin-btn--ghost" onClick={() => setClosing(null)}>
+              Cancel
+            </button>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

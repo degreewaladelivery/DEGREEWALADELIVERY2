@@ -38,6 +38,8 @@ export interface TrackedOrder {
   claimed_at: string | null;
   picked_up_at: string | null;
   delivered_at: string | null;
+  /** Read out to the agent at the door. Null once the order is finished. */
+  delivery_code: string | null;
   agent: {
     name: string;
     phone: string;

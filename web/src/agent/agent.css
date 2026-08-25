@@ -140,3 +140,101 @@
   line-height: 1.5;
   color: var(--text, #1f2430);
 }
+
+/* Duty, earnings and the delivery dialog ---------------------------------- */
+
+.agent-duty {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  background: #fff;
+  border: 1px solid var(--border, #eceef2);
+  border-radius: var(--radius-lg, 16px);
+  padding: 14px 16px;
+  margin-bottom: 12px;
+  cursor: pointer;
+}
+
+.agent-duty input { margin-top: 3px; }
+.agent-duty strong { display: block; font-size: 15px; }
+.agent-duty small { display: block; font-size: 12px; color: var(--text-muted, #6b7280); }
+
+.agent-earn {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(90px, 1fr));
+  gap: 8px;
+  margin-bottom: 16px;
+}
+
+.agent-earn > div {
+  background: #fff;
+  border: 1px solid var(--border, #eceef2);
+  border-radius: var(--radius-md, 12px);
+  padding: 12px;
+  text-align: center;
+}
+
+.agent-earn strong { display: block; font-size: 15px; font-weight: 800; }
+.agent-earn span { font-size: 11px; color: var(--text-muted, #6b7280); }
+
+.agent-modal__backdrop {
+  position: fixed;
+  inset: 0;
+  background: rgba(16, 24, 40, 0.55);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 16px;
+  z-index: 50;
+}
+
+.agent-modal {
+  width: 100%;
+  max-width: 380px;
+  background: #fff;
+  border-radius: var(--radius-lg, 16px);
+  padding: 24px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  text-align: center;
+}
+
+.agent-modal h2 { margin: 0; font-size: 18px; }
+.agent-modal__sub { margin: 0; font-size: 13px; color: var(--text-muted, #6b7280); }
+
+.agent-modal__code {
+  font: inherit;
+  font-size: 30px;
+  font-weight: 800;
+  letter-spacing: 12px;
+  text-align: center;
+  padding: 12px;
+  border: 1.5px solid var(--border-strong, #dfe3ea);
+  border-radius: var(--radius-md, 12px);
+}
+
+.agent-modal__cash {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 13px;
+  text-align: left;
+}
+
+/* Reasons are laid out as buttons, not a dropdown: an agent standing at a gate
+   should be one tap from reporting, not two. */
+.agent-modal__fail {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  border-top: 1px solid var(--border, #eceef2);
+  padding-top: 12px;
+  margin-top: 4px;
+}
+
+.agent-modal__fail span {
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--text-muted, #6b7280);
+}

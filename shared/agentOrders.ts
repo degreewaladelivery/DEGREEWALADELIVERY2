@@ -19,7 +19,13 @@ export interface OrderItem {
   image_url?: string | null;
 }
 
-export type OrderStatus = 'placed' | 'claimed' | 'picked_up' | 'delivered' | 'cancelled';
+export type OrderStatus =
+  | 'placed'
+  | 'claimed'
+  | 'picked_up'
+  | 'delivered'
+  | 'cancelled'
+  | 'failed';
 
 export interface OrderRow {
   id: string;
@@ -43,6 +49,8 @@ export interface OrderRow {
   claimed_at: string | null;
   picked_up_at: string | null;
   delivered_at: string | null;
+  cash_collected_at: string | null;
+  failure_reason: string | null;
   created_at: string;
   updated_at: string;
 }
@@ -52,12 +60,15 @@ export interface AgentProfile {
   name: string;
   phone: string;
   is_active: boolean;
+  /** Off duty agents keep their account but stop being sent new orders. */
+  is_online: boolean;
 }
 
 /** The slice of supabase-js these queries need, so neither platform's client
  *  type has to be imported here. */
 interface Db {
   from: (table: string) => any; // eslint-disable-line @typescript-eslint/no-explicit-any
+  rpc: (fn: string, args?: Record<string, unknown>) => any; // eslint-disable-line @typescript-eslint/no-explicit-any
 }
 
 export async function getMyProfile(db: Db): Promise<AgentProfile> {
@@ -90,7 +101,7 @@ export async function listMyDeliveries(db: Db, agentId: string): Promise<OrderRo
     .from('orders')
     .select('*')
     .eq('claimed_by', agentId)
-    .neq('status', 'delivered')
+    .not('status', 'in', '(delivered,failed,cancelled)')
     .order('claimed_at', { ascending: true });
   if (error) throw error;
   return data as OrderRow[];
@@ -139,7 +150,14 @@ export function isAgentLocationFresh(locationAt: string | null | undefined): boo
 
 /** Orders still in flight — anything the customer is waiting on. */
 export function isActiveOrder(order: { status: string }): boolean {
-  return order.status !== 'delivered' && order.status !== 'cancelled';
+  // 'failed' belongs here too: a delivery nobody could complete is finished,
+  // and leaving it "active" would keep a tracking bar on the customer's screen
+  // for an order that is never arriving.
+  return (
+    order.status !== 'delivered' &&
+    order.status !== 'cancelled' &&
+    order.status !== 'failed'
+  );
 }
 
 const STATUS_LABELS: Record<string, string> = {
@@ -148,6 +166,7 @@ const STATUS_LABELS: Record<string, string> = {
   picked_up: 'On the way',
   delivered: 'Delivered',
   cancelled: 'Cancelled',
+  failed: 'Could not be delivered',
 };
 
 /** Never guess from a boolean — an unfinished order must not read "Delivered"
@@ -182,10 +201,170 @@ export async function markPickedUp(db: Db, orderId: string): Promise<void> {
   if (error) throw error;
 }
 
-export async function markDelivered(db: Db, orderId: string): Promise<void> {
+/**
+ * Closes a delivery.
+ *
+ * `cashCollected` is recorded at the same moment rather than later: the agent is
+ * standing at the door with the money, and asking them to remember afterwards
+ * is how a cash ledger stops matching reality.
+ *
+ * The database refuses this unless verifyDeliveryOtp has already succeeded for
+ * the order, so a failure here means the code was never entered.
+ */
+export async function markDelivered(
+  db: Db,
+  orderId: string,
+  cashCollected: boolean
+): Promise<void> {
   const { error } = await db
     .from('orders')
-    .update({ status: 'delivered', delivered_at: new Date().toISOString() })
+    .update({
+      status: 'delivered',
+      delivered_at: new Date().toISOString(),
+      cash_collected_at: cashCollected ? new Date().toISOString() : null,
+    })
     .eq('id', orderId);
   if (error) throw error;
+}
+
+/** True when the code matched. The code itself is never sent to the agent. */
+export async function verifyDeliveryOtp(
+  db: Db,
+  orderId: string,
+  otp: string
+): Promise<boolean> {
+  const { data, error } = await db.rpc('verify_delivery_otp', {
+    p_order_id: orderId,
+    p_otp: otp,
+  });
+  if (error) throw error;
+  return data === true;
+}
+
+/**
+ * Records a delivery that could not be completed.
+ *
+ * The reason is required — "failed" with no explanation leaves the office
+ * ringing the agent to ask, which is the call this is meant to save.
+ */
+export async function reportFailedDelivery(
+  db: Db,
+  orderId: string,
+  reason: string
+): Promise<void> {
+  const { error } = await db
+    .from('orders')
+    .update({ status: 'failed', failure_reason: reason })
+    .eq('id', orderId);
+  if (error) throw error;
+}
+
+/** Go on or off duty. Off duty agents are not pushed new orders. */
+export async function setAgentOnline(
+  db: Db,
+  agentId: string,
+  online: boolean
+): Promise<void> {
+  const { error } = await db
+    .from('delivery_agents')
+    .update({
+      is_online: online,
+      went_online_at: online ? new Date().toISOString() : null,
+    })
+    .eq('user_id', agentId);
+  if (error) throw error;
+}
+
+export interface EarningsSummary {
+  today: number;
+  week: number;
+  total: number;
+  deliveredToday: number;
+  deliveredTotal: number;
+  /** Cash taken at the door and not yet handed to the office. */
+  cashInHand: number;
+}
+
+/**
+ * What an agent has earned and what they are holding.
+ *
+ * Computed from delivered orders rather than a running total, so a corrected
+ * order can never leave the figure stale — and an agent who cannot see what
+ * they have earned stops trusting the platform.
+ */
+export async function getEarnings(db: Db, agentId: string): Promise<EarningsSummary> {
+  const { data, error } = await db
+    .from('orders')
+    .select('agent_payout, total, payment_method, delivered_at, cash_collected_at')
+    .eq('claimed_by', agentId)
+    .eq('status', 'delivered');
+  if (error) throw error;
+
+  const rows = (data ?? []) as {
+    agent_payout: number;
+    total: number;
+    payment_method: string;
+    delivered_at: string | null;
+    cash_collected_at: string | null;
+  }[];
+
+  const startOfToday = new Date();
+  startOfToday.setHours(0, 0, 0, 0);
+  const startOfWeek = new Date(startOfToday);
+  startOfWeek.setDate(startOfWeek.getDate() - 6);
+
+  let today = 0;
+  let week = 0;
+  let total = 0;
+  let deliveredToday = 0;
+  let cashInHand = 0;
+
+  for (const row of rows) {
+    const payout = Number(row.agent_payout) || 0;
+    total += payout;
+    if (row.payment_method === 'cod' && row.cash_collected_at) {
+      cashInHand += Number(row.total) || 0;
+    }
+    const at = row.delivered_at ? new Date(row.delivered_at) : null;
+    if (!at) continue;
+    if (at >= startOfWeek) week += payout;
+    if (at >= startOfToday) {
+      today += payout;
+      deliveredToday += 1;
+    }
+  }
+
+  const { data: settled } = await db
+    .from('agent_cash_settlements')
+    .select('amount')
+    .eq('agent_id', agentId);
+  for (const row of (settled ?? []) as { amount: number }[]) {
+    cashInHand -= Number(row.amount) || 0;
+  }
+
+  return {
+    today,
+    week,
+    total,
+    deliveredToday,
+    deliveredTotal: rows.length,
+    cashInHand,
+  };
+}
+
+/** Past deliveries, newest first. */
+export async function listDeliveryHistory(
+  db: Db,
+  agentId: string,
+  limit = 50
+): Promise<OrderRow[]> {
+  const { data, error } = await db
+    .from('orders')
+    .select('*')
+    .eq('claimed_by', agentId)
+    .in('status', ['delivered', 'failed'])
+    .order('delivered_at', { ascending: false, nullsFirst: false })
+    .limit(limit);
+  if (error) throw error;
+  return data as OrderRow[];
 }
