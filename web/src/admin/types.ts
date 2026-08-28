@@ -81,6 +81,24 @@ export interface DeliveryAgentRow {
   photo_url: string | null;
 }
 
+export interface AgentCashBalance {
+  agent_id: string;
+  name: string;
+  phone: string;
+  /** Cash taken at the door on delivered COD orders. */
+  collected: number;
+  /** What has been handed in to the office. */
+  settled: number;
+  outstanding: number;
+}
+
+export interface AgentSettlementRow {
+  id: string;
+  amount: number;
+  note: string | null;
+  settled_at: string;
+}
+
 export interface CustomerRow {
   id: string;
   name: string | null;

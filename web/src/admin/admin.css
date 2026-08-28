@@ -407,3 +407,74 @@
 .admin-customers__blank {
   color: var(--text-faint, #9aa0ac);
 }
+
+/* Agent cash ------------------------------------------------------------- */
+
+.admin-cash__total {
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--warning, #f59e0b);
+}
+
+/* Outstanding cash is money sitting in someone's pocket, so it is coloured as
+   something to act on rather than a neutral figure. */
+.admin-cash__due {
+  color: var(--warning, #f59e0b);
+  font-weight: 800;
+}
+
+.admin-cash__figures {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 8px;
+  margin-bottom: 16px;
+}
+
+.admin-cash__figures > div {
+  background: var(--surface, #f4f6f9);
+  border-radius: var(--radius-md, 12px);
+  padding: 12px;
+  text-align: center;
+}
+
+.admin-cash__figures strong { display: block; font-size: 15px; font-weight: 800; }
+.admin-cash__figures span { font-size: 11px; color: var(--text-muted, #6b7280); }
+.admin-cash__out strong { color: var(--warning, #f59e0b); }
+
+.admin-cash__histHead {
+  font-size: 14px;
+  margin: 20px 0 8px;
+  padding-top: 16px;
+  border-top: 1px solid var(--border, #eceef2);
+}
+
+.admin-cash__hist {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  max-height: 220px;
+  overflow-y: auto;
+}
+
+.admin-cash__hist li {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-size: 13px;
+  background: var(--surface, #f4f6f9);
+  border-radius: var(--radius-sm, 8px);
+  padding: 8px 10px;
+}
+
+.admin-cash__histAmount { font-weight: 800; }
+.admin-cash__histWhen { color: var(--text-muted, #6b7280); }
+.admin-cash__histNote {
+  flex: 1;
+  color: var(--text-muted, #6b7280);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}

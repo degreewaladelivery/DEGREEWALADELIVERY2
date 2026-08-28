@@ -2,6 +2,8 @@ import { supabase } from '../lib/supabase';
 import { notifyCustomer } from '@shared/notifyCustomer';
 import { resizeForUpload } from './resizeImage';
 import type {
+  AgentCashBalance,
+  AgentSettlementRow,
   CategoryRow,
   CustomerRow,
   SubcategoryRow,
@@ -673,5 +675,65 @@ export async function getHomeBanner(): Promise<HomeBannerRow> {
 export async function saveHomeBanner(patch: Partial<HomeBannerRow>): Promise<void> {
   // The table holds exactly one row, keyed on a constant.
   const { error } = await supabase.from('home_banner').update(patch).eq('id', true);
+  if (error) throw error;
+}
+
+// ---------------------------------------------------------------------------
+// Agent cash
+// ---------------------------------------------------------------------------
+
+/**
+ * What every agent is holding: cash taken at the door, less what they have
+ * handed in.
+ *
+ * Read from a view that derives both sides rather than a stored total, so a
+ * corrected order or a deleted settlement can never leave the figure stale.
+ */
+export async function listAgentCashBalances(): Promise<AgentCashBalance[]> {
+  const { data, error } = await supabase
+    .from('agent_cash_balances')
+    .select('agent_id, name, phone, collected, settled, outstanding')
+    .order('outstanding', { ascending: false });
+  if (error) throw error;
+  return (data ?? []).map((row) => ({
+    ...row,
+    collected: Number(row.collected) || 0,
+    settled: Number(row.settled) || 0,
+    outstanding: Number(row.outstanding) || 0,
+  })) as AgentCashBalance[];
+}
+
+export async function listAgentSettlements(agentId: string): Promise<AgentSettlementRow[]> {
+  const { data, error } = await supabase
+    .from('agent_cash_settlements')
+    .select('id, amount, note, settled_at')
+    .eq('agent_id', agentId)
+    .order('settled_at', { ascending: false })
+    .limit(50);
+  if (error) throw error;
+  return (data ?? []).map((row) => ({ ...row, amount: Number(row.amount) || 0 })) as AgentSettlementRow[];
+}
+
+/** Records money handed over. Who recorded it is stamped from the session, so a
+ *  settlement always has a person attached to it. */
+export async function recordAgentSettlement(
+  agentId: string,
+  amount: number,
+  note: string
+): Promise<void> {
+  const { data: session } = await supabase.auth.getUser();
+  const { error } = await supabase.from('agent_cash_settlements').insert({
+    agent_id: agentId,
+    amount,
+    note: note.trim() || null,
+    recorded_by: session?.user?.id ?? null,
+  });
+  if (error) throw error;
+}
+
+/** Undo a mistake. Settlements are never edited — a wrong figure is removed and
+ *  entered again, so the ledger reads as a list of real handovers. */
+export async function deleteAgentSettlement(id: string): Promise<void> {
+  const { error } = await supabase.from('agent_cash_settlements').delete().eq('id', id);
   if (error) throw error;
 }
