@@ -5,7 +5,8 @@ const LINKS = [
   { label: 'Help', to: '/help' },
   { label: 'Track Order', to: '/track' },
   { label: 'Contact', to: '/help#contact' },
-  { label: 'Terms & Privacy', to: '/terms' },
+  { label: 'Terms', to: '/terms' },
+  { label: 'Privacy Policy', to: '/privacy' },
 ];
 
 export function Footer() {

@@ -1,3 +1,4 @@
+import { Link } from 'react-router-dom';
 import './Static.css';
 
 export function Terms() {
@@ -55,6 +56,13 @@ export function Terms() {
       </section>
 
       <h2 className="static-page__subheading">Your information</h2>
+
+      <section className="static-card">
+        <p>
+          In short, below. The full detail — including every company that receives any of it — is in
+          our <Link to="/privacy" className="static-link">Privacy Policy</Link>.
+        </p>
+      </section>
 
       <section className="static-card">
         <h3 className="static-card__sub">What we collect</h3>

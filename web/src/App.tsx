@@ -11,6 +11,7 @@ import { Track } from './pages/Track';
 import { Search } from './pages/Search';
 import { Help } from './pages/Help';
 import { Terms } from './pages/Terms';
+import { Privacy } from './pages/Privacy';
 import { Login } from './pages/Login';
 import { Profile } from './pages/Profile';
 import { ComingSoon, RouteError } from './pages/ComingSoon';
@@ -50,6 +51,7 @@ const router = createBrowserRouter([
       { path: '/profile', element: <Profile /> },
       { path: '/help', element: <Help /> },
       { path: '/terms', element: <Terms /> },
+      { path: '/privacy', element: <Privacy /> },
       { path: '*', element: <ComingSoon title="Page not found" /> },
     ],
   },

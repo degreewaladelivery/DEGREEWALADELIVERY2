@@ -201,8 +201,8 @@ export function Login() {
         )}
 
         <p className="login__terms">
-          By continuing you agree to our{' '}
-          <Link to="/terms">Terms &amp; Privacy Policy</Link>.
+          By continuing you agree to our <Link to="/terms">Terms</Link> and{' '}
+          <Link to="/privacy">Privacy Policy</Link>.
         </p>
       </div>
     </div>
