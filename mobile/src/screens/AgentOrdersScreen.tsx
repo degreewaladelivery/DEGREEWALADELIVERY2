@@ -3,6 +3,7 @@ import {
   View,
   Text,
   ScrollView,
+  Image,
   TouchableOpacity,
   StyleSheet,
   RefreshControl,
@@ -30,6 +31,8 @@ import {
   reportFailedDelivery,
   setAgentOnline,
   getEarnings,
+  getTodayMinutes,
+  listDeliveryHistory,
 } from '../agent/api';
 import { getMessaging, onMessage } from '@react-native-firebase/messaging';
 import { signOutAgent } from '../agent/supabaseAgent';
@@ -40,10 +43,14 @@ import {
   stopBackgroundTracking,
 } from '../agent/backgroundTracking';
 import type { AgentProfile, OrderRow, EarningsSummary } from '@shared/agentOrders';
+import { formatDuration, orderStatusLabel } from '@shared/agentOrders';
 import { formatRupees } from '../lib/format';
 import { Thumb } from '../components/Thumb';
 import { TrackingMap } from '../components/TrackingMap';
 import { colors, spacing, radius, fontSizes, fontWeights, shadows } from '../theme';
+
+/** Fallback when an agent has no personal support number recorded. */
+const SUPPORT_PHONE = '+918431109368';
 
 /** How often to re-check the pool while the app is open. */
 const POLL_MS = 15000;
@@ -65,6 +72,9 @@ export function AgentOrdersScreen({ agentId, onSignedOut }: { agentId: string; o
   const [code, setCode] = useState('');
   const [cashTaken, setCashTaken] = useState(true);
   const [closeError, setCloseError] = useState<string | null>(null);
+  const [minutesToday, setMinutesToday] = useState(0);
+  const [history, setHistory] = useState<OrderRow[] | null>(null);
+  const [showProfile, setShowProfile] = useState(false);
   const [refreshing, setRefreshing] = useState(false);
   // Location is a condition of working, not a preference — a customer watching a
   // stationary pin can't tell the agent simply switched it off.
@@ -78,14 +88,16 @@ export function AgentOrdersScreen({ agentId, onSignedOut }: { agentId: string; o
 
   const load = useCallback(async () => {
     try {
-      const [open, mine, earned] = await Promise.all([
+      const [open, mine, earned, minutes] = await Promise.all([
         listOpenOrders(),
         listMyDeliveries(agentId),
         getEarnings(agentId).catch(() => null),
+        getTodayMinutes().catch(() => 0),
       ]);
       setOpenOrders(open);
       setMyOrders(mine);
       if (earned) setEarnings(earned);
+      setMinutesToday(minutes);
       setError(null);
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Could not load orders');
@@ -309,7 +321,7 @@ export function AgentOrdersScreen({ agentId, onSignedOut }: { agentId: string; o
     if (!profile) return;
     setOnline(next);
     try {
-      await setAgentOnline(profile.user_id, next);
+      await setAgentOnline(next);
     } catch {
       setOnline(!next);
     }
@@ -355,8 +367,14 @@ export function AgentOrdersScreen({ agentId, onSignedOut }: { agentId: string; o
               <Text style={styles.sharing}>📍 Sharing your location with the customer</Text>
             )}
           </View>
-          <TouchableOpacity onPress={onSignOut} hitSlop={10}>
-            <Text style={styles.signOut}>Sign out</Text>
+          <TouchableOpacity
+            onPress={() => {
+              setShowProfile(true);
+              if (!history) listDeliveryHistory(agentId).then(setHistory).catch(() => setHistory([]));
+            }}
+            hitSlop={10}
+          >
+            <Text style={styles.profileLink}>Profile</Text>
           </TouchableOpacity>
         </View>
 
@@ -385,6 +403,7 @@ export function AgentOrdersScreen({ agentId, onSignedOut }: { agentId: string; o
             <Earn label="7 days" value={formatRupees(earnings.week)} />
             <Earn label="Deliveries" value={String(earnings.deliveredToday)} />
             <Earn label="Cash held" value={formatRupees(earnings.cashInHand)} />
+            <Earn label="On duty" value={formatDuration(minutesToday)} />
           </View>
         )}
 
@@ -442,6 +461,94 @@ export function AgentOrdersScreen({ agentId, onSignedOut }: { agentId: string; o
           />
         ))}
       </ScrollView>
+
+      <Modal
+        visible={showProfile}
+        animationType="slide"
+        onRequestClose={() => setShowProfile(false)}
+      >
+        <SafeAreaView style={styles.safe} edges={['top']}>
+          <ScrollView contentContainerStyle={styles.content}>
+            <View style={styles.head}>
+              <Text style={styles.hi}>My profile</Text>
+              <TouchableOpacity onPress={() => setShowProfile(false)} hitSlop={10}>
+                <Text style={styles.signOut}>Close</Text>
+              </TouchableOpacity>
+            </View>
+
+            <View style={styles.profileCard}>
+              <View style={styles.profileAvatar}>
+                {profile?.photo_url ? (
+                  <Image source={{ uri: profile.photo_url }} style={styles.profilePhoto} />
+                ) : (
+                  <Text style={styles.profileInitial}>
+                    {profile?.name?.trim().charAt(0).toUpperCase() || '🛵'}
+                  </Text>
+                )}
+              </View>
+              <Text style={styles.profileName}>{profile?.name ?? ''}</Text>
+              <Text style={styles.profileMeta}>{profile?.phone ?? ''}</Text>
+              {profile?.vehicle_number ? (
+                <Text style={styles.profileVehicle}>{profile.vehicle_number}</Text>
+              ) : null}
+
+              {/* Documents are checked by the office, so the app reports the
+                  state rather than pretending the agent can change it. */}
+              <View style={profile?.kyc_verified_at ? styles.kycOk : styles.kycPending}>
+                <Text style={profile?.kyc_verified_at ? styles.kycOkText : styles.kycPendingText}>
+                  {profile?.kyc_verified_at
+                    ? '✓ Documents verified'
+                    : 'Documents not verified yet — ask the office'}
+                </Text>
+              </View>
+
+              <Text style={styles.profileMeta}>On duty today: {formatDuration(minutesToday)}</Text>
+            </View>
+
+            {/* One tap to a person, not a form. Something has gone wrong on the
+                road when this is pressed. */}
+            <TouchableOpacity
+              style={styles.emergencyBtn}
+              activeOpacity={0.9}
+              onPress={() =>
+                Linking.openURL(`tel:${profile?.emergency_contact || SUPPORT_PHONE}`).catch(
+                  () => undefined
+                )
+              }
+            >
+              <Text style={styles.emergencyText}>📞 Call support</Text>
+            </TouchableOpacity>
+
+            <Text style={styles.section}>Past Deliveries</Text>
+            {!history && <Text style={styles.empty}>Loading…</Text>}
+            {history && history.length === 0 && (
+              <Text style={styles.empty}>Nothing delivered yet.</Text>
+            )}
+            {history?.map((order) => (
+              <View key={order.id} style={styles.histRow}>
+                <View style={styles.histCol}>
+                  <Text style={styles.histWhere} numberOfLines={1}>
+                    {order.pickup_label} → {order.delivery_address}
+                  </Text>
+                  <Text style={styles.histMeta}>
+                    {order.delivered_at
+                      ? new Date(order.delivered_at).toLocaleDateString('en-IN')
+                      : orderStatusLabel(order.status)}
+                    {order.failure_reason ? ` · ${order.failure_reason}` : ''}
+                  </Text>
+                </View>
+                <Text style={order.status === 'failed' ? styles.histFailed : styles.histPay}>
+                  {order.status === 'failed' ? 'Failed' : formatRupees(order.agent_payout)}
+                </Text>
+              </View>
+            ))}
+
+            <TouchableOpacity style={styles.signOutBtn} activeOpacity={0.9} onPress={onSignOut}>
+              <Text style={styles.signOutBtnText}>Sign out</Text>
+            </TouchableOpacity>
+          </ScrollView>
+        </SafeAreaView>
+      </Modal>
 
       <Modal visible={closing !== null} transparent animationType="fade" onRequestClose={() => setClosing(null)}>
         <View style={styles.modalBack}>
@@ -623,6 +730,88 @@ function OrderCard({
 }
 
 const styles = StyleSheet.create({
+  profileLink: { fontSize: fontSizes.sm, fontWeight: fontWeights.bold, color: colors.brand },
+
+  profileCard: {
+    backgroundColor: '#fff',
+    borderRadius: radius.lg,
+    padding: spacing.xl,
+    alignItems: 'center',
+    gap: spacing.xs,
+    marginBottom: spacing.md,
+    ...shadows.sm,
+  },
+  profileAvatar: {
+    width: 72,
+    height: 72,
+    borderRadius: 36,
+    overflow: 'hidden',
+    backgroundColor: colors.brandTint,
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginBottom: spacing.sm,
+  },
+  profilePhoto: { width: 72, height: 72 },
+  profileInitial: { fontSize: 30, fontWeight: fontWeights.heading, color: colors.brand },
+  profileName: { fontSize: fontSizes.lg, fontWeight: fontWeights.heading, color: colors.text },
+  profileMeta: { fontSize: fontSizes.sm, color: colors.textMuted },
+  profileVehicle: {
+    fontSize: fontSizes.sm,
+    fontWeight: fontWeights.bold,
+    color: colors.text,
+    letterSpacing: 0.5,
+  },
+
+  kycOk: {
+    backgroundColor: colors.successTint,
+    borderRadius: radius.sm,
+    paddingVertical: spacing.xs,
+    paddingHorizontal: spacing.md,
+    marginTop: spacing.sm,
+  },
+  kycOkText: { fontSize: fontSizes.xs, fontWeight: fontWeights.bold, color: colors.success },
+  kycPending: {
+    backgroundColor: colors.surface,
+    borderRadius: radius.sm,
+    paddingVertical: spacing.xs,
+    paddingHorizontal: spacing.md,
+    marginTop: spacing.sm,
+  },
+  kycPendingText: { fontSize: fontSizes.xs, fontWeight: fontWeights.bold, color: colors.textMuted },
+
+  emergencyBtn: {
+    backgroundColor: colors.danger,
+    borderRadius: radius.md,
+    paddingVertical: spacing.md,
+    alignItems: 'center',
+    marginBottom: spacing.md,
+  },
+  emergencyText: { color: '#fff', fontWeight: fontWeights.heading, fontSize: fontSizes.md },
+
+  histRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: spacing.md,
+    backgroundColor: '#fff',
+    borderRadius: radius.md,
+    padding: spacing.md,
+    marginBottom: spacing.sm,
+  },
+  histCol: { flex: 1 },
+  histWhere: { fontSize: fontSizes.sm, fontWeight: fontWeights.semibold, color: colors.text },
+  histMeta: { fontSize: fontSizes.xs, color: colors.textMuted, marginTop: 2 },
+  histPay: { fontSize: fontSizes.sm, fontWeight: fontWeights.heading, color: colors.text },
+  histFailed: { fontSize: fontSizes.sm, fontWeight: fontWeights.bold, color: colors.danger },
+
+  signOutBtn: {
+    backgroundColor: colors.surface,
+    borderRadius: radius.md,
+    paddingVertical: spacing.md,
+    alignItems: 'center',
+    marginTop: spacing.lg,
+  },
+  signOutBtnText: { color: colors.danger, fontWeight: fontWeights.heading, fontSize: fontSizes.md },
+
   dutyRow: {
     flexDirection: 'row',
     alignItems: 'center',

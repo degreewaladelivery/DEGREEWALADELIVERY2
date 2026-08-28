@@ -512,7 +512,19 @@ export async function createAgent(input: CreateAgentInput): Promise<void> {
 export async function updateAgent(
   userId: string,
   input: Partial<
-    Pick<DeliveryAgentRow, 'name' | 'phone' | 'is_active' | 'vehicle_number' | 'photo_url'>
+    Pick<
+      DeliveryAgentRow,
+      | 'name'
+      | 'phone'
+      | 'is_active'
+      | 'vehicle_number'
+      | 'photo_url'
+      | 'licence_number'
+      | 'id_proof_path'
+      | 'licence_path'
+      | 'kyc_verified_at'
+      | 'emergency_contact'
+    >
   >
 ): Promise<DeliveryAgentRow> {
   const { data, error } = await supabase
@@ -736,4 +748,36 @@ export async function recordAgentSettlement(
 export async function deleteAgentSettlement(id: string): Promise<void> {
   const { error } = await supabase.from('agent_cash_settlements').delete().eq('id', id);
   if (error) throw error;
+}
+
+/**
+ * Uploads an agent's identity document to the private bucket.
+ *
+ * Returns a path, not a URL. Nothing in this bucket is publicly readable, so a
+ * viewer has to ask for a short-lived signed link each time — which is the point
+ * of keeping licences out of the public bucket.
+ */
+export async function uploadAgentDocument(file: File): Promise<string> {
+  const resized = await resizeForUpload(file);
+  const ext = resized.name.split('.').pop() ?? 'jpg';
+  const path = `${crypto.randomUUID()}.${ext}`;
+  const { error } = await supabase.storage.from('agent-documents').upload(path, resized, {
+    cacheControl: '0',
+    upsert: false,
+  });
+  if (error) throw error;
+  return path;
+}
+
+/** A link that works for a few minutes, for showing a document in the admin UI. */
+export async function signedAgentDocumentUrl(path: string): Promise<string | null> {
+  const { data, error } = await supabase.storage
+    .from('agent-documents')
+    .createSignedUrl(path, 300);
+  if (error) return null;
+  return data?.signedUrl ?? null;
+}
+
+export async function deleteAgentDocument(path: string): Promise<void> {
+  await supabase.storage.from('agent-documents').remove([path]);
 }

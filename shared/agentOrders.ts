@@ -62,6 +62,12 @@ export interface AgentProfile {
   is_active: boolean;
   /** Off duty agents keep their account but stop being sent new orders. */
   is_online: boolean;
+  vehicle_number: string | null;
+  photo_url: string | null;
+  licence_number: string | null;
+  /** Set once the office has checked the documents. */
+  kyc_verified_at: string | null;
+  emergency_contact: string | null;
 }
 
 /** The slice of supabase-js these queries need, so neither platform's client
@@ -259,20 +265,31 @@ export async function reportFailedDelivery(
   if (error) throw error;
 }
 
-/** Go on or off duty. Off duty agents are not pushed new orders. */
-export async function setAgentOnline(
-  db: Db,
-  agentId: string,
-  online: boolean
-): Promise<void> {
-  const { error } = await db
-    .from('delivery_agents')
-    .update({
-      is_online: online,
-      went_online_at: online ? new Date().toISOString() : null,
-    })
-    .eq('user_id', agentId);
+/**
+ * Go on or off duty. Off duty agents are not pushed new orders.
+ *
+ * Goes through a function rather than updating the row directly so the shift
+ * record moves with it — an app that crashed between two separate calls would
+ * leave an agent available with no shift open, or a shift running for someone
+ * who has gone home.
+ */
+export async function setAgentOnline(db: Db, online: boolean): Promise<void> {
+  const { error } = await db.rpc('set_agent_duty', { p_online: online });
   if (error) throw error;
+}
+
+/** Minutes on duty today, including a shift still running. */
+export async function getTodayMinutes(db: Db): Promise<number> {
+  const { data, error } = await db.rpc('agent_today_minutes');
+  if (error) throw error;
+  return Number(data) || 0;
+}
+
+export function formatDuration(minutes: number): string {
+  if (minutes < 60) return `${minutes}m`;
+  const hours = Math.floor(minutes / 60);
+  const rest = minutes % 60;
+  return rest === 0 ? `${hours}h` : `${hours}h ${rest}m`;
 }
 
 export interface EarningsSummary {

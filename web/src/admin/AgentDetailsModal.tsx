@@ -1,7 +1,13 @@
-import { useState, type FormEvent } from 'react';
+import { useEffect, useState, type FormEvent } from 'react';
 import { Modal } from './Modal';
 import { ImagePicker } from './ImagePicker';
-import { updateAgent, uploadCatalogImage } from './api';
+import {
+  updateAgent,
+  uploadCatalogImage,
+  uploadAgentDocument,
+  signedAgentDocumentUrl,
+  deleteAgentDocument,
+} from './api';
 import type { DeliveryAgentRow } from './types';
 
 /**
@@ -22,19 +28,73 @@ export function AgentDetailsModal({
 }) {
   const [vehicleNumber, setVehicleNumber] = useState(agent.vehicle_number ?? '');
   const [photoUrl, setPhotoUrl] = useState<string | null>(agent.photo_url);
+  const [licenceNumber, setLicenceNumber] = useState(agent.licence_number ?? '');
+  const [idProofPath, setIdProofPath] = useState<string | null>(agent.id_proof_path);
+  const [licencePath, setLicencePath] = useState<string | null>(agent.licence_path);
+  // Signed links, fetched only to show the thumbnails. They expire in minutes,
+  // so nothing long-lived points at a licence. Held with the path they belong
+  // to, so a freshly uploaded document never briefly shows the previous one.
+  const [idProofSigned, setIdProofSigned] = useState<{ path: string; url: string } | null>(null);
+  const [licenceSigned, setLicenceSigned] = useState<{ path: string; url: string } | null>(null);
+  const [emergency, setEmergency] = useState(agent.emergency_contact ?? '');
+  const [verified, setVerified] = useState(Boolean(agent.kyc_verified_at));
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  const onPick = async (file: File) => {
+  const upload = async (file: File, apply: (url: string) => void) => {
     setSaving(true);
     setError(null);
     try {
-      setPhotoUrl(await uploadCatalogImage(file, 'agents'));
+      apply(await uploadCatalogImage(file, 'agents'));
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Could not upload that photo');
+      setError(err instanceof Error ? err.message : 'Could not upload that image');
     } finally {
       setSaving(false);
     }
+  };
+
+  useEffect(() => {
+    if (!idProofPath) return;
+    let cancelled = false;
+    signedAgentDocumentUrl(idProofPath).then((url) => {
+      if (!cancelled && url) setIdProofSigned({ path: idProofPath, url });
+    });
+    return () => {
+      cancelled = true;
+    };
+  }, [idProofPath]);
+
+  useEffect(() => {
+    if (!licencePath) return;
+    let cancelled = false;
+    signedAgentDocumentUrl(licencePath).then((url) => {
+      if (!cancelled && url) setLicenceSigned({ path: licencePath, url });
+    });
+    return () => {
+      cancelled = true;
+    };
+  }, [licencePath]);
+
+  // Derived, so clearing a document empties the preview at once rather than
+  // waiting on an effect.
+  const idProofPreview = idProofSigned?.path === idProofPath ? idProofSigned.url : '';
+  const licencePreview = licenceSigned?.path === licencePath ? licenceSigned.url : '';
+
+  const uploadDoc = async (file: File, apply: (path: string) => void) => {
+    setSaving(true);
+    setError(null);
+    try {
+      apply(await uploadAgentDocument(file));
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Could not upload that document');
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  const removeDoc = async (path: string | null, clear: () => void) => {
+    clear();
+    if (path) await deleteAgentDocument(path).catch(() => undefined);
   };
 
   const onSubmit = async (e: FormEvent) => {
@@ -47,6 +107,15 @@ export function AgentDetailsModal({
         // stored the way they are written on the plate.
         vehicle_number: vehicleNumber.trim().toUpperCase() || null,
         photo_url: photoUrl,
+        licence_number: licenceNumber.trim().toUpperCase() || null,
+        id_proof_path: idProofPath,
+        licence_path: licencePath,
+        emergency_contact: emergency.trim() || null,
+        // Stamped when the box is ticked, cleared when it is unticked, so the
+        // date always means "checked on".
+        kyc_verified_at: verified
+          ? agent.kyc_verified_at ?? new Date().toISOString()
+          : null,
       });
       onSaved();
     } catch (err) {
@@ -77,9 +146,67 @@ export function AgentDetailsModal({
         <ImagePicker
           label="Photo"
           preview={photoUrl ?? ''}
-          onPick={onPick}
+          onPick={(file) => upload(file, setPhotoUrl)}
           onRemove={() => setPhotoUrl(null)}
         />
+
+        <label className="admin-field">
+          <span>Emergency contact</span>
+          <input
+            value={emergency}
+            onChange={(e) => setEmergency(e.target.value)}
+            placeholder="Number this agent should call for help"
+          />
+          <em>Used by the Call support button in their app. Falls back to the office number.</em>
+        </label>
+
+        <h3 className="admin-cash__histHead">Documents</h3>
+
+        <label className="admin-field">
+          <span>Driving licence number</span>
+          <input
+            value={licenceNumber}
+            onChange={(e) => setLicenceNumber(e.target.value)}
+            placeholder="KA18 20230001234"
+          />
+          <em>
+            Do not record Aadhaar numbers here. A photograph of the card is enough, and storing the
+            number brings obligations a delivery service should not take on.
+          </em>
+        </label>
+
+        <ImagePicker
+          label="ID proof (photo of the document)"
+          preview={idProofPreview}
+          onPick={(file) => uploadDoc(file, setIdProofPath)}
+          onRemove={() => removeDoc(idProofPath, () => setIdProofPath(null))}
+        />
+
+        <ImagePicker
+          label="Driving licence (photo)"
+          preview={licencePreview}
+          onPick={(file) => uploadDoc(file, setLicencePath)}
+          onRemove={() => removeDoc(licencePath, () => setLicencePath(null))}
+        />
+
+        <p className="admin-empty" style={{ textAlign: 'left' }}>
+          Documents are stored privately and are visible only to admins here. They are never shown
+          to customers or to the agent's app.
+        </p>
+
+        <label className="admin-check">
+          <input
+            type="checkbox"
+            checked={verified}
+            onChange={(e) => setVerified(e.target.checked)}
+          />
+          <span>
+            I have seen the original documents
+            {agent.kyc_verified_at
+              ? ` — verified ${new Date(agent.kyc_verified_at).toLocaleDateString('en-IN')}`
+              : ''}
+          </span>
+        </label>
 
         {error && <p className="admin-login__error">{error}</p>}
 

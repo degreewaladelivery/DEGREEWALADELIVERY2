@@ -46,8 +46,10 @@ export const reportFailedDelivery = async (orderId: string, reason: string): Pro
   notifyCustomer(supabaseAgent, orderId);
 };
 
-export const setAgentOnline = (agentId: string, online: boolean): Promise<void> =>
-  agentOrders.setAgentOnline(supabaseAgent, agentId, online);
+export const setAgentOnline = (online: boolean): Promise<void> =>
+  agentOrders.setAgentOnline(supabaseAgent, online);
+
+export const getTodayMinutes = (): Promise<number> => agentOrders.getTodayMinutes(supabaseAgent);
 
 export const getEarnings = (agentId: string): Promise<agentOrders.EarningsSummary> =>
   agentOrders.getEarnings(supabaseAgent, agentId);

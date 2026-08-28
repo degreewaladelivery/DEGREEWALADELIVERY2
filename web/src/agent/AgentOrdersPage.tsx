@@ -14,9 +14,11 @@ import {
   reportFailedDelivery,
   setAgentOnline,
   getEarnings,
+  getTodayMinutes,
 } from './api';
 import type { AgentProfile, OrderRow } from './types';
 import type { EarningsSummary } from '@shared/agentOrders';
+import { formatDuration } from '@shared/agentOrders';
 import {
   alertsSupported,
   enableAlerts,
@@ -72,6 +74,7 @@ export function AgentOrdersPage() {
   const [code, setCode] = useState('');
   const [cashTaken, setCashTaken] = useState(true);
   const [closeError, setCloseError] = useState<string | null>(null);
+  const [minutesToday, setMinutesToday] = useState(0);
   // Location is a condition of working, not a preference — a customer watching
   // a stationary pin has no way to know the agent simply switched it off.
   // 'unknown' until the browser answers.
@@ -159,12 +162,14 @@ export function AgentOrdersPage() {
       listOpenOrders(),
       listMyDeliveries(agentId),
       getEarnings(agentId).catch(() => null),
+      getTodayMinutes().catch(() => 0),
     ])
-      .then(([open, mine, earned]) => {
+      .then(([open, mine, earned, minutes]) => {
         announceNewOrders(open, seenOpenIdsRef, alertsOnRef);
         setOpenOrders(open);
         setMyOrders(mine);
         if (earned) setEarnings(earned);
+        setMinutesToday(minutes as number);
         setError(null);
       })
       .catch((err) => setError(err instanceof Error ? err.message : 'Failed to load orders'));
@@ -319,7 +324,7 @@ export function AgentOrdersPage() {
     if (!profile) return;
     setOnline(next);
     try {
-      await setAgentOnline(profile.user_id, next);
+      await setAgentOnline(next);
     } catch {
       setOnline(!next);
     }
@@ -351,6 +356,7 @@ export function AgentOrdersPage() {
           <div><strong>{formatRupees(earnings.week)}</strong><span>7 days</span></div>
           <div><strong>{earnings.deliveredToday}</strong><span>Deliveries</span></div>
           <div><strong>{formatRupees(earnings.cashInHand)}</strong><span>Cash held</span></div>
+          <div><strong>{formatDuration(minutesToday)}</strong><span>On duty</span></div>
         </div>
       )}
 

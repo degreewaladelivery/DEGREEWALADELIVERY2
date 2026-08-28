@@ -79,6 +79,12 @@ export interface DeliveryAgentRow {
   /** Shown to the customer waiting for this agent. Null until recorded. */
   vehicle_number: string | null;
   photo_url: string | null;
+  licence_number: string | null;
+  /** Path inside the private agent-documents bucket, not a public URL. */
+  id_proof_path: string | null;
+  licence_path: string | null;
+  kyc_verified_at: string | null;
+  emergency_contact: string | null;
 }
 
 export interface AgentCashBalance {
