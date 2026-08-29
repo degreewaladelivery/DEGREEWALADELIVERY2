@@ -50,6 +50,12 @@ export function AgentAuthProvider({ children }: { children: ReactNode }) {
   };
 
   const signOut = async () => {
+    // Off duty first, while the session still authorises it. Signing out
+    // otherwise left the shift running and the agent marked available.
+    await supabase.rpc('set_agent_duty', { p_online: false }).then(
+      () => undefined,
+      () => undefined
+    );
     await supabase.auth.signOut();
   };
 

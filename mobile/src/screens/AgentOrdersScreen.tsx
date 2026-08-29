@@ -338,7 +338,11 @@ export function AgentOrdersScreen({ agentId, onSignedOut }: { agentId: string; o
             text: 'Sign out',
             style: 'destructive',
             onPress: () =>
-              stopBackgroundTracking()
+              // Off duty first: signing out otherwise left the shift running
+              // and the agent marked available for orders they cannot see.
+              setAgentOnline(false)
+                .catch(() => undefined)
+                .then(() => stopBackgroundTracking())
                 .then(() => unregisterDeviceForPush())
                 .then(() => signOutAgent())
                 .then(onSignedOut),
@@ -347,7 +351,9 @@ export function AgentOrdersScreen({ agentId, onSignedOut }: { agentId: string; o
       );
       return;
     }
-    stopBackgroundTracking()
+    setAgentOnline(false)
+      .catch(() => undefined)
+      .then(() => stopBackgroundTracking())
       .then(() => unregisterDeviceForPush())
       .then(() => signOutAgent())
       .then(onSignedOut);
