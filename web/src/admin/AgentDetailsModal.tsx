@@ -97,17 +97,26 @@ export function AgentDetailsModal({
    *
    * The tab is opened before the signed link is fetched, because a popup opened
    * after an await is blocked — the browser no longer connects it to the click.
+   *
+   * Deliberately without the noopener feature: window.open returns null when it
+   * is set, which left nothing to navigate and opened a blank tab. The opener
+   * is severed once the address is in, which gets the same protection.
    */
   const viewDoc = async (path: string | null) => {
     if (!path) return;
-    const tab = window.open('', '_blank', 'noopener');
+    const tab = window.open('', '_blank');
     const url = await signedAgentDocumentUrl(path);
     if (!url) {
       tab?.close();
       setError('Could not open that document.');
       return;
     }
-    if (tab) tab.location.href = url;
+    if (!tab) {
+      setError('Your browser blocked the new tab. Allow pop-ups for this site, or use Download.');
+      return;
+    }
+    tab.location.href = url;
+    tab.opener = null;
   };
 
   const downloadDoc = async (path: string | null, name: string) => {
