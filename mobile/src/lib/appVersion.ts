@@ -6,4 +6,4 @@
  * if this reads what you expect, the new code is installed. Keep it in step
  * with versionName in android/app/build.gradle.
  */
-export const APP_VERSION = '2.2';
+export const APP_VERSION = '2.3';

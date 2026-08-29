@@ -52,6 +52,16 @@ import { colors, spacing, radius, fontSizes, fontWeights, shadows } from '../the
 /** Fallback when an agent has no personal support number recorded. */
 const SUPPORT_PHONE = '+918431109368';
 
+/** Date and time, for a delivery being looked back on. */
+function whenFull(iso: string): string {
+  const date = new Date(iso);
+  if (Number.isNaN(date.getTime())) return '';
+  return `${date.toLocaleDateString('en-IN')} at ${date.toLocaleTimeString('en-IN', {
+    hour: 'numeric',
+    minute: '2-digit',
+  })}`;
+}
+
 /** How often to re-check the pool while the app is open. */
 const POLL_MS = 15000;
 /** Don't write a location fix more often than this — it's a database write per
@@ -75,6 +85,7 @@ export function AgentOrdersScreen({ agentId, onSignedOut }: { agentId: string; o
   const [minutesToday, setMinutesToday] = useState(0);
   const [history, setHistory] = useState<OrderRow[] | null>(null);
   const [showProfile, setShowProfile] = useState(false);
+  const [pastOrder, setPastOrder] = useState<OrderRow | null>(null);
   const [refreshing, setRefreshing] = useState(false);
   // Location is a condition of working, not a preference — a customer watching a
   // stationary pin can't tell the agent simply switched it off.
@@ -531,7 +542,12 @@ export function AgentOrdersScreen({ agentId, onSignedOut }: { agentId: string; o
               <Text style={styles.empty}>Nothing delivered yet.</Text>
             )}
             {history?.map((order) => (
-              <View key={order.id} style={styles.histRow}>
+              <TouchableOpacity
+                key={order.id}
+                style={styles.histRow}
+                activeOpacity={0.7}
+                onPress={() => setPastOrder(order)}
+              >
                 <View style={styles.histCol}>
                   <Text style={styles.histWhere} numberOfLines={1}>
                     {order.pickup_label} → {order.delivery_address}
@@ -546,12 +562,109 @@ export function AgentOrdersScreen({ agentId, onSignedOut }: { agentId: string; o
                 <Text style={order.status === 'failed' ? styles.histFailed : styles.histPay}>
                   {order.status === 'failed' ? 'Failed' : formatRupees(order.agent_payout)}
                 </Text>
-              </View>
+                <Text style={styles.histChev}>›</Text>
+              </TouchableOpacity>
             ))}
 
             <TouchableOpacity style={styles.signOutBtn} activeOpacity={0.9} onPress={onSignOut}>
               <Text style={styles.signOutBtnText}>Sign out</Text>
             </TouchableOpacity>
+          </ScrollView>
+        </SafeAreaView>
+      </Modal>
+
+      <Modal
+        visible={pastOrder !== null}
+        animationType="slide"
+        onRequestClose={() => setPastOrder(null)}
+      >
+        <SafeAreaView style={styles.safe} edges={['top']}>
+          <ScrollView contentContainerStyle={styles.content}>
+            <View style={styles.head}>
+              <Text style={styles.hi}>Delivery</Text>
+              <TouchableOpacity onPress={() => setPastOrder(null)} hitSlop={10}>
+                <Text style={styles.signOut}>Close</Text>
+              </TouchableOpacity>
+            </View>
+
+            {pastOrder && (
+              <>
+                <View style={styles.detCard}>
+                  <Text style={styles.detId}>#{pastOrder.id.slice(0, 8).toUpperCase()}</Text>
+                  <Text
+                    style={
+                      pastOrder.status === 'failed' ? styles.detFailed : styles.detDelivered
+                    }
+                  >
+                    {orderStatusLabel(pastOrder.status)}
+                  </Text>
+                  {pastOrder.failure_reason ? (
+                    <Text style={styles.detReason}>{pastOrder.failure_reason}</Text>
+                  ) : null}
+                </View>
+
+                <View style={styles.detCard}>
+                  <Text style={styles.detLabel}>Picked up from</Text>
+                  <Text style={styles.detValue}>{pastOrder.pickup_label}</Text>
+                  <Text style={[styles.detLabel, styles.detSpaced]}>Delivered to</Text>
+                  {/* Full address, not the single clipped line of the list. */}
+                  <Text style={styles.detValue}>{pastOrder.delivery_address}</Text>
+                  {pastOrder.distance_km != null && (
+                    <Text style={styles.detMeta}>{pastOrder.distance_km.toFixed(1)} km</Text>
+                  )}
+                  {/* The customer's number is deliberately absent: the reason to
+                      call them ended when the delivery did. It is on the card
+                      while the job is live. */}
+                </View>
+
+                <View style={styles.detCard}>
+                  <Text style={styles.detLabel}>Items</Text>
+                  {pastOrder.items.map((item) => (
+                    <View key={item.id} style={styles.detItem}>
+                      <Text style={styles.detItemName} numberOfLines={2}>
+                        {item.name}
+                        {item.unit ? ` (${item.unit})` : ''}
+                      </Text>
+                      <Text style={styles.detItemQty}>x{item.quantity}</Text>
+                    </View>
+                  ))}
+                </View>
+
+                <View style={styles.detCard}>
+                  <View style={styles.detRow}>
+                    <Text style={styles.detLabel}>Order total</Text>
+                    <Text style={styles.detValue}>{formatRupees(pastOrder.total)}</Text>
+                  </View>
+                  <View style={styles.detRow}>
+                    <Text style={styles.detLabel}>Payment</Text>
+                    <Text style={styles.detValue}>
+                      {pastOrder.payment_method === 'cod'
+                        ? pastOrder.cash_collected_at
+                          ? 'Cash collected'
+                          : 'Cash — not collected'
+                        : 'Paid online'}
+                    </Text>
+                  </View>
+                  <View style={styles.detRow}>
+                    <Text style={styles.detLabel}>You earned</Text>
+                    <Text style={styles.detPay}>{formatRupees(pastOrder.agent_payout)}</Text>
+                  </View>
+                </View>
+
+                <View style={styles.detCard}>
+                  <Text style={styles.detLabel}>Times</Text>
+                  {pastOrder.claimed_at && (
+                    <Text style={styles.detMeta}>Accepted {whenFull(pastOrder.claimed_at)}</Text>
+                  )}
+                  {pastOrder.picked_up_at && (
+                    <Text style={styles.detMeta}>Picked up {whenFull(pastOrder.picked_up_at)}</Text>
+                  )}
+                  {pastOrder.delivered_at && (
+                    <Text style={styles.detMeta}>Delivered {whenFull(pastOrder.delivered_at)}</Text>
+                  )}
+                </View>
+              </>
+            )}
           </ScrollView>
         </SafeAreaView>
       </Modal>
@@ -736,6 +849,51 @@ function OrderCard({
 }
 
 const styles = StyleSheet.create({
+  histChev: { fontSize: fontSizes.lg, color: colors.textFaint, marginLeft: spacing.xs },
+
+  detCard: {
+    backgroundColor: '#fff',
+    borderRadius: radius.lg,
+    padding: spacing.lg,
+    marginBottom: spacing.md,
+    ...shadows.sm,
+  },
+  detId: { fontSize: fontSizes.sm, fontWeight: fontWeights.bold, color: colors.textMuted },
+  detDelivered: {
+    fontSize: fontSizes.lg,
+    fontWeight: fontWeights.heading,
+    color: colors.success,
+    marginTop: 2,
+  },
+  detFailed: {
+    fontSize: fontSizes.lg,
+    fontWeight: fontWeights.heading,
+    color: colors.danger,
+    marginTop: 2,
+  },
+  detReason: { fontSize: fontSizes.sm, color: colors.textMuted, marginTop: spacing.xs },
+
+  detLabel: { fontSize: fontSizes.xs, fontWeight: fontWeights.bold, color: colors.textMuted },
+  detValue: { fontSize: fontSizes.md, color: colors.text, marginTop: 2 },
+  detMeta: { fontSize: fontSizes.sm, color: colors.textMuted, marginTop: 2 },
+  detSpaced: { marginTop: spacing.md },
+  detRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    paddingVertical: spacing.xs,
+  },
+  detPay: { fontSize: fontSizes.md, fontWeight: fontWeights.heading, color: colors.brand },
+  detItem: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    gap: spacing.md,
+    paddingVertical: spacing.xs,
+  },
+  detItemName: { flex: 1, fontSize: fontSizes.sm, color: colors.text },
+  detItemQty: { fontSize: fontSizes.sm, fontWeight: fontWeights.bold, color: colors.textMuted },
+
   profileLink: { fontSize: fontSizes.sm, fontWeight: fontWeights.bold, color: colors.brand },
 
   profileCard: {
