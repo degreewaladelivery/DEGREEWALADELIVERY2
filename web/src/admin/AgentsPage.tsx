@@ -99,11 +99,11 @@ export function AgentsPage() {
                   {agent.is_active ? 'Active' : <span className="admin-tag admin-tag--muted">Inactive</span>}
                 </td>
                 <td className="admin-table__actions">
-                  <button className="admin-btn admin-btn--sm admin-btn--ghost" onClick={() => setEditing(agent)}>
+                  <button className="admin-btn admin-btn--sm admin-btn--brand" onClick={() => setEditing(agent)}>
                     Details
                   </button>
                   <button
-                    className="admin-btn admin-btn--sm admin-btn--ghost"
+                    className="admin-btn admin-btn--sm admin-btn--brand"
                     onClick={() => {
                       const held = cash.find((c) => c.agent_id === agent.user_id);
                       setSettling(

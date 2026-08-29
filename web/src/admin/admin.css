@@ -125,6 +125,15 @@
   color: #fff;
 }
 .admin-btn--primary:hover { background: var(--brand-dark, #e85d00); }
+/* Outlined in the brand colour: reads as something to press, without the weight
+   of a solid button in a row that already has three others. */
+.admin-btn--brand {
+  background: #fff;
+  border-color: var(--brand, #ff6b00);
+  color: var(--brand, #ff6b00);
+}
+.admin-btn--brand:hover { background: var(--brand-tint, #fff3e0); }
+
 .admin-btn--ghost { background: transparent; border-color: transparent; }
 .admin-btn--ghost:hover { background: var(--surface, #f4f6f9); border-color: transparent; }
 .admin-btn--danger { color: var(--danger, #f44336); }
