@@ -769,11 +769,20 @@ export async function uploadAgentDocument(file: File): Promise<string> {
   return path;
 }
 
-/** A link that works for a few minutes, for showing a document in the admin UI. */
-export async function signedAgentDocumentUrl(path: string): Promise<string | null> {
+/**
+ * A link that works for a few minutes, for showing a document in the admin UI.
+ *
+ * Pass a filename to get one that saves rather than opens — the storage service
+ * sets the attachment header, so the browser downloads it instead of navigating
+ * away from the admin page.
+ */
+export async function signedAgentDocumentUrl(
+  path: string,
+  downloadAs?: string
+): Promise<string | null> {
   const { data, error } = await supabase.storage
     .from('agent-documents')
-    .createSignedUrl(path, 300);
+    .createSignedUrl(path, 300, downloadAs ? { download: downloadAs } : undefined);
   if (error) return null;
   return data?.signedUrl ?? null;
 }

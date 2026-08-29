@@ -487,3 +487,11 @@
   text-overflow: ellipsis;
   white-space: nowrap;
 }
+
+/* View / download beneath a stored document. Sits under the thumbnail rather
+   than beside Remove, so the destructive action stays visually separate. */
+.admin-doc__actions {
+  display: flex;
+  gap: 8px;
+  margin: -4px 0 12px;
+}

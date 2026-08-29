@@ -92,6 +92,42 @@ export function AgentDetailsModal({
     }
   };
 
+  /**
+   * Opens a document in a new tab.
+   *
+   * The tab is opened before the signed link is fetched, because a popup opened
+   * after an await is blocked — the browser no longer connects it to the click.
+   */
+  const viewDoc = async (path: string | null) => {
+    if (!path) return;
+    const tab = window.open('', '_blank', 'noopener');
+    const url = await signedAgentDocumentUrl(path);
+    if (!url) {
+      tab?.close();
+      setError('Could not open that document.');
+      return;
+    }
+    if (tab) tab.location.href = url;
+  };
+
+  const downloadDoc = async (path: string | null, name: string) => {
+    if (!path) return;
+    const ext = path.split('.').pop() ?? 'jpg';
+    const url = await signedAgentDocumentUrl(path, `${agent.name}-${name}.${ext}`);
+    if (!url) {
+      setError('Could not download that document.');
+      return;
+    }
+    // An anchor rather than assigning location: the header makes it save, and
+    // the admin page stays where it is.
+    const link = document.createElement('a');
+    link.href = url;
+    link.rel = 'noopener';
+    document.body.appendChild(link);
+    link.click();
+    link.remove();
+  };
+
   const removeDoc = async (path: string | null, clear: () => void) => {
     clear();
     if (path) await deleteAgentDocument(path).catch(() => undefined);
@@ -186,6 +222,24 @@ export function AgentDetailsModal({
           onPick={(file) => uploadDoc(file, setIdProofPath)}
           onRemove={() => removeDoc(idProofPath, () => setIdProofPath(null))}
         />
+        {idProofPath && (
+          <div className="admin-doc__actions">
+            <button
+              type="button"
+              className="admin-btn admin-btn--sm admin-btn--brand"
+              onClick={() => viewDoc(idProofPath)}
+            >
+              View full size
+            </button>
+            <button
+              type="button"
+              className="admin-btn admin-btn--sm admin-btn--ghost"
+              onClick={() => downloadDoc(idProofPath, 'id-proof')}
+            >
+              Download
+            </button>
+          </div>
+        )}
 
         <ImagePicker
           label="Driving licence (photo)"
@@ -193,6 +247,24 @@ export function AgentDetailsModal({
           onPick={(file) => uploadDoc(file, setLicencePath)}
           onRemove={() => removeDoc(licencePath, () => setLicencePath(null))}
         />
+        {licencePath && (
+          <div className="admin-doc__actions">
+            <button
+              type="button"
+              className="admin-btn admin-btn--sm admin-btn--brand"
+              onClick={() => viewDoc(licencePath)}
+            >
+              View full size
+            </button>
+            <button
+              type="button"
+              className="admin-btn admin-btn--sm admin-btn--ghost"
+              onClick={() => downloadDoc(licencePath, 'licence')}
+            >
+              Download
+            </button>
+          </div>
+        )}
 
         <p className="admin-empty" style={{ textAlign: 'left' }}>
           Documents are stored privately and are visible only to admins here. They are never shown
