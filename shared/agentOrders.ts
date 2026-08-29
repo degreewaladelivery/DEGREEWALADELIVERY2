@@ -285,6 +285,18 @@ export async function getTodayMinutes(db: Db): Promise<number> {
   return Number(data) || 0;
 }
 
+/** How long a delivery took, from accepting it to handing it over. */
+export function tripMinutes(order: {
+  claimed_at: string | null;
+  delivered_at: string | null;
+}): number | null {
+  if (!order.claimed_at || !order.delivered_at) return null;
+  const start = new Date(order.claimed_at).getTime();
+  const end = new Date(order.delivered_at).getTime();
+  if (Number.isNaN(start) || Number.isNaN(end) || end < start) return null;
+  return Math.round((end - start) / 60000);
+}
+
 export function formatDuration(minutes: number): string {
   if (minutes < 60) return `${minutes}m`;
   const hours = Math.floor(minutes / 60);
@@ -373,7 +385,7 @@ export async function getEarnings(db: Db, agentId: string): Promise<EarningsSumm
 export async function listDeliveryHistory(
   db: Db,
   agentId: string,
-  limit = 50
+  limit = 500
 ): Promise<OrderRow[]> {
   const { data, error } = await db
     .from('orders')

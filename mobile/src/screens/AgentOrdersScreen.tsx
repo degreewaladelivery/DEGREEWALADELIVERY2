@@ -43,7 +43,7 @@ import {
   stopBackgroundTracking,
 } from '../agent/backgroundTracking';
 import type { AgentProfile, OrderRow, EarningsSummary } from '@shared/agentOrders';
-import { formatDuration, orderStatusLabel } from '@shared/agentOrders';
+import { formatDuration, orderStatusLabel, tripMinutes } from '@shared/agentOrders';
 import { formatRupees } from '../lib/format';
 import { Thumb } from '../components/Thumb';
 import { TrackingMap } from '../components/TrackingMap';
@@ -556,6 +556,7 @@ export function AgentOrdersScreen({ agentId, onSignedOut }: { agentId: string; o
                     {order.delivered_at
                       ? new Date(order.delivered_at).toLocaleDateString('en-IN')
                       : orderStatusLabel(order.status)}
+                    {order.distance_km != null ? ` · ${order.distance_km.toFixed(1)} km` : ''}
                     {order.failure_reason ? ` · ${order.failure_reason}` : ''}
                   </Text>
                 </View>
@@ -662,6 +663,12 @@ export function AgentOrdersScreen({ agentId, onSignedOut }: { agentId: string; o
                   {pastOrder.delivered_at && (
                     <Text style={styles.detMeta}>Delivered {whenFull(pastOrder.delivered_at)}</Text>
                   )}
+                  {(() => {
+                    const taken = tripMinutes(pastOrder);
+                    return taken == null ? null : (
+                      <Text style={styles.detTaken}>Took {formatDuration(taken)}</Text>
+                    );
+                  })()}
                 </View>
               </>
             )}
@@ -882,6 +889,12 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'space-between',
     paddingVertical: spacing.xs,
+  },
+  detTaken: {
+    fontSize: fontSizes.sm,
+    fontWeight: fontWeights.bold,
+    color: colors.text,
+    marginTop: spacing.xs,
   },
   detPay: { fontSize: fontSizes.md, fontWeight: fontWeights.heading, color: colors.brand },
   detItem: {
