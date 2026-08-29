@@ -1,4 +1,4 @@
-import { createBrowserRouter, RouterProvider, Outlet } from 'react-router-dom';
+import { createBrowserRouter, RouterProvider, Outlet, Navigate } from 'react-router-dom';
 import { Layout } from './components/layout/Layout';
 import { Home } from './pages/Home';
 import { ShopList } from './pages/ShopList';
@@ -64,6 +64,10 @@ const router = createBrowserRouter([
     ),
     errorElement: <RouteError />,
     children: [
+      // Without this, /admin matches the parent and renders an empty Outlet —
+      // a blank white page with no error to explain it. RequireAdmin sends
+      // anyone not signed in on to the login screen.
+      { index: true, element: <Navigate to="/admin/categories" replace /> },
       { path: 'login', element: <AdminLogin /> },
       {
         element: (
@@ -78,7 +82,7 @@ const router = createBrowserRouter([
           { path: 'shops/:shopId', element: <ShopDetailPage /> },
           { path: 'settings', element: <SettingsPage /> },
           { path: 'agents', element: <AgentsPage /> },
-      { path: 'customers', element: <CustomersPage /> },
+          { path: 'customers', element: <CustomersPage /> },
           { path: 'attention', element: <AttentionPage /> },
         ],
       },
@@ -93,6 +97,7 @@ const router = createBrowserRouter([
     ),
     errorElement: <RouteError />,
     children: [
+      { index: true, element: <Navigate to="/agent/orders" replace /> },
       { path: 'login', element: <AgentLogin /> },
       {
         element: (
