@@ -144,11 +144,16 @@ export function AgentDetailsModal({
         </label>
 
         <ImagePicker
-          label="Photo"
+          label="Agent's photo — their face, not the vehicle"
           preview={photoUrl ?? ''}
           onPick={(file) => upload(file, setPhotoUrl)}
           onRemove={() => setPhotoUrl(null)}
         />
+        <p className="admin-empty" style={{ textAlign: 'left', marginTop: 0 }}>
+          A clear head-and-shoulders photo. The customer sees it beside the agent's name while they
+          are on the way, so they can recognise who is walking up. The vehicle is identified by its
+          number above.
+        </p>
 
         <label className="admin-field">
           <span>Emergency contact</span>
