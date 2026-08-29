@@ -128,6 +128,29 @@ export function AgentDetailsModal({
     link.remove();
   };
 
+  /**
+   * The agent photo is a plain public URL, not a signed one: customers have to
+   * be able to load it on the tracking screen. So no link needs minting — but
+   * the storage service still honours ?download= to make it save rather than
+   * open.
+   */
+  const viewPhoto = () => {
+    if (!photoUrl) return;
+    window.open(photoUrl, '_blank', 'noopener');
+  };
+
+  const downloadPhoto = () => {
+    if (!photoUrl) return;
+    const ext = photoUrl.split('.').pop()?.split('?')[0] ?? 'jpg';
+    const separator = photoUrl.includes('?') ? '&' : '?';
+    const link = document.createElement('a');
+    link.href = `${photoUrl}${separator}download=${encodeURIComponent(`${agent.name}-photo.${ext}`)}`;
+    link.rel = 'noopener';
+    document.body.appendChild(link);
+    link.click();
+    link.remove();
+  };
+
   const removeDoc = async (path: string | null, clear: () => void) => {
     clear();
     if (path) await deleteAgentDocument(path).catch(() => undefined);
@@ -185,6 +208,24 @@ export function AgentDetailsModal({
           onPick={(file) => upload(file, setPhotoUrl)}
           onRemove={() => setPhotoUrl(null)}
         />
+        {photoUrl && (
+          <div className="admin-doc__actions">
+            <button
+              type="button"
+              className="admin-btn admin-btn--sm admin-btn--brand"
+              onClick={viewPhoto}
+            >
+              View full size
+            </button>
+            <button
+              type="button"
+              className="admin-btn admin-btn--sm admin-btn--ghost"
+              onClick={downloadPhoto}
+            >
+              Download
+            </button>
+          </div>
+        )}
         <p className="admin-empty" style={{ textAlign: 'left', marginTop: 0 }}>
           A clear head-and-shoulders photo. The customer sees it beside the agent's name while they
           are on the way, so they can recognise who is walking up. The vehicle is identified by its
