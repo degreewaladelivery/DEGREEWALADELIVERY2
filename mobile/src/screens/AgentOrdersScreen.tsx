@@ -488,8 +488,8 @@ export function AgentOrdersScreen({ agentId, onSignedOut }: { agentId: string; o
           <ScrollView contentContainerStyle={styles.content}>
             <View style={styles.head}>
               <Text style={styles.hi}>My profile</Text>
-              <TouchableOpacity onPress={() => setShowProfile(false)} hitSlop={10}>
-                <Text style={styles.signOut}>Close</Text>
+              <TouchableOpacity onPress={() => setShowProfile(false)} hitSlop={12}>
+                <Text style={styles.closeLink}>Close</Text>
               </TouchableOpacity>
             </View>
 
@@ -583,8 +583,8 @@ export function AgentOrdersScreen({ agentId, onSignedOut }: { agentId: string; o
           <ScrollView contentContainerStyle={styles.content}>
             <View style={styles.head}>
               <Text style={styles.hi}>Delivery</Text>
-              <TouchableOpacity onPress={() => setPastOrder(null)} hitSlop={10}>
-                <Text style={styles.signOut}>Close</Text>
+              <TouchableOpacity onPress={() => setPastOrder(null)} hitSlop={12}>
+                <Text style={styles.closeLink}>Close</Text>
               </TouchableOpacity>
             </View>
 
@@ -1095,11 +1095,17 @@ const styles = StyleSheet.create({
   safe: { flex: 1, backgroundColor: colors.bgSoft },
   content: { padding: spacing.lg, paddingBottom: 60 },
 
-  head: { flexDirection: 'row', alignItems: 'flex-start', gap: spacing.md },
+  head: {
+    flexDirection: 'row',
+    alignItems: 'flex-start',
+    justifyContent: 'space-between',
+    gap: spacing.md,
+  },
   headCol: { flex: 1 },
   hi: { fontSize: fontSizes.xl, fontWeight: fontWeights.heading, color: colors.text },
   sharing: { fontSize: fontSizes.xs, color: colors.success, marginTop: 2 },
   signOut: { fontSize: fontSizes.sm, fontWeight: fontWeights.bold, color: colors.textMuted },
+  closeLink: { fontSize: fontSizes.md, fontWeight: fontWeights.heading, color: colors.brand },
 
   section: {
     fontSize: fontSizes.md,
