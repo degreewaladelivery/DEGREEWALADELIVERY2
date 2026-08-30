@@ -238,3 +238,118 @@
   font-weight: 700;
   color: var(--text-muted, #6b7280);
 }
+
+/* Agent profile ----------------------------------------------------------- */
+
+.agent-profile {
+  display: flex;
+  gap: 16px;
+  align-items: flex-start;
+  background: #fff;
+  border: 1px solid var(--border, #eceef2);
+  border-radius: var(--radius-lg, 16px);
+  padding: 20px;
+  margin-bottom: 12px;
+}
+
+.agent-profile__avatar {
+  width: 72px;
+  height: 72px;
+  flex-shrink: 0;
+  border-radius: 50%;
+  overflow: hidden;
+  background: var(--brand-tint, #fff3e0);
+  color: var(--brand, #ff6b00);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 28px;
+  font-weight: 800;
+}
+
+.agent-profile__avatar img { width: 100%; height: 100%; object-fit: cover; }
+.agent-profile__name { font-size: 18px; }
+.agent-profile__meta { font-size: 13px; color: var(--text-muted, #6b7280); margin: 2px 0 0; }
+.agent-profile__vehicle {
+  font-size: 13px;
+  font-weight: 700;
+  letter-spacing: 0.5px;
+  margin: 2px 0 0;
+}
+
+.agent-profile__kyc {
+  display: inline-block;
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--text-muted, #6b7280);
+  background: var(--surface, #f4f6f9);
+  border-radius: var(--radius-sm, 8px);
+  padding: 4px 10px;
+  margin: 8px 0;
+}
+
+.agent-profile__kyc.is-ok {
+  color: var(--success, #2e9e5b);
+  background: var(--success-tint, #e8f6ee);
+}
+
+.agent-profile__support {
+  display: block;
+  text-align: center;
+  text-decoration: none;
+  font-weight: 800;
+  color: #fff;
+  background: var(--danger, #f44336);
+  border-radius: var(--radius-md, 12px);
+  padding: 14px;
+  margin-bottom: 20px;
+}
+
+.agent-hist { display: flex; flex-direction: column; gap: 8px; }
+
+.agent-hist__row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  width: 100%;
+  text-align: left;
+  font: inherit;
+  background: #fff;
+  border: 1px solid var(--border, #eceef2);
+  border-radius: var(--radius-md, 12px);
+  padding: 12px 14px;
+  cursor: pointer;
+}
+
+.agent-hist__row:hover { border-color: var(--border-strong, #dfe3ea); }
+.agent-hist__col { flex: 1; min-width: 0; }
+.agent-hist__where {
+  display: block;
+  font-size: 14px;
+  font-weight: 600;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.agent-hist__meta { display: block; font-size: 12px; color: var(--text-muted, #6b7280); }
+.agent-hist__pay { font-weight: 800; }
+.agent-hist__failed { font-weight: 700; color: var(--danger, #f44336); }
+.agent-hist__chev { color: var(--text-faint, #9aa0ac); }
+
+.agent-modal--wide { max-width: 460px; text-align: left; }
+
+.agent-detail__id { font-size: 13px; color: var(--text-muted, #6b7280); margin: 0; }
+.agent-detail__ok { font-size: 16px; font-weight: 800; color: var(--success, #2e9e5b); margin: 2px 0 0; }
+.agent-detail__failed { font-size: 16px; font-weight: 800; color: var(--danger, #f44336); margin: 2px 0 0; }
+.agent-detail__reason { font-size: 13px; color: var(--text-muted, #6b7280); margin: 4px 0 0; }
+
+/* Label above value, so a long address is not squeezed into half the width. */
+.agent-detail { margin: 12px 0 0; }
+.agent-detail dt {
+  font-size: 11px;
+  font-weight: 700;
+  color: var(--text-muted, #6b7280);
+  margin-top: 10px;
+}
+.agent-detail dd { margin: 2px 0 0; font-size: 14px; }
+.agent-detail__item { display: block; }

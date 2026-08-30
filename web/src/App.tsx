@@ -32,6 +32,7 @@ import { AgentLogin } from './agent/AgentLogin';
 import { AgentLayout } from './agent/AgentLayout';
 import { RequireAgent } from './agent/RequireAgent';
 import { AgentOrdersPage } from './agent/AgentOrdersPage';
+import { AgentProfilePage } from './agent/AgentProfilePage';
 
 const router = createBrowserRouter([
   {
@@ -105,7 +106,10 @@ const router = createBrowserRouter([
             <AgentLayout />
           </RequireAgent>
         ),
-        children: [{ path: 'orders', element: <AgentOrdersPage /> }],
+        children: [
+          { path: 'orders', element: <AgentOrdersPage /> },
+          { path: 'profile', element: <AgentProfilePage /> },
+        ],
       },
     ],
   },
